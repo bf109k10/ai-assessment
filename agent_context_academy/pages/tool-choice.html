@@ -1,0 +1,904 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Какой инструмент когда — Memory vs AGENTS.md vs Rules vs Skills</title><link rel="stylesheet" href="../assets/style.css"/>
+<style>
+.schema-box{background:#0f172a;color:#e2e8f0;border-radius:16px;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.65;overflow:auto;margin:10px 0;white-space:pre-wrap}
+.diff-split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.diff-split{grid-template-columns:1fr}}
+.req-yes{color:#dc2626;font-weight:900}
+.req-no{color:#64748b}
+
+/* Таблицы в .tableWrap — светлый фон сайта, тёмный текст (не «тёмная» матрица) */
+.decision-matrix{width:100%;border-collapse:collapse;font-size:14px}
+.decision-matrix th{background:#f1f5f9;color:#0f172a;padding:12px;text-align:left;font-weight:800;border-bottom:1px solid #e2e8f0}
+.decision-matrix td{padding:12px;border-bottom:1px solid #e2e8f0;color:#334155;vertical-align:top;line-height:1.45}
+.decision-matrix tr:hover td{background:#f8fafc}
+.decision-matrix .tool-badge{display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.03em;white-space:nowrap}
+.tb-memory{background:#dbeafe;color:#1e40af}
+.tb-agents{background:#dcfce7;color:#166534}
+.tb-rules{background:#ede9fe;color:#5b21b6}
+.tb-skills{background:#ffedd5;color:#c2410c}
+.tb-hooks{background:#cffafe;color:#0e7490}
+.tb-both{background:#f5f5f4;color:#44403c}
+
+/* Tool card — тёмные карточки вне tableWrap */
+.tool-card{background:#1e293b;border-radius:14px;padding:20px;margin-bottom:16px;border-top:4px solid #334155}
+.tool-card.tc-memory{border-top-color:#3b82f6}
+.tool-card.tc-agents{border-top-color:#22c55e}
+.tool-card.tc-rules{border-top-color:#a855f7}
+.tool-card.tc-skills{border-top-color:#f97316}
+.tool-card.tc-hooks{border-top-color:#06b6d4}
+.tool-card h3{font-size:16px;color:#f1f5f9;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.tool-card p{font-size:13px;color:#94a3b8;margin:0 0 10px;line-height:1.6}
+.tool-card ul{font-size:13px;color:#cbd5e1;padding-left:16px;line-height:1.8;margin:0}
+.tc-badge{padding:2px 10px;border-radius:4px;font-size:11px;font-weight:700}
+
+/* Decision flow */
+.decision-flow{background:#0f172a;border-radius:12px;padding:20px;margin:12px 0}
+.df-question{color:#fbbf24;font-size:14px;font-weight:700;margin-bottom:12px}
+.df-branch{display:flex;gap:12px;flex-wrap:wrap}
+.df-option{background:#1e293b;border-radius:8px;padding:12px 16px;flex:1;min-width:180px}
+.df-option .df-if{color:#94a3b8;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px}
+.df-option .df-then{color:#34d399;font-size:13px;font-weight:700}
+.df-option .df-why{color:#64748b;font-size:12px;margin-top:4px}
+
+/* Ячейки «куда класть» в светлых таблицах */
+.sit-yes{color:#15803d;font-weight:800;text-align:center}
+.sit-no{color:#64748b;font-weight:700;text-align:center}
+.sit-maybe{color:#b45309;font-weight:800;text-align:center}
+.sit-primary{color:#1d4ed8;font-weight:800;text-align:center}
+
+/* Подсветка строк Memory / AGENTS — светло-зелёный фон, тёмный текст */
+.compare-winner{background:#ecfdf5!important;border-left:4px solid #10b981}
+.compare-winner td{color:#334155!important}
+.compare-winner .sit-primary{color:#047857!important}
+.compare-winner .sit-no{color:#64748b!important}
+.platform-split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+@media(max-width:700px){.platform-split{grid-template-columns:1fr}}
+.ps-col{background:#1e293b;border-radius:10px;padding:16px}
+.ps-head{font-size:13px;font-weight:700;padding:6px 12px;border-radius:6px;margin-bottom:12px;display:inline-block}
+.ps-cursor{background:#1e3a5f;color:#60a5fa}
+.ps-claude{background:#1a2e1a;color:#4ade80}
+</style>
+</head><body><div class="app"><aside class="sidebar"><div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>
+  <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html" class="active"><span class="ico">🗂️</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div><div class="progressBox"><b>Формула</b><p class="sourceNote">System → AGENTS/Rules → Current task → Memory/RAG/MCP/Skills → Subagent findings.</p></div></aside>
+
+<main class="main">
+<section class="hero">
+  <div class="kicker">Agent Context Academy</div>
+  <h2>Какой инструмент когда</h2>
+  <p>Memory Bank, AGENTS.md, Rules, Skills, Hooks — пять инструментов управления поведением агента. Таблицы best practices: что куда класть, когда что выбирать, почему путаница стоит дорого.</p>
+  <div class="heroActions">
+    <a class="btn primary" href="#decision-table">Таблица решений</a>
+    <a class="btn" href="#situations">По ситуациям</a>
+    <button class="markDone">Отметить страницу изученной</button>
+  </div>
+</section>
+
+<!-- ═══════════════════ СУТЬ ПРОБЛЕМЫ -->
+<section class="section">
+  <h2>Почему важно выбирать правильный инструмент</h2>
+  <p class="sectionIntro">У каждого инструмента свой <strong>тип содержимого, lifetime и механизм применения</strong>. Положишь факт о проекте в Rules вместо Memory — агент будет его получать каждый раз независимо от задачи, засоряя context. Положишь обязательный workflow в Memory вместо AGENTS.md — он может не загрузиться в Cursor без явного <code>@include</code>.</p>
+
+  <div class="callout warn"><b>Главная ошибка:</b> все пять инструментов выглядят как «напиши текст и агент это знает». Но они отличаются scope, приоритетом, lifetime, гарантиями загрузки и тем, кто их читает — агент или платформа.</div>
+
+  <div class="grid">
+    <div class="card bg-blue">
+      <h3>🧠 Memory Bank (<code>memory.md</code>)</h3>
+      <p><b>Что это:</b> накопленные факты о проекте — решения, ADR, стек, глоссарий. Меняется со временем.</p>
+      <p class="card-why"><b>Для чего:</b> не объяснять стек и историю решений заново в каждой сессии.</p>
+    </div>
+    <div class="card bg-green">
+      <h3>📋 AGENTS.md / CLAUDE.md</h3>
+      <p><b>Что это:</b> «контракт» агента — как работать здесь, роль, workflow, definition of done.</p>
+      <p class="card-why"><b>Для чего:</b> агент всегда следует одному и тому же рабочему процессу в этом репо.</p>
+    </div>
+    <div class="card bg-purple">
+      <h3>🔒 Rules (<code>.cursor/rules/</code>)</h3>
+      <p><b>Что это:</b> постоянные инструкции поведения — стайлгайд, запреты, coding conventions.</p>
+      <p class="card-why"><b>Для чего:</b> агент ВСЕГДА или при определённых условиях следует конкретным правилам.</p>
+    </div>
+    <div class="card bg-orange">
+      <h3>⚡ Skills</h3>
+      <p><b>Что это:</b> переиспользуемые процедуры — «как выполнить задачу X по шагам».</p>
+      <p class="card-why"><b>Для чего:</b> стандартизировать повторяющиеся workflow, которые агент вызывает по запросу.</p>
+    </div>
+    <div class="card bg-teal">
+      <h3>🪝 Hooks (Claude Code)</h3>
+      <p><b>Что это:</b> OS-уровень перехватчики событий агента — до/после каждого действия.</p>
+      <p class="card-why"><b>Для чего:</b> гарантированное enforcement правил безопасности — агент не может обойти.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ ГЛАВНАЯ ТАБЛИЦА -->
+<section class="section" id="decision-table">
+  <h2>Мастер-таблица: что куда класть</h2>
+  <p class="sectionIntro">Для каждого типа контента — рекомендованный инструмент и почему.</p>
+
+  <div class="tableWrap">
+  <table class="decision-matrix">
+    <thead>
+      <tr>
+        <th style="width:30%">Ситуация / тип контента</th>
+        <th>Куда класть</th>
+        <th>Почему именно туда</th>
+        <th>НЕ класть в</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- AGENTS.md -->
+      <tr>
+        <td><b>Роль агента, язык ответов, общий workflow</b> (Plan→Code→Review)</td>
+        <td><span class="tool-badge tb-agents">AGENTS.md</span></td>
+        <td>Это «контракт» агента — основной файл, читается первым, задаёт поведение всей сессии.</td>
+        <td><span class="tool-badge tb-memory">Memory</span> — может не загрузиться автоматически в Cursor без <code>@include</code></td>
+      </tr>
+      <tr>
+        <td><b>Definition of Done, требования к PR, ссылки на Rules/Skills</b></td>
+        <td><span class="tool-badge tb-agents">AGENTS.md</span></td>
+        <td>Это процессные требования проекта. Не меняются от задачи к задаче, нужны всегда.</td>
+        <td><span class="tool-badge tb-memory">Memory</span> — Memory для фактов, не для процессов</td>
+      </tr>
+      <tr>
+        <td><b>Стек и команды сборки</b> — краткая шпаргалка для старта</td>
+        <td><span class="tool-badge tb-agents">AGENTS.md</span></td>
+        <td>Агент читает AGENTS.md первым. Стек — это «как работать здесь», не «что мы накопили».</td>
+        <td><span class="tool-badge tb-rules">Rules</span> — Rules не место для фактов о проекте</td>
+      </tr>
+      <tr>
+        <td><b>Строка подключения Memory:</b> <code>@docs/memory.md @include</code></td>
+        <td><span class="tool-badge tb-agents">AGENTS.md</span></td>
+        <td>Именно AGENTS.md говорит агенту — читай ещё и memory.md. Без этой строки Memory может быть проигнорирован.</td>
+        <td>Нигде больше — только в AGENTS.md / system prompt</td>
+      </tr>
+
+      <!-- Memory Bank -->
+      <tr>
+        <td><b>ADR с датой и обоснованием</b> («почему отвергли Redis»)</td>
+        <td><span class="tool-badge tb-memory">Memory</span></td>
+        <td>Это накопленные проектные знания — меняются со временем, относятся к конкретному репо, нужны как справочник.</td>
+        <td><span class="tool-badge tb-agents">AGENTS.md</span> — AGENTS.md для workflow, не для истории</td>
+      </tr>
+      <tr>
+        <td><b>Gotchas и баги «которые все забывают»</b> (timezone, thread-safety, env vars)</td>
+        <td><span class="tool-badge tb-memory">Memory</span></td>
+        <td>Опытные знания команды. Формат: что именно, почему, как исправлять. Не Rules — не обязательное поведение.</td>
+        <td><span class="tool-badge tb-rules">Rules</span> — Gotcha — это знание, не запрет</td>
+      </tr>
+      <tr>
+        <td><b>Эволюция решений</b> («раньше Maven, с Q3 перешли на Gradle»)</td>
+        <td><span class="tool-badge tb-memory">Memory</span></td>
+        <td>История решений — для объяснения «почему сейчас так». Агент не будет предлагать Maven зная историю.</td>
+        <td><span class="tool-badge tb-agents">AGENTS.md</span> — AGENTS.md для текущего состояния, не истории</td>
+      </tr>
+      <tr>
+        <td><b>Project glossary, доменные термины</b></td>
+        <td><span class="tool-badge tb-memory">Memory</span></td>
+        <td>Глоссарий — живой артефакт, меняется с проектом. Правильный инструмент для накапливаемых знаний.</td>
+        <td><span class="tool-badge tb-rules">Rules</span> — не загромождай Rules глоссарием</td>
+      </tr>
+      <tr>
+        <td><b>Результаты ресёрча, выводы после спринтов</b></td>
+        <td><span class="tool-badge tb-memory">Memory</span></td>
+        <td>Это артефакты исследований, датированные. Memory — правильное место, можно структурировать по дате.</td>
+        <td><span class="tool-badge tb-agents">AGENTS.md</span> — не дублируй весь ресёрч в контракте</td>
+      </tr>
+
+      <!-- Rules -->
+      <tr>
+        <td><b>Coding conventions, стайлгайд</b> (never use <code>var</code>, camelCase)</td>
+        <td><span class="tool-badge tb-rules">Rules</span></td>
+        <td>Rules применяются к конкретным файлам через glob или всегда — ideal для coding standards.</td>
+        <td><span class="tool-badge tb-agents">AGENTS.md</span> — не захламляй контракт конвенциями</td>
+      </tr>
+      <tr>
+        <td><b>Запреты и MUST</b> («никогда не коммить секреты», «no force push to main»)</td>
+        <td><span class="tool-badge tb-rules">Rules</span> + <span class="tool-badge tb-hooks">Hooks</span></td>
+        <td>Rules задаёт намерение. Hooks (Claude Code) — гарантированный enforcement на OS-уровне, агент не обойдёт.</td>
+        <td><span class="tool-badge tb-memory">Memory</span> — Memory может устареть или не прочитаться</td>
+      </tr>
+      <tr>
+        <td><b>Инструкции для конкретного типа файлов</b> (<code>*.test.ts</code>, <code>*.sql</code>)</td>
+        <td><span class="tool-badge tb-rules">Rules</span> с glob</td>
+        <td>Rules поддерживают globs — применяются только когда агент работает с нужными файлами. Экономит context.</td>
+        <td><span class="tool-badge tb-agents">AGENTS.md</span> — слишком специфично для общего контракта</td>
+      </tr>
+      <tr>
+        <td><b>Постоянные инструкции стиля общения</b> (tone, язык, формат ответов)</td>
+        <td><span class="tool-badge tb-rules">Rules</span> alwaysApply</td>
+        <td>alwaysApply = в каждом запросе. Стиль общения нужен всегда, независимо от задачи.</td>
+        <td><span class="tool-badge tb-skills">Skills</span> — Skills для процедур, не стиля</td>
+      </tr>
+
+      <!-- Skills -->
+      <tr>
+        <td><b>Повторяющийся workflow</b> (deploy, create PR, run migration)</td>
+        <td><span class="tool-badge tb-skills">Skills</span></td>
+        <td>Skills — переиспользуемые процедуры. Агент вызывает по запросу, не тратит context в каждой сессии.</td>
+        <td><span class="tool-badge tb-agents">AGENTS.md</span> — не дублируй подробные процедуры в контракте</td>
+      </tr>
+      <tr>
+        <td><b>Пошаговая инструкция с ветвлением</b> (if staging → do X, else → do Y)</td>
+        <td><span class="tool-badge tb-skills">Skills</span></td>
+        <td>Skills поддерживают условную логику и шаги — для этого они и созданы. Rules этого не умеют.</td>
+        <td><span class="tool-badge tb-rules">Rules</span> — Rule для простых ограничений, не процедур</td>
+      </tr>
+      <tr>
+        <td><b>Онбординг нового разработчика</b> (README, архитектура для людей)</td>
+        <td>README / docs</td>
+        <td>Это документация для людей, не для агента. Агент не обязан её читать автоматически.</td>
+        <td><span class="tool-badge tb-memory">Memory</span> — в Memory можно добавить краткую выжимку для агента</td>
+      </tr>
+      <tr>
+        <td><b>Маленький pet-проект, один разработчик</b></td>
+        <td>Один файл — AGENTS.md или memory.md</td>
+        <td>При росте — разделить: AGENTS.md = «как работать», memory.md = «что накопили». На старте — можно один файл.</td>
+        <td>Не создавай лишние файлы пока не нужны</td>
+      </tr>
+
+      <!-- Ни туда, ни туда / другие инструменты -->
+      <tr>
+        <td><b>Секреты, API-ключи, токены доступа</b></td>
+        <td>env vars / secret manager</td>
+        <td>Любой файл в репо (включая Memory и Rules) может попасть в git history или в context window LLM. Секреты — не текст для агента, а конфигурация окружения.</td>
+        <td><span class="tool-badge tb-memory">Memory</span> <span class="tool-badge tb-agents">AGENTS.md</span> — никогда, даже «временно»</td>
+      </tr>
+      <tr>
+        <td><b>Крупная документация</b> (полный OpenAPI spec, сотни страниц wiki)</td>
+        <td>RAG (Cursor @Docs)</td>
+        <td>Слишком большой объём для постоянной загрузки в context. RAG достаёт релевантный фрагмент только когда нужен.</td>
+        <td><span class="tool-badge tb-memory">Memory</span> — засорит context в 95% запросов где это не нужно</td>
+      </tr>
+      <tr>
+        <td><b>Временный статус</b> («CI сейчас красный», «staging лежит»)</td>
+        <td>Не сохранять постоянно</td>
+        <td>Это facts с TTL в часы, не месяцы. Постоянный файл устареет через день и будет врать агенту.</td>
+        <td><span class="tool-badge tb-memory">Memory</span> — для live-статуса используй MCP/CI API, не файл</td>
+      </tr>
+      <tr>
+        <td><b>Запрещённые команды</b> (<code>git push --force</code>, <code>DROP TABLE</code>, <code>rm -rf</code>)</td>
+        <td><span class="tool-badge tb-rules">Rules</span> + <span class="tool-badge tb-hooks">Hooks</span></td>
+        <td>Критическое ограничение с необратимыми последствиями — нужен не только текст правила, но и enforcement на уровне платформы.</td>
+        <td><span class="tool-badge tb-memory">Memory</span> — Memory описывает факты, не блокирует действия</td>
+      </tr>
+      <tr>
+        <td><b>Личные предпочтения разработчика</b> (кратко отвечать, любимый стиль)</td>
+        <td>User-level / global (не project)</td>
+        <td>Это про человека, не про проект. В Cursor — глобальные Rules/настройки, в Claude Code — <code>~/.claude/memory/</code>. Живёт вне репозитория.</td>
+        <td><span class="tool-badge tb-agents">AGENTS.md</span> — он общий для всей команды, не для одного человека</td>
+      </tr>
+      <tr>
+        <td><b>Формат commit message / PR title</b> (Conventional Commits: <code>feat:</code>, <code>fix:</code>)</td>
+        <td><span class="tool-badge tb-rules">Rules</span></td>
+        <td>Это конвенция форматирования — применяется всегда при коммитах, типичный кейс для alwaysApply Rule.</td>
+        <td><span class="tool-badge tb-agents">AGENTS.md</span> — не расписывай форматы коммитов в контракте</td>
+      </tr>
+      <tr>
+        <td><b>Чеклист code review</b> с шагами (проверить тесты → security → naming → docs)</td>
+        <td><span class="tool-badge tb-skills">Skills</span></td>
+        <td>Пошаговая процедура с явным порядком действий — вызывается когда нужно провести review, не в каждой сессии.</td>
+        <td><span class="tool-badge tb-rules">Rules</span> — Rule не умеет упорядоченные шаги, только ограничения</td>
+      </tr>
+      <tr>
+        <td><b>Known flaky tests</b> с датой обнаружения («testLogin падает раз в 10 запусков с марта»)</td>
+        <td><span class="tool-badge tb-memory">Memory</span></td>
+        <td>Опытное знание команды о нестабильности — не должно повторно «открываться» каждым разработчиком/агентом.</td>
+        <td><span class="tool-badge tb-rules">Rules</span> — это факт про тесты, не правило поведения</td>
+      </tr>
+      <tr>
+        <td><b>Список MCP-серверов и их назначение</b> (jira-mcp, graylog-mcp)</td>
+        <td>Конфиг платформы (<code>mcp.json</code>)</td>
+        <td>Подключение MCP — это конфигурация инструментов, не текстовая инструкция агенту. Отдельный механизм, не Rules/Memory.</td>
+        <td><span class="tool-badge tb-agents">AGENTS.md</span> — можно упомянуть «зачем» MCP, но не дублировать конфиг</td>
+      </tr>
+      <tr>
+        <td><b>Временный workaround с датой истечения</b> («патч до фикса в апстриме, убрать после Q3 2026»)</td>
+        <td><span class="tool-badge tb-memory">Memory</span></td>
+        <td>Нужен явный тег даты/expiry прямо в записи — иначе workaround станет «постоянным» и забытым навсегда.</td>
+        <td><span class="tool-badge tb-rules">Rules</span> — временное решение не должно быть постоянным правилом</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ═══════════════════ СРАВНЕНИЕ MEMORY vs AGENTS -->
+<section class="section">
+  <h2>Memory Bank vs AGENTS.md — детальное сравнение</h2>
+  <p class="sectionIntro">Оба файла попадают в context window при каждом запросе. Путаница между ними — главная причина дублей и устаревших команд. <strong>AGENTS.md (в Claude Code — CLAUDE.md) = «как работать здесь»; memory.md = «что мы накопили о проекте».</strong></p>
+
+  <div class="tableWrap">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:32%">Ситуация или тип контента</th>
+        <th style="width:22%">AGENTS.md / CLAUDE.md</th>
+        <th style="width:22%">Memory Bank (memory.md)</th>
+        <th>Почему именно так</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Роль агента, язык ответа команды, общий workflow (Plan → Code → Review)</td>
+        <td class="sit-primary">✓ Сюда</td><td class="sit-no">—</td>
+        <td>Это инструкции поведения, не факты. AGENTS.md задаёт контракт.</td>
+      </tr>
+      <tr>
+        <td>Definition of Done, процесс PR/review, ссылки на Rules / Skills / RAG</td>
+        <td class="sit-primary">✓ Сюда</td><td class="sit-no">—</td>
+        <td>Процессные требования неизменны — AGENTS.md правильное место.</td>
+      </tr>
+      <tr>
+        <td>Стек и команды сборки — в одном каноническом месте (коротко, для старта)</td>
+        <td class="sit-primary">✓ Сюда</td><td class="sit-no">—</td>
+        <td>AGENTS.md читается первым, агент получает стек сразу.</td>
+      </tr>
+      <tr>
+        <td>Строка подключения: <code>@docs/memory.md @include</code></td>
+        <td class="sit-primary">✓ Сюда</td><td class="sit-no">—</td>
+        <td>Без этой строки в AGENTS.md память может не загрузиться в Cursor.</td>
+      </tr>
+      <tr class="compare-winner">
+        <td>ADR с датой и обоснованием «почему отвергли X»</td>
+        <td class="sit-no">—</td><td class="sit-primary">✓ Сюда</td>
+        <td>Это накопленные решения с датой — история проекта, живёт в Memory.</td>
+      </tr>
+      <tr class="compare-winner">
+        <td>Gotchas и баги «которые все забывают» (timezone, thread-safety, env vars)</td>
+        <td class="sit-no">—</td><td class="sit-primary">✓ Сюда</td>
+        <td>Опытное знание команды, накапливается. Не запрет — поэтому не в Rules.</td>
+      </tr>
+      <tr class="compare-winner">
+        <td>Эволюция решений: «раньше Maven, с Q3 перешли на Gradle»</td>
+        <td class="sit-no">—</td><td class="sit-primary">✓ Сюда</td>
+        <td>Агент не будет предлагать Maven, зная историю.</td>
+      </tr>
+      <tr class="compare-winner">
+        <td>Project glossary, доменные термины команды</td>
+        <td class="sit-no">—</td><td class="sit-primary">✓ Сюда</td>
+        <td>Глоссарий растёт, меняется — правильный артефакт для Memory.</td>
+      </tr>
+      <tr class="compare-winner">
+        <td>Результаты исследований, выводы после спринтов</td>
+        <td class="sit-no">—</td><td class="sit-primary">✓ Сюда</td>
+        <td>Датированные артефакты — Memory, структурированные по дате/теме.</td>
+      </tr>
+      <tr>
+        <td>Запреты и MUST («никогда не коммить секреты»)</td>
+        <td class="sit-no">→ Rules</td><td class="sit-no">—</td>
+        <td>Критические запреты — в Rules (+ Hooks для enforcement). Memory устаревает.</td>
+      </tr>
+      <tr>
+        <td>Онбординг человека (README, архитектура для людей)</td>
+        <td class="sit-no">→ README / docs</td><td class="sit-maybe">краткая выжимка ✓</td>
+        <td>README — для людей. В Memory добавь выжимку для агента.</td>
+      </tr>
+      <tr class="compare-winner">
+        <td>Known flaky tests с датой обнаружения</td>
+        <td class="sit-no">—</td><td class="sit-primary">✓ Сюда</td>
+        <td>Опытное знание о нестабильности тестов — накапливается, нужен справочник.</td>
+      </tr>
+      <tr>
+        <td>URL окружений (dev/staging/prod) и как проверить деплой</td>
+        <td class="sit-primary">✓ Сюда</td><td class="sit-no">—</td>
+        <td>Это часть операционного workflow — нужно агенту при каждом деплое, а не как «история».</td>
+      </tr>
+      <tr class="compare-winner">
+        <td>Временный workaround с датой истечения («убрать после Q3»)</td>
+        <td class="sit-no">—</td><td class="sit-primary">✓ Сюда</td>
+        <td>Нужен явный expiry-тег в записи — Memory хранит датированные факты, AGENTS.md не про временное.</td>
+      </tr>
+      <tr>
+        <td>Naming conventions веток и PR (<code>feature/*</code>, <code>fix/*</code>)</td>
+        <td class="sit-no">→ Rules</td><td class="sit-no">—</td>
+        <td>Это конвенция форматирования, применяется автоматически — типичный кейс для Rules, не для контракта или знаний.</td>
+      </tr>
+      <tr class="compare-winner">
+        <td>Владелец интеграции («Stripe — вопросы к Ане из billing»)</td>
+        <td class="sit-no">—</td><td class="sit-primary">✓ Сюда</td>
+        <td>Контактная информация команды — меняется, накапливается, не про процесс работы агента.</td>
+      </tr>
+      <tr class="compare-winner">
+        <td>Почему выбрали текущего deployment provider (AWS vs GCP)</td>
+        <td class="sit-no">—</td><td class="sit-primary">✓ Сюда</td>
+        <td>Это ADR — архитектурное решение с обоснованием, живёт в Memory как история.</td>
+      </tr>
+      <tr>
+        <td>Чеклист перед релизом (release checklist с шагами)</td>
+        <td class="sit-no">→ Skills</td><td class="sit-no">—</td>
+        <td>Пошаговая процедура с порядком действий — не факт и не общий контракт, а вызываемый playbook.</td>
+      </tr>
+      <tr>
+        <td>Ссылка на incident response runbook, on-call rotation</td>
+        <td class="sit-primary">✓ Сюда (ссылкой)</td><td class="sit-no">—</td>
+        <td>Это часть процесса «как работать здесь» — AGENTS.md даёт ссылку, сам runbook — отдельный Skill/doc.</td>
+      </tr>
+      <tr class="compare-winner">
+        <td>Текущая версия фреймворка и план upgrade («React 17 → 18, план на Q3»)</td>
+        <td class="sit-no">—</td><td class="sit-primary">✓ Сюда</td>
+        <td>Версия с планом — это факт с историей и будущим шагом, типичный контент для Memory, не для контракта.</td>
+      </tr>
+      <tr>
+        <td>Личные предпочтения одного разработчика (кратко отвечать, эмодзи)</td>
+        <td class="sit-maybe">→ global, не project</td><td class="sit-maybe">→ global, не project</td>
+        <td>AGENTS.md/project-memory общие для всей команды. Личное — в user-level настройках (Cursor global rules, <code>~/.claude/memory/</code>).</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout"><b>Главное отличие:</b> AGENTS.md = «как работать в этом репо» (процесс, workflow, роль). memory.md = «что мы знаем о проекте» (факты, история, решения). Если ты пишешь глагол — скорее AGENTS.md. Если пишешь существительное/факт — скорее Memory.</div>
+</section>
+
+<!-- ═══════════════════ RULES vs SKILLS -->
+<section class="section">
+  <h2>Rules vs Skills — когда что</h2>
+  <p class="sectionIntro">Оба инструмента задают поведение агента. Rules — ограничения и стиль. Skills — процедуры и workflow. Ключевой вопрос: «это правило (как не надо) или процедура (как делать)?»</p>
+
+  <div class="diff-split">
+    <div>
+      <div class="tool-card tc-rules">
+        <h3><span class="tc-badge" style="background:#4c1d95;color:#c4b5fd">Rules</span> — ограничения, конвенции, стиль</h3>
+        <p>Применяются автоматически: <code>alwaysApply</code> или по glob/trigger. Агент не «вызывает» Rule — он просто следует ему.</p>
+        <ul>
+          <li>Coding conventions (no <code>var</code>, camelCase)</li>
+          <li>Запреты: «не делать X без approval»</li>
+          <li>Стиль ответов: тон, язык, формат</li>
+          <li>File-specific: инструкции для <code>*.test.ts</code></li>
+          <li>Security constraints: никаких секретов в коде</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="tool-card tc-skills">
+        <h3><span class="tc-badge" style="background:#7c2d12;color:#fca5a5">Skills</span> — процедуры, workflow, алгоритмы</h3>
+        <p>Вызываются по команде (<code>/skill-name</code>) или при совпадении trigger-фразы. Агент читает Skill как пошаговую инструкцию.</p>
+        <ul>
+          <li>Deploy workflow: «как деплоить в staging»</li>
+          <li>PR creation: пошаговый процесс с чеклистом</li>
+          <li>Migration: алгоритм с ветвлением (if/else)</li>
+          <li>Code review: «как ревьюить по стандартам»</li>
+          <li>Onboarding script: «как настроить локальную среду»</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="tableWrap">
+  <table>
+    <thead>
+      <tr><th>Вопрос</th><th>Rules</th><th>Skills</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Как активируется?</td><td>Автоматически (alwaysApply) или по glob/trigger</td><td>По команде (<code>/deploy</code>) или trigger-фразе</td></tr>
+      <tr><td>Что описывает?</td><td>«Чего не делать» / «как писать» — ограничение или конвенция</td><td>«Как выполнить задачу» — пошаговая процедура</td></tr>
+      <tr><td>Поддерживает условную логику?</td><td>Нет (простые правила)</td><td>Да (if staging then X, else Y)</td></tr>
+      <tr><td>Когда в context?</td><td>Всегда (alwaysApply) или при открытии файла с glob</td><td>Только когда вызвана — экономит context</td></tr>
+      <tr><td>Может конфликтовать с?</td><td>Другими Rules, AGENTS.md, User message</td><td>Rules (Skill предлагает действие, Rule его запрещает)</td></tr>
+      <tr><td>Кто читает?</td><td>Агент при каждом запросе (если alwaysApply)</td><td>Агент только при вызове Skill</td></tr>
+      <tr><td>Хранится в?</td><td><code>.cursor/rules/*.mdc</code> (Cursor) / <code>CLAUDE.md</code> секция (Claude Code)</td><td><code>.cursor/skills/*.md</code> (Cursor) / отдельные md-файлы</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout"><b>Правило большого пальца:</b> если содержит слово «никогда/всегда/обязательно» — это Rule. Если содержит нумерованный список шагов — это Skill. Если и то, и другое — разбей на Rule (ограничение) + Skill (процедура).</div>
+</section>
+
+<!-- ═══════════════════ HOOKS -->
+<section class="section">
+  <h2>Когда добавлять Hooks (Claude Code)</h2>
+  <p class="sectionIntro">Hooks — единственный инструмент с гарантированным enforcement. Rules и AGENTS.md — это «агент должен следовать». Hooks — «платформа гарантирует выполнение на OS-уровне, агент не может обойти».</p>
+
+  <div class="tool-card tc-hooks">
+    <h3>🪝 Hooks — когда не хватает Rules</h3>
+    <p>Добавляй Hooks когда нарушение правила стоит дорого и нельзя доверять только тексту Rules.</p>
+    <ul>
+      <li><b>Критические security запреты:</b> «никогда не коммить <code>.env</code>» → PreToolCall hook на git commit</li>
+      <li><b>Обязательные проверки:</b> запустить linter перед каждым сохранением файла</li>
+      <li><b>Аудит лог:</b> логировать все tool calls для compliance</li>
+      <li><b>Approval gate:</b> требовать подтверждение перед destructive действием (drop table, rm -rf)</li>
+      <li><b>Форматирование:</b> автоформатирование кода после каждого изменения файла</li>
+    </ul>
+  </div>
+
+  <div class="tableWrap">
+  <table>
+    <thead>
+      <tr><th>Критерий</th><th>Rules достаточно</th><th>Нужны Hooks</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Последствие нарушения</td><td>Неудобство, стиль не соблюдён</td><td>Security breach, потеря данных, compliance violation</td></tr>
+      <tr><td>Частота проверки</td><td>Агент помнит правило в сессии</td><td>Каждый tool call, каждое сохранение — без исключений</td></tr>
+      <tr><td>Можно ли «попросить агента нарушить»?</td><td>Технически да (User override)</td><td>Нет — Hook выполнится независимо от сообщения</td></tr>
+      <tr><td>Пример</td><td>«Пиши комментарии на английском»</td><td>«Не коммить файлы с секретами»</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="nuance-card nc-orange">
+    <h4>Rules ≠ Hooks по надёжности</h4>
+    <p>Rule в <code>.cursor/rules/</code> — это текст в context window. LLM «пытается» следовать. Если Rule попал в середину длинного context (lost in the middle), вес снижается. Hooks — это код который выполняется платформой. Для критических ограничений: Rule + Hook (двойная защита), только Rule недостаточно.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════ СИТУАЦИОННЫЕ ПРИМЕРЫ -->
+<section class="section" id="situations">
+  <h2>Ситуации — что выбрать</h2>
+
+  <div class="decision-flow">
+    <div class="df-question">Нужна гарантия что агент никогда не сделает X?</div>
+    <div class="df-branch">
+      <div class="df-option">
+        <div class="df-if">Критическое (секреты, prod DB, rm -rf)</div>
+        <div class="df-then">→ Rule + Hook (Claude Code)</div>
+        <div class="df-why">Двойная защита: Rule в context + OS-уровень enforcement</div>
+      </div>
+      <div class="df-option">
+        <div class="df-if">Стилевое (no var, camelCase)</div>
+        <div class="df-then">→ Rule (alwaysApply или glob)</div>
+        <div class="df-why">Конвенции достаточно в Rules, не нужен Hook</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="decision-flow">
+    <div class="df-question">Хочу чтобы агент «знал» историю решений проекта?</div>
+    <div class="df-branch">
+      <div class="df-option">
+        <div class="df-if">Почему отвергли X, ADR, Gotchas</div>
+        <div class="df-then">→ Memory Bank (memory.md)</div>
+        <div class="df-why">Накопленные знания — это Memory, не AGENTS.md</div>
+      </div>
+      <div class="df-option">
+        <div class="df-if">Текущий стек, команды для старта</div>
+        <div class="df-then">→ AGENTS.md (коротко)</div>
+        <div class="df-why">AGENTS.md читается первым, даёт контекст сразу</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="decision-flow">
+    <div class="df-question">Нужно переиспользовать один и тот же workflow в разных проектах?</div>
+    <div class="df-branch">
+      <div class="df-option">
+        <div class="df-if">Workflow с шагами (deploy, PR, migration)</div>
+        <div class="df-then">→ Skill (вызывать по /команде)</div>
+        <div class="df-why">Skills переносимы между проектами, вызываются по запросу</div>
+      </div>
+      <div class="df-option">
+        <div class="df-if">Стандарты команды (stacks, conventions)</div>
+        <div class="df-then">→ Rules (alwaysApply или auto-attach)</div>
+        <div class="df-why">Conventions — это ограничения, применяются автоматически</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="decision-flow">
+    <div class="df-question">Агент забывает что-то между сессиями?</div>
+    <div class="df-branch">
+      <div class="df-option">
+        <div class="df-if">Факты о проекте (стек, решения, глоссарий)</div>
+        <div class="df-then">→ Memory Bank</div>
+        <div class="df-why">Memory — для «что мы знаем», загружается каждую сессию</div>
+      </div>
+      <div class="df-option">
+        <div class="df-if">Поведение агента (роль, workflow, DoD)</div>
+        <div class="df-then">→ AGENTS.md</div>
+        <div class="df-why">Поведение — для «как работаем», базовый контракт</div>
+      </div>
+      <div class="df-option">
+        <div class="df-if">Крупные документы (спецификации, схемы)</div>
+        <div class="df-then">→ RAG (Cursor @Docs)</div>
+        <div class="df-why">RAG для больших corpus — не засоряет context window</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ ПО РОЛИ В КОМАНДЕ -->
+<section class="section">
+  <h2>Ответственность: кто управляет каждым инструментом</h2>
+  <p class="sectionIntro">В команде важно договориться кто отвечает за каждый файл. Иначе — конфликты, дубли, устаревший контент.</p>
+
+  <div class="tableWrap">
+  <table>
+    <thead>
+      <tr><th>Инструмент</th><th>Кто создаёт/поддерживает</th><th>Когда обновлять</th><th>Риск при игнорировании</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="tool-badge tb-agents">AGENTS.md</span></td>
+        <td>Tech Lead / Architect</td>
+        <td>При смене workflow, процесса PR, onboarding</td>
+        <td>Агент следует устаревшему процессу, пропускает DoD</td>
+      </tr>
+      <tr>
+        <td><span class="tool-badge tb-memory">Memory Bank</span></td>
+        <td>Вся команда (каждый добавляет знания)</td>
+        <td>После каждого ADR, Gotcha, sprint retrospective</td>
+        <td>Агент предлагает отвергнутые решения, не знает истории</td>
+      </tr>
+      <tr>
+        <td><span class="tool-badge tb-rules">Rules</span></td>
+        <td>Tech Lead + разработчики (по модулям)</td>
+        <td>При смене coding standards, новые запреты</td>
+        <td>Inconsistency в коде, security drift</td>
+      </tr>
+      <tr>
+        <td><span class="tool-badge tb-skills">Skills</span></td>
+        <td>Разработчики (тот кто знает workflow)</td>
+        <td>При смене процесса deploy/PR/migration</td>
+        <td>Агент выполняет устаревший workflow, ломает деплои</td>
+      </tr>
+      <tr>
+        <td><span class="tool-badge tb-hooks">Hooks</span></td>
+        <td>Tech Lead / Security engineer</td>
+        <td>При новых security требованиях</td>
+        <td>Критические запреты не соблюдаются на OS-уровне</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ═══════════════════ ТОНКОСТИ -->
+<section class="section">
+  <h2>Тонкости и нюансы</h2>
+
+  <div class="nuance-card nc-red">
+    <h4>Дублирование = главный враг</h4>
+    <p>Один и тот же контент в AGENTS.md <strong>и</strong> в memory.md = дубль. При расхождении агент не знает чему верить. Правило: каждый факт живёт ровно в одном месте. AGENTS.md ссылается на memory.md, не копирует. Регулярный аудит: поищи одинаковые разделы — удали из менее подходящего файла.</p>
+  </div>
+
+  <div class="nuance-card nc-orange">
+    <h4>Memory Bank не загружается автоматически в Cursor без @include</h4>
+    <p>В Claude Code — memory.md из <code>.claude/memory/</code> подхватывается автоматически. В Cursor — нужна явная строка в AGENTS.md: <code>@docs/memory.md</code> или через Rules <code>alwaysApply</code>. Без этого Memory Bank просто не попадёт в context. Проверь: агент видит твой memory.md, попросив его процитировать что-то оттуда.</p>
+  </div>
+
+  <div class="nuance-card nc-blue">
+    <h4>Rules — не место для фактов о проекте</h4>
+    <p>Частая ошибка: кладут в Rules «наш стек — Java 21, Maven» или «мы используем PostgreSQL». Rules — для поведения (как делать), не для фактов (что есть). Факты в Rules: (1) засоряют Rules файл; (2) не обновляются при смене стека; (3) смешивают поведение с контентом. Факты → memory.md. Конвенции → Rules.</p>
+  </div>
+
+  <div class="nuance-card nc-purple">
+    <h4>Skill vs AGENTS.md workflow — разница в granularity</h4>
+    <p>AGENTS.md workflow: «для PR — следуй PR checklist в <code>SKILL.md</code>». Skill PR-checklist: подробные шаги, ветвления, команды. AGENTS.md = «что делать» (высокоуровнево). Skill = «как именно» (детально). Если детали workflow растут — выноси в Skill, в AGENTS.md оставь ссылку. Иначе AGENTS.md раздувается и агент теряет focus.</p>
+  </div>
+
+  <div class="nuance-card nc-green">
+    <h4>Размер context window — чем меньше, тем лучше работает каждый файл</h4>
+    <p>Memory Bank, AGENTS.md, Rules — все попадают в context window <strong>одновременно</strong>. Суммарный объём влияет на качество: чем больше нерелевантного контента, тем хуже attention на важном. Принцип: AGENTS.md ≤ 500 строк, memory.md ≤ 300 строк на секцию, Rules — конкретные и короткие. Альтернатива для большого corpus — RAG (Cursor @Docs) вместо прямой загрузки.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════ PLATFORM SPLIT -->
+<section class="section">
+  <h2>Cursor vs Claude Code — как это работает на каждой платформе</h2>
+
+  <div class="platform-split">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor</div>
+      <table style="font-size:12px;width:100%;border-collapse:collapse">
+        <tr><td style="padding:5px 0;border-bottom:1px solid #334155;color:#94a3b8">AGENTS.md</td><td style="padding:5px 0;border-bottom:1px solid #334155;color:#e2e8f0">Читается из корня репо автоматически</td></tr>
+        <tr><td style="padding:5px 0;border-bottom:1px solid #334155;color:#94a3b8">memory.md</td><td style="padding:5px 0;border-bottom:1px solid #334155;color:#e2e8f0">Нужна явная строка <code>@docs/memory.md</code> в AGENTS.md или Rules alwaysApply</td></tr>
+        <tr><td style="padding:5px 0;border-bottom:1px solid #334155;color:#94a3b8">Rules</td><td style="padding:5px 0;border-bottom:1px solid #334155;color:#e2e8f0"><code>.cursor/rules/*.mdc</code>, поддерживают glob, alwaysApply, autoAttach</td></tr>
+        <tr><td style="padding:5px 0;border-bottom:1px solid #334155;color:#94a3b8">Skills</td><td style="padding:5px 0;border-bottom:1px solid #334155;color:#e2e8f0"><code>.cursor/skills/*.md</code>, вызываются командой или trigger</td></tr>
+        <tr><td style="padding:5px 0;color:#94a3b8">Hooks</td><td style="padding:5px 0;color:#e2e8f0">Нет native Hooks — используй Rules + Permissions для ограничений</td></tr>
+      </table>
+      <div style="font-size:12px;margin-top:10px">📖 <a href="https://docs.cursor.com/context/rules" target="_blank">Cursor Rules Docs</a></div>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code</div>
+      <table style="font-size:12px;width:100%;border-collapse:collapse">
+        <tr><td style="padding:5px 0;border-bottom:1px solid #334155;color:#94a3b8">CLAUDE.md</td><td style="padding:5px 0;border-bottom:1px solid #334155;color:#e2e8f0">Аналог AGENTS.md — автоматически читается из корня и поддиректорий</td></tr>
+        <tr><td style="padding:5px 0;border-bottom:1px solid #334155;color:#94a3b8">Memory</td><td style="padding:5px 0;border-bottom:1px solid #334155;color:#e2e8f0"><code>.claude/memory/*.md</code> — автозагрузка без явного @include</td></tr>
+        <tr><td style="padding:5px 0;border-bottom:1px solid #334155;color:#94a3b8">Rules</td><td style="padding:5px 0;border-bottom:1px solid #334155;color:#e2e8f0">Секции в CLAUDE.md или отдельные <code>.claude/commands/*.md</code></td></tr>
+        <tr><td style="padding:5px 0;border-bottom:1px solid #334155;color:#94a3b8">Skills</td><td style="padding:5px 0;border-bottom:1px solid #334155;color:#e2e8f0">Commands (<code>.claude/commands/</code>) — аналог Skills</td></tr>
+        <tr><td style="padding:5px 0;color:#94a3b8">Hooks</td><td style="padding:5px 0;color:#e2e8f0"><code>~/.claude/settings.json</code> → <code>hooks</code> — OS-уровень, PreToolCall / PostToolCall</td></tr>
+      </table>
+      <div style="font-size:12px;margin-top:10px">📖 <a href="https://docs.anthropic.com/en/docs/claude-code/memory" target="_blank">Claude Code Memory Docs</a></div>
+    </div>
+  </div>
+
+  <div class="tableWrap" style="margin-top:16px">
+  <table>
+    <thead>
+      <tr><th>Аспект</th><th>Cursor</th><th>Claude Code</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Основной контракт агента</td><td>AGENTS.md (корень)</td><td>CLAUDE.md (корень + поддиректории)</td></tr>
+      <tr><td>Memory автозагрузка</td><td>Нет — нужен явный @include в AGENTS.md</td><td>Да — <code>.claude/memory/</code> читается автоматически</td></tr>
+      <tr><td>Rules хранение</td><td><code>.cursor/rules/*.mdc</code></td><td>Секции CLAUDE.md или <code>.claude/commands/</code></td></tr>
+      <tr><td>Skills/Commands</td><td><code>.cursor/skills/*.md</code></td><td><code>.claude/commands/*.md</code></td></tr>
+      <tr><td>Hooks (enforcement)</td><td>Нет аналога — используй Permissions</td><td>OS-уровень Hooks в <code>settings.json</code></td></tr>
+      <tr><td>Иерархия Memory</td><td>Один файл или несколько через @include</td><td>Global → Project → Session (три уровня)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout"><b>Ключевое отличие:</b> В Claude Code memory загружается автоматически и поддерживает иерархию (global/project/session). В Cursor нужна явная строка подключения в AGENTS.md — без неё Memory Bank «невидим» для агента.</div>
+</section>
+
+<!-- ═══════════════════ BEST PRACTICES -->
+<section class="section">
+  <h2>Best practices — Делай / Не делай</h2>
+  <div class="grid two">
+    <div class="card bg-green"><h3>✅ Делай</h3><ul>
+      <li>Держи AGENTS.md кратким (&lt;500 строк) — только роль, workflow, DoD</li>
+      <li>Факты о проекте — в memory.md, не в AGENTS.md</li>
+      <li>Конвенции и запреты — в Rules, не в Memory</li>
+      <li>Для повторяющихся процедур — Skills, не Rules</li>
+      <li>Критические запреты — Rule + Hook (двойная защита)</li>
+      <li>В Cursor: добавь <code>@docs/memory.md</code> в AGENTS.md явно</li>
+      <li>Регулярный аудит: проверяй дубли между файлами</li>
+      <li>Каждый инструмент — одна ответственность (SRP)</li>
+    </ul></div>
+    <div class="card bg-red"><h3>❌ Не делай</h3><ul>
+      <li>Не клади факты о проекте в Rules — они для поведения</li>
+      <li>Не дублируй контент между AGENTS.md и memory.md</li>
+      <li>Не полагайся на Rules для критических запретов без Hooks</li>
+      <li>Не раздувай memory.md без структуры — агент теряет важное</li>
+      <li>Не смешивай процедуры (Skill) и запреты (Rule) в одном файле</li>
+      <li>Не забывай обновлять Skills при смене workflow</li>
+      <li>Не используй Memory для живых фактов — для них MCP/RAG</li>
+    </ul></div>
+  </div>
+</section>
+
+<!-- ═══════════════════ Q&A -->
+<section class="section">
+  <h2>Вопросы по уровням</h2>
+
+  <div class="qlevel-group">Junior — 10 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> В чём главное отличие AGENTS.md от memory.md?</summary>
+  <div class="inside">AGENTS.md = «как работать здесь» — роль агента, workflow, definition of done. Это процессный контракт, меняется редко. memory.md = «что мы накопили о проекте» — факты, ADR, история решений, глоссарий. Это живые накопленные знания, растёт со временем. Аналогия: AGENTS.md — это должностная инструкция сотрудника, memory.md — его рабочий дневник и база знаний. Если ты пишешь «как делать» — AGENTS.md. Если пишешь «что мы знаем» — memory.md.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое Rules и для чего они нужны?</summary>
+  <div class="inside">Rules — это постоянные инструкции поведения агента. Хранятся в <code>.cursor/rules/*.mdc</code> (Cursor) или как секции в CLAUDE.md (Claude Code). Применяются автоматически: <code>alwaysApply</code> — при каждом запросе; glob — при открытии файлов по паттерну (например <code>*.test.ts</code>). Типичные примеры: coding conventions (camelCase, no var), запреты (не коммить секреты), стиль ответов (отвечай по-русски). Главный принцип: Rules — для ограничений и конвенций, не для процедур и не для фактов.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое Skills и чем они отличаются от Rules?</summary>
+  <div class="inside">Skills — переиспользуемые пошаговые процедуры. Агент «вызывает» Skill по команде (<code>/deploy</code>) или trigger-фразе — и выполняет шаги из SKILL.md файла. Rules применяются автоматически и постоянно. Skills применяются только когда вызваны — экономят context. Rules описывают «чего не делать» или «как писать». Skills описывают «как выполнить задачу шаг за шагом». Пример Skills: «как создать PR», «как задеплоить в staging», «как делать code review».</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Зачем нужен Memory Bank если есть AGENTS.md?</summary>
+  <div class="inside">AGENTS.md — статичный контракт, не предназначен для роста. Если класть в него всю историю проекта (ADR, Gotchas, решения) — он раздуется и агент будет работать с огромным context при каждом запросе. Memory Bank (memory.md) — отдельный файл для накопленных знаний. Разделение ответственности: AGENTS.md остаётся компактным (workflow + DoD), memory.md растёт с проектом (факты + история). Ещё: memory.md можно не включать в маленьких задачах, AGENTS.md — всегда.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое Hooks и когда они нужны?</summary>
+  <div class="inside">Hooks (Claude Code) — перехватчики событий на OS-уровне. Срабатывают до (<code>PreToolCall</code>) или после (<code>PostToolCall</code>) действий агента — независимо от содержимого context window. Нужны когда Rules недостаточно: Rules — это текст, LLM «старается следовать» но может не заметить (lost in the middle). Hooks — это код, платформа гарантирует выполнение. Используй Hooks для: не коммить секреты, не выполнять rm -rf без approval, запускать linter после каждого сохранения, логировать все tool calls.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Куда класть информацию «почему мы отвергли Redis»?</summary>
+  <div class="inside">В Memory Bank (memory.md). Это архитектурное решение (ADR) с датой и обоснованием — накопленное знание о проекте. Именно для этого существует memory.md. Не в AGENTS.md (это не процесс), не в Rules (это не запрет поведения), не в Skills (это не процедура). Формат для memory.md: <code>## ADR: отказ от Redis (Q1 2025)</code> — коротко, почему, что выбрали вместо. Агент, читая это, не будет предлагать Redis в будущих сессиях.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Куда класть coding conventions (camelCase, no var)?</summary>
+  <div class="inside">В Rules. Coding conventions — это постоянные инструкции поведения агента при написании кода. Rules идеальны: поддерживают glob (применяются только для *.ts файлов), поддерживают alwaysApply. Не в AGENTS.md — он для workflow, не конвенций. Не в memory.md — это не факт, а правило поведения. Пример Rule в .cursor/rules/typescript.mdc: <code>- Always use const/let, never var</code>, <code>- Variable names: camelCase</code>. Glob: <code>**/*.ts, **/*.tsx</code>.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Нужно ли создавать все пять инструментов для каждого проекта?</summary>
+  <div class="inside">Нет. Начни минимально: AGENTS.md (обязателен) + память только когда накопится что записывать. Добавляй инструменты по мере необходимости: Rules — когда команда хочет enforce coding standards; Skills — когда есть повторяющийся workflow; Memory — когда накопилось достаточно фактов; Hooks — когда нужны security гарантии. Для pet-проекта может хватить одного AGENTS.md. Для большой команды — все пять. Принцип: каждый инструмент добавляется когда появляется конкретная проблема которую он решает.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что будет если положить workflow в Memory вместо AGENTS.md?</summary>
+  <div class="inside">В Cursor — workflow может вообще не загрузиться если memory.md не подключён явно через @include. Даже если загрузится — AGENTS.md читается агентом как основной контракт, memory.md как дополнительные знания. Workflow в memory «конкурирует» с другими фактами за attention. Риск: агент не выполнит DoD или пропустит шаги PR process. Правило: процессные требования, которые должны выполняться ВСЕГДА — в AGENTS.md. Знания которые полезны «иногда» — в memory.md.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Где хранится memory.md в Cursor и в Claude Code?</summary>
+  <div class="inside">В Cursor: обычно <code>docs/memory.md</code> или <code>.cursor/memory.md</code> — произвольное расположение, главное указать путь в AGENTS.md через @include. Claude Code: <code>.claude/memory/</code> — стандартная директория, файлы оттуда загружаются автоматически без явного подключения. Три уровня: <code>~/.claude/memory/</code> (global — для всех проектов), <code>.claude/memory/</code> (project — текущий проект), создаваемые в сессии (session memory). В Cursor иерархии нет — один файл, подключается явно.</div></details>
+
+  <div class="qlevel-group">Middle — 10 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как избежать дублирования между AGENTS.md и memory.md?</summary>
+  <div class="inside">Правило одного источника истины: каждый факт и каждая инструкция живут ровно в одном файле. AGENTS.md ссылается на memory.md (строка @include), не копирует оттуда данные. Стек: в AGENTS.md — только текущий (Java 21, Maven) как шпаргалка для старта. История изменений стека — в memory.md. Если одинаковый раздел появился в обоих — удали из менее подходящего. Регулярный аудит: раз в квартал проверяй оба файла на дубли. Сигнал проблемы: агент цитирует разные версии одного факта в разных сессиях.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда использовать glob в Rules vs alwaysApply?</summary>
+  <div class="inside">alwaysApply: для инструкций которые нужны при КАЖДОМ запросе — стиль ответов, язык общения, общие запреты. Glob: для инструкций которые нужны только при работе с определёнными файлами — TypeScript conventions только для *.ts, SQL formatting только для *.sql, migration rules для db/migrations/**. Практика: сначала спроси «нужно ли это при каждом запросе?». Если нет — glob. alwaysApply засоряет context всегда, glob — только когда нужно. Ошибка: класть file-specific конвенции в alwaysApply — агент получает TypeScript правила когда пишет Python.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как структурировать Memory Bank чтобы агент не терял важное?</summary>
+  <div class="inside">Структура — критична для attention агента. Рекомендованные секции: <code>## Stack</code> (текущий стек), <code>## Architecture Decisions</code> (ADR с датами), <code>## Gotchas</code> (баги и ловушки), <code>## Glossary</code> (доменные термины), <code>## Sprint outcomes</code> (выводы ретроспектив). Важные факты — в начало файла (lost in the middle: середина читается хуже). Каждый ADR: дата, что решили, почему, что НЕ использовать. Ограничение размера: каждая секция ≤ 50 строк. При росте — разбить на несколько файлов: memory-stack.md, memory-adr.md, memory-glossary.md.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как Rules конкурируют с Skills при конфликте?</summary>
+  <div class="inside">Rule выше Skill при конфликте. Skill описывает «как выполнить», Rule ограничивает «что можно». Пример: Skill «deploy to production» включает шаг «run migrations». Rule: «migrations требуют approval». Агент должен выполнить Skill, но адаптировать шаг: запросить approval перед migration. Неправильно: выполнить Skill и пропустить Rule потому что «в Skill написано запускать». Правило: Skill — способ достичь цели, Rule — ограничение на пути. Skill адаптируется к Rule, не обходит его. Best practice: в Skill явно указывать «проверь применимые Rules перед этим шагом».</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда Memory Bank недостаточно и нужен RAG?</summary>
+  <div class="inside">Memory Bank загружается целиком в context window — ограничение по размеру. Для больших corpus (вся документация API, полные спецификации, большая кодовая база) — RAG эффективнее. Критерий: если memory.md > 500-1000 строк и большинство контента нерелевантно для типичного запроса — переходи на RAG (Cursor @Docs, векторные базы). Memory Bank → для «всегда нужно» (стек, ключевые ADR, Gotchas). RAG → для «нужно при конкретных вопросах» (API reference, схемы, спецификации). Hybrid: небольшой memory.md (ключевые факты) + RAG для деталей.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как убедиться что агент действительно читает memory.md в Cursor?</summary>
+  <div class="inside">Тест: спроси агента процитировать конкретный факт из memory.md («какую версию Java мы используем по memory.md?»). Если агент не знает — файл не загружен. Причины: (1) нет строки @include в AGENTS.md — добавь; (2) AGENTS.md не читается — проверь что он в корне репо; (3) файл слишком большой — агент «теряет» середину. Дополнительная проверка: в начале сессии попроси агента «summarize memory.md» — если резюме точное, всё работает. В Claude Code проверяется аналогично, но файл должен быть в <code>.claude/memory/</code>.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как правильно описать Deploy workflow — в AGENTS.md, Skills или Rules?</summary>
+  <div class="inside">Правильно: Skills. AGENTS.md: одна строка — «для deploy используй /deploy skill». Skills (deploy.md): полные шаги — git pull, run tests, build image, push to registry, update k8s, verify health. Rules: только ограничения — «deploy в prod только в рабочее время», «требует approval от 2 reviewers». Почему так: AGENTS.md остаётся компактным, Rules содержат только запреты/условия, Skill содержит процедуру целиком и обновляется независимо. Бонус: один Skill можно переиспользовать в разных проектах.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как Hooks в Claude Code усиливают Rules?</summary>
+  <div class="inside">Rules в context — это «мягкое» ограничение: LLM читает текст и старается следовать. В длинном context (lost in the middle) Rule может потерять вес. Hooks — «жёсткое» ограничение: код выполняется платформой при каждом tool call независимо от context. Схема двойной защиты: Rule в .mdc описывает намерение (документация для агента и команды), Hook в settings.json реализует enforcement (код который нельзя обойти). Пример: Rule «не коммить .env файлы» + Hook PreToolCall который проверяет список файлов в git add и блокирует если есть .env. Rule объясняет почему, Hook гарантирует соблюдение.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Что положить в global memory (Claude Code) vs project memory?</summary>
+  <div class="inside">Global memory (<code>~/.claude/memory/</code>): предпочтения которые одинаковы во всех проектах — стиль ответов, предпочитаемый язык, личные workflow предпочтения, часто используемые команды. Project memory (<code>.claude/memory/</code>): всё специфичное для репо — стек, ADR, Gotchas, глоссарий команды, sprint outcomes. Session memory: временные заметки для текущей задачи, не нужны в следующей сессии. Правило: если факт нужен во всех проектах → global. Если только в этом репо → project. Если только сегодня → session.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как правильно организовать Rules когда их много?</summary>
+  <div class="inside">Разбей по ответственности: один файл .mdc = одна тема. Примеры: <code>typescript.mdc</code> (TS конвенции, glob *.ts), <code>testing.mdc</code> (тестирование, glob *.test.*), <code>git.mdc</code> (git workflow, alwaysApply), <code>security.mdc</code> (запреты безопасности, alwaysApply), <code>style.mdc</code> (тон ответов, alwaysApply). Избегай: один большой rules.mdc на всё — агент теряет конкретные правила в большом файле. Лимит: каждый .mdc файл ≤ 100 строк. При росте — разбивай дальше. Регулярно: аудит на конфликты между файлами.</div></details>
+
+  <div class="qlevel-group">Senior — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как спроектировать систему из пяти инструментов чтобы минимизировать context overhead?</summary>
+  <div class="inside">Принцип Just-In-Time context: инструмент попадает в context только когда нужен. Стратегия: AGENTS.md — компактный (&lt;500 строк), только workflow skeleton. Memory — структурированный, важное вверху. Rules — разбиты по glob, не всё alwaysApply. Skills — on-demand, не в context пока не вызваны. Hooks — OS-уровень, не занимают context вообще. Метрика: подсчитай токены которые ВСЕГДА в context (AGENTS.md + alwaysApply Rules + memory.md). Цель: &lt;20% от context window. Остаток для кода, истории чата, task context. При превышении: Rules → glob, memory → RAG для объёмных частей, AGENTS.md → ссылки на Skills вместо деталей.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как обнаружить и разрешить конфликт между инструментами в production?</summary>
+  <div class="inside">Сигналы конфликта: агент ведёт себя непредсказуемо при похожих запросах; цитирует разные версии одного факта; игнорирует явный запрет из Rule. Диагностика: (1) включи verbose logging в Claude Code (CLAUDE_CODE_DEBUG=1); (2) попроси агента «explain which rules and memory you're using for this»; (3) проверь overlap — ищи одинаковые темы в AGENTS.md и memory.md. Разрешение: найди конфликтующие инструкции → определи правильный инструмент → удали из неправильного → обнови. Профилактика: каждый инструмент — single responsibility, аудит раз в квартал, PR review для изменений в Rules/AGENTS.md.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Когда Rules + Memory + AGENTS.md недостаточно и нужна архитектурная перестройка?</summary>
+  <div class="inside">Сигналы необходимости перестройки: (1) context window заполнен ≥40% только служебными файлами; (2) агент регулярно «забывает» важные Rules несмотря на alwaysApply; (3) Memory Bank > 2000 строк и плохо структурирован; (4) одна и та же Skill используется в 10+ проектах. Архитектурные решения: Memory Bank → векторная RAG система для больших corpus; Rules → централизованный Rules registry с versioning; Skills → shared Skill library (git submodule или package); большой AGENTS.md → иерархические AGENTS.md (корень + поддиректории). Триггер для обсуждения с командой: когда maintenance cost инструментов превышает их пользу.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как обеспечить consistency Rules и Memory при работе нескольких агентов (subagents)?</summary>
+  <div class="inside">Проблема: subagent получает свой context, может не читать те же Rules что main agent. Решение: явно передавать critical Rules и relevant Memory в системный промпт subagent или через AGENTS.md subagent-а. Паттерн: main agent передаёт subagent только те Rules которые релевантны задаче (не весь набор). Memory: subagent читает ту же память что main agent если работает в том же репо. Риск: subagent находит «другой ответ» потому что видел другой subset Rules. Защита: subagent findings = evidence, main agent верифицирует против Rules прежде чем применить (см. conflicts.html). Hook на OS-уровне применяется к любому агенту — это самое надёжное.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как оценить «quality» текущей системы инструментов и найти слабые места?</summary>
+  <div class="inside">Метрики: (1) Context saturation — % context window занятый служебными файлами при типичном запросе. Цель &lt;25%. (2) Rule compliance rate — % запросов где агент следовал критическим Rules. Проверяется через выборку из истории. (3) Memory freshness — дата последнего обновления каждой секции memory.md. Устаревшие разделы — риск. (4) Skill usage — какие Skills вызываются часто, какие — нет (obsolete). (5) Conflict frequency — как часто агент получает противоречивые инструкции. Инструменты: git blame на AGENTS.md/memory.md (когда последний раз обновлялись), grep на дубли (одинаковые слова в разных файлах), тестовые сессии с «provocative» запросами которые обнаруживают конфликты.</div></details>
+
+  <div class="qlevel-group">Lead — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как выстроить governance для пяти инструментов в команде 10+ разработчиков?</summary>
+  <div class="inside">Принципы governance: (1) Ownership — каждый файл имеет одного owner (AGENTS.md → Tech Lead, memory.md → команда через PR, Rules → per-domain owners, Skills → domain experts, Hooks → Security engineer). (2) Change process — изменения в AGENTS.md/Rules/Hooks через PR с обязательным review от owner. Memory — более свободный PR process. (3) Versioning — все файлы в git, история изменений видна. (4) Audit calendar — раз в квартал: conflict detection, freshness check, obsolete skills removal. (5) Onboarding — новый разработчик обязан прочитать AGENTS.md + memory.md как часть onboarding. (6) Breaking changes — изменение в Rules которое меняет поведение = обсуждение в команде, не unilateral change.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как провести onboarding команды на новую систему инструментов?</summary>
+  <div class="inside">Фазы: (1) Foundation (week 1): всем прочитать AGENTS.md + memory.md. Задача: найти одну устаревшую секцию и создать PR с исправлением. (2) Practice (week 2-3): каждый добавляет один Gotcha или ADR в memory.md который знает. (3) Rules review (week 4): совместный просмотр всех Rules — есть ли конфликты, дубли, устаревшие. (4) Skills demo (week 5): каждый domain expert демонстрирует свой Skill или пишет новый для повторяющегося workflow. (5) Governance setup (week 6): назначить owners, договориться о PR process. Инструмент: создай team wiki страницу «Наши инструменты агента» с описанием каждого файла и кто owner.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как стандартизировать использование инструментов между несколькими репозиториями команды?</summary>
+  <div class="inside">Паттерны: (1) Shared Rules library — git submodule или npm package с общими Rules (security, coding standards). Каждое репо делает extend + override. (2) Template AGENTS.md — базовый шаблон в team wiki, каждое репо кастомизирует для своих нужд. (3) Shared Skills — критические Skills (deploy, PR process, incident response) в shared repository, подключаются как submodule. (4) Memory structure template — стандартная структура секций memory.md для всех проектов — упрощает чтение при переходе между репо. (5) Global Rules — для Claude Code можно положить в <code>~/.claude/</code> — применяются ко всем проектам. Риск унификации: over-standardization убивает flexibility. Баланс: стандартизировать security и team process, оставлять свободу для project-specific Rules.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как измерить ROI от инвестиций в систему инструментов?</summary>
+  <div class="inside">Метрики до/после: (1) Time to complete repetitive task — сравни время deploy/PR с Skills vs без. (2) Rework rate — % задач где агент предложил неправильное (отвергнутое) решение. С хорошей Memory должно снижаться. (3) Onboarding time — сколько дней до продуктивности нового разработчика. Memory Bank ускоряет. (4) Security incidents — нарушения Rules/Hooks. (5) Context-related bugs — баги из-за того что агент «не знал» о решении которое уже было принято. Методология: baseline measurement перед внедрением, track 30/60/90 дней после. Soft metrics: команда реже объясняет контекст агенту, агент реже предлагает уже отвергнутые решения.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как поддерживать актуальность Memory Bank при быстрых изменениях стека?</summary>
+  <div class="inside">Проблема: стек меняется быстро, memory.md устаревает незаметно — агент продолжает думать что используется старый подход. Решения: (1) ADR с датами — каждое решение датировано, легко видеть устаревшее. (2) «Expires» пометка — <code>[deprecated Q2 2025]</code> рядом с устаревшим решением вместо удаления. (3) Sprint ritual — в конце каждого спринта 15 минут: обновить memory.md по sprint outcomes. (4) Bot check — скрипт или CI check который сравнивает даты обновления memory.md с датами PR в репо. (5) Memory owner rotation — один разработчик на sprint отвечает за актуальность memory.md. (6) Automated memory — в Claude Code агент сам предлагает обновить memory.md при обнаружении расхождений между памятью и текущим кодом.</div></details>
+
+  <div class="qlevel-group">Architect — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как спроектировать систему инструментов для организации с 50+ репозиториями?</summary>
+  <div class="inside">Архитектура уровней: (1) Organization level — shared Rules package (security, compliance) версионируется как npm/pip package, все репо подключают как dependency. Global CLAUDE.md / team-wide Hooks для критических запретов. (2) Team level — team-specific Rules и Skills в shared git submodule. Memory template для всех репо команды. (3) Project level — project-specific AGENTS.md, memory.md, project Rules. (4) Individual level — personal global memory в ~/.claude/memory/ для персональных предпочтений. Governance: Organization Rules → CODEOWNERS + mandatory security review. Team Rules → team lead approval. Project → обычный PR. Versioning: Rules package с semver, breaking changes требуют migration guide для всех репо.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как интегрировать систему инструментов агента с CI/CD pipeline?</summary>
+  <div class="inside">Integration points: (1) Memory validation в CI — скрипт проверяет что memory.md не содержит устаревших ссылок (на deprecated packages, старые версии). (2) Rules linting — automated check на конфликты между .mdc файлами при PR. (3) Skills testing — для критических Skills (deploy, migration) — automated regression test: запускаем агент в sandbox с этим Skill и проверяем результат. (4) Hooks audit — в CI проверяем что hooks.json содержит обязательные security hooks (никто не удалил случайно). (5) Memory freshness — CI warning если секция memory.md не обновлялась > 90 дней. (6) Context size check — CI метрика: суммарный size AGENTS.md + alwaysApply Rules не превышает лимит (например 50KB). Pipeline: все проверки в pre-merge check, блокирующие только security (Hooks).</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как спроектировать Memory Bank для мультиагентной системы где агенты работают параллельно?</summary>
+  <div class="inside">Проблемы concurrent access: (1) Race condition — два агента одновременно обновляют memory.md → merge conflict. (2) Stale read — агент читает memory в начале сессии, к концу оно уже обновлено другим агентом. (3) Conflicting writes — агенты записывают противоречивые факты. Решения: (1) Read-only memory — агенты только читают, обновление только через human review (PR). (2) Append-only log — агенты добавляют записи в log, не редактируют существующее. Conflict resolution run отдельно. (3) Sharded memory — каждый агент работает со своим subset (memory-billing.md, memory-auth.md). (4) Versioned snapshots — memory snapshot в начале session, агент работает с snapshot, изменения через PR. (5) External memory store — Redis или vector DB с proper concurrency control вместо git файлов.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как обеспечить security и compliance для системы инструментов в regulated industry?</summary>
+  <div class="inside">Compliance requirements: (1) Audit trail — все изменения в Rules, AGENTS.md, Hooks должны быть traceable. Git blame + signed commits + CODEOWNERS обеспечивают аудит. (2) Access control — Hooks (security critical) — только security team может изменять. Enforcement: CODEOWNERS + branch protection. (3) Rules для sensitive data — явные Rules о PII, PHI, PCI. Hooks для enforcement: блокировать любой tool call с sensitive data patterns. (4) Memory sanitization — перед добавлением в memory.md проверка на sensitive data (secrets, credentials, PII). (5) Skills approval — workflow Skills для production actions требуют approval gate. (6) Compliance Rules package — отдельный versioned package с compliance-specific Rules (GDPR, HIPAA, PCI). Подключается обязательно во все репо организации. (7) Quarterly compliance audit — проверка что Hooks не были обойдены, Rules не конфликтуют с compliance требованиями.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как проектировать cross-cutting concerns (logging, security, observability) через систему инструментов?</summary>
+  <div class="inside">Cross-cutting concerns плохо ложатся в один файл — нужна многоуровневая стратегия. Logging: Hooks (PostToolCall) — логировать все tool calls в centralized logging service. Не в Rules (агент может забыть), только Hooks гарантируют. Security: Organization-level Rules package + mandatory Hooks для всех репо. CODEOWNERS → Security team owns эти файлы. Observability: Skills для incident response (structured процедура сбора диагностики). Hooks для critical alerts (при аномальных tool calls — уведомление). Memory для known incidents (Postmortem outcomes → memory.md). Архитектурный принцип: чем critical cross-cutting concern → тем ниже уровень enforcement (Hooks > Rules > Memory). Logging → Hooks. Security → Hooks + Rules. Best practices → Rules. Knowledge → Memory. Process → AGENTS.md + Skills.</div></details>
+
+</section>
+
+</main></div>
+<script src="../assets/app.js"></script>
+</body></html>

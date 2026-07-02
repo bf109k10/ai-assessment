@@ -1,0 +1,1330 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Agent Context — схема и учебник</title>
+  <style>
+    :root {
+      --bg: #f6f8fc;
+      --card: #ffffff;
+      --ink: #111827;
+      --muted: #5b6577;
+      --line: #d8e0ee;
+      --red: #ef4444;
+      --purple: #7c3aed;
+      --blue: #2563eb;
+      --orange: #f97316;
+      --green: #16a34a;
+      --teal: #0891b2;
+      --navy: #334155;
+      --yellow: #ca8a04;
+      --soft-red: #fff1f2;
+      --soft-purple: #f5f3ff;
+      --soft-blue: #eff6ff;
+      --soft-orange: #fff7ed;
+      --soft-green: #f0fdf4;
+      --soft-teal: #ecfeff;
+      --soft-gray: #f8fafc;
+      --soft-yellow: #fefce8;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(37,99,235,.08), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(124,58,237,.08), transparent 28%),
+        var(--bg);
+      color: var(--ink);
+      font-family: Inter, Arial, Helvetica, sans-serif;
+    }
+
+    .page {
+      width: 1840px;
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 26px 28px 36px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 42px;
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+      color: #0f172a;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      font-size: 21px;
+      color: #475569;
+      font-weight: 800;
+    }
+
+    .nav {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: #1e293b;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 999px;
+      padding: 10px 15px;
+      font-weight: 900;
+      font-size: 14px;
+      box-shadow: 0 6px 18px rgba(15,23,42,.05);
+    }
+
+    .hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      color: #334155;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 305px minmax(820px, 1fr) 500px;
+      gap: 20px;
+      align-items: start;
+      margin-top: 18px;
+    }
+
+    .column-title {
+      font-size: 19px;
+      font-weight: 1000;
+      margin: 0 0 10px;
+      color: #0f172a;
+    }
+
+    .sources { display: flex; flex-direction: column; gap: 12px; }
+
+    .source-card, .layer-card, .system-card, .result-card, .details-panel, .legend-card, .conflict-box, .topic-card, .qa-card, .matrix-card {
+      background: var(--card);
+      border: 2px solid var(--line);
+      border-radius: 16px;
+      box-shadow: 0 10px 28px rgba(15,23,42,.055);
+    }
+
+    button { font: inherit; color: inherit; text-align: left; border-width: 2px; }
+
+    .clickable {
+      cursor: pointer;
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+
+    .clickable:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 34px rgba(15,23,42,.10);
+    }
+
+    .clickable.active {
+      outline: 4px solid rgba(37, 99, 235, .18);
+      box-shadow: 0 18px 42px rgba(37,99,235,.16);
+    }
+
+    .source-card {
+      width: 100%;
+      min-height: 112px;
+      padding: 14px;
+      position: relative;
+    }
+
+    .source-card.red { border-color: #fecaca; background: var(--soft-red); }
+    .source-card.green { border-color: #bbf7d0; background: var(--soft-green); }
+    .source-card.teal { border-color: #99f6e4; background: var(--soft-teal); }
+    .source-card.purple { border-color: #ddd6fe; background: var(--soft-purple); }
+    .source-card.navy { border-color: #cbd5e1; background: var(--soft-gray); }
+    .source-card.yellow { border-color: #fde68a; background: var(--soft-yellow); }
+    .source-card.orange { border-color: #fdba74; background: var(--soft-orange); }
+    .source-card.blue { border-color: #93c5fd; background: var(--soft-blue); }
+
+    .source-head {
+      display: grid;
+      grid-template-columns: 43px 1fr;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 7px;
+    }
+
+    .icon {
+      width: 43px;
+      height: 43px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      background: #fff;
+      border: 2px solid currentColor;
+      font-weight: 900;
+    }
+
+    .source-title {
+      font-size: 18px;
+      font-weight: 1000;
+      line-height: 1.12;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 19px;
+      color: #1f2937;
+      font-size: 14px;
+      line-height: 1.36;
+    }
+
+    .main {
+      background: rgba(255,255,255,.76);
+      border: 2px solid #bfdbfe;
+      border-radius: 22px;
+      padding: 14px 14px 16px;
+      box-shadow: 0 16px 40px rgba(37,99,235,.08);
+    }
+
+    .main-title {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 1000;
+      color: #1d4ed8;
+      margin-bottom: 12px;
+    }
+
+    .system-card {
+      width: 100%;
+      border-color: #94a3b8;
+      background: linear-gradient(180deg, #f8fafc, #fff);
+      padding: 16px 18px;
+      margin-bottom: 11px;
+      position: relative;
+    }
+
+    .system-card::after {
+      content: "выше всех";
+      position: absolute;
+      right: 14px;
+      top: 14px;
+      background: #0f172a;
+      color: white;
+      font-size: 12px;
+      font-weight: 1000;
+      padding: 5px 9px;
+      border-radius: 999px;
+      text-transform: uppercase;
+    }
+
+    .sys-title {
+      font-size: 23px;
+      font-weight: 1000;
+      color: #0f172a;
+      margin-bottom: 7px;
+    }
+
+    .sys-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      font-size: 14px;
+      line-height: 1.35;
+      color: #334155;
+      padding-right: 92px;
+    }
+
+    .flow { display: flex; flex-direction: column; gap: 10px; }
+
+    .layer-card, .conflict-box {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 44px 80px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 13px 14px;
+      position: relative;
+      min-height: 98px;
+    }
+
+    .layer-card:not(:last-child)::after {
+      content: "↓";
+      position: absolute;
+      bottom: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #64748b;
+      font-size: 19px;
+      font-weight: 900;
+      z-index: 2;
+    }
+
+    .num {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 1000;
+      font-size: 17px;
+    }
+
+    .big-icon { font-size: 43px; text-align: center; }
+
+    .layer-body h2, .conflict-box h2 {
+      margin: 0 0 5px;
+      font-size: 21px;
+      line-height: 1.1;
+    }
+
+    .desc {
+      margin: 0 0 5px;
+      color: #334155;
+      font-size: 14px;
+      line-height: 1.32;
+    }
+
+    .badge {
+      color: #fff;
+      font-size: 12px;
+      line-height: 1;
+      padding: 7px 9px;
+      border-radius: 9px;
+      font-weight: 1000;
+      white-space: nowrap;
+      align-self: start;
+    }
+
+    .conflict-box { margin: 0 0 11px; border-color: #fde68a; background: var(--soft-yellow); }
+
+    .red-border { border-color: #fca5a5; background: var(--soft-red); }
+    .purple-border { border-color: #c4b5fd; background: var(--soft-purple); }
+    .blue-border { border-color: #93c5fd; background: var(--soft-blue); }
+    .orange-border { border-color: #fdba74; background: var(--soft-orange); }
+    .green-border { border-color: #86efac; background: var(--soft-green); }
+    .teal-border { border-color: #67e8f9; background: var(--soft-teal); }
+    .navy-border { border-color: #cbd5e1; background: var(--soft-gray); }
+
+    .red-text { color: var(--red); }
+    .purple-text { color: var(--purple); }
+    .blue-text { color: var(--blue); }
+    .orange-text { color: var(--orange); }
+    .green-text { color: var(--green); }
+    .teal-text { color: var(--teal); }
+    .navy-text { color: var(--navy); }
+    .yellow-text { color: var(--yellow); }
+
+    .red-bg { background: var(--red); }
+    .purple-bg { background: var(--purple); }
+    .blue-bg { background: var(--blue); }
+    .orange-bg { background: var(--orange); }
+    .green-bg { background: var(--green); }
+    .teal-bg { background: var(--teal); }
+    .navy-bg { background: var(--navy); }
+    .yellow-bg { background: var(--yellow); }
+    .black-bg { background: #0f172a; }
+
+    .right-sticky {
+      position: sticky;
+      top: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .details-panel {
+      padding: 18px;
+      border-color: #93c5fd;
+      background: linear-gradient(180deg, #ffffff, #f8fbff);
+      min-height: 520px;
+      max-height: calc(100vh - 36px);
+      overflow: auto;
+    }
+
+    .details-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e2e8f0;
+      margin-bottom: 12px;
+    }
+
+    .details-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      font-size: 30px;
+      background: #fff;
+      border: 2px solid currentColor;
+      flex-shrink: 0;
+    }
+
+    .details-panel h2 {
+      margin: 0;
+      font-size: 25px;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .details-sub {
+      margin-top: 4px;
+      font-size: 14px;
+      color: #64748b;
+      font-weight: 800;
+    }
+
+    .details-section { margin-top: 14px; }
+    .details-section h3 { margin: 0 0 7px; font-size: 16px; color: #0f172a; }
+    .details-section p { margin: 0; color: #334155; line-height: 1.42; font-size: 14px; }
+
+    .case-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: #fff;
+      margin-top: 8px;
+      color: #334155;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .case-card b { color: #0f172a; }
+
+    .priority-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 13px;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+
+    .priority-table th, .priority-table td {
+      border: 1px solid #e2e8f0;
+      padding: 8px;
+      vertical-align: top;
+      background: #fff;
+    }
+
+    .priority-table th {
+      background: #f1f5f9;
+      color: #0f172a;
+      font-weight: 1000;
+    }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .chip {
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      color: #334155;
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .legend-card { padding: 14px 16px; background: rgba(255,255,255,.78); }
+    .legend-card h3 { margin: 0 0 8px; font-size: 17px; color: #0f172a; }
+    .legend-card p { margin: 0; color: #475569; line-height: 1.4; font-size: 14px; }
+
+    .result-card {
+      margin-top: 13px;
+      border-color: #86efac;
+      background: #f0fdf4;
+      padding: 17px 20px;
+      display: grid;
+      grid-template-columns: 54px 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .check {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      border: 3px solid #16a34a;
+      color: #16a34a;
+      display: grid;
+      place-items: center;
+      font-size: 33px;
+      font-weight: 1000;
+      background: white;
+    }
+
+    .result-card b { display: block; color: #15803d; font-size: 22px; margin-bottom: 3px; }
+    .result-card span { color: #166534; font-size: 15px; line-height: 1.35; }
+
+    .study {
+      margin-top: 34px;
+      padding-top: 10px;
+    }
+
+    .section-heading {
+      text-align: center;
+      margin: 0 0 18px;
+    }
+
+    .section-heading h2 {
+      margin: 0;
+      font-size: 36px;
+      letter-spacing: -0.035em;
+      color: #0f172a;
+    }
+
+    .section-heading p {
+      margin: 8px auto 0;
+      max-width: 1100px;
+      color: #475569;
+      font-size: 17px;
+      line-height: 1.45;
+      font-weight: 650;
+    }
+
+    .topic-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .topic-card {
+      padding: 18px;
+      background: #fff;
+      border-color: #dbeafe;
+    }
+
+    .topic-head {
+      display: grid;
+      grid-template-columns: 58px 1fr;
+      gap: 13px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .topic-icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      font-size: 32px;
+      border: 2px solid currentColor;
+      background: #fff;
+    }
+
+    .topic-card h3 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.1;
+      color: #0f172a;
+    }
+
+    .topic-card .tagline {
+      margin-top: 4px;
+      color: #64748b;
+      font-size: 14px;
+      font-weight: 850;
+    }
+
+    .topic-card h4 {
+      margin: 14px 0 7px;
+      font-size: 16px;
+      color: #0f172a;
+    }
+
+    .topic-card p {
+      margin: 0;
+      color: #334155;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .mini-box {
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .mini-box b {
+      display: block;
+      color: #0f172a;
+      margin-bottom: 5px;
+    }
+
+    .matrix-card {
+      margin-top: 16px;
+      padding: 18px;
+      border-color: #c7d2fe;
+      background: #fff;
+    }
+
+    .matrix-card h3 {
+      margin: 0 0 12px;
+      font-size: 25px;
+      color: #0f172a;
+    }
+
+    .qa-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .qa-card {
+      padding: 15px;
+      border-color: #e2e8f0;
+      background: #fff;
+    }
+
+    .qa-card h4 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      color: #0f172a;
+    }
+
+    .qa-card p {
+      margin: 0;
+      color: #334155;
+      line-height: 1.43;
+      font-size: 14px;
+    }
+
+    footer {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      color: #475569;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .footer-box {
+      border: 1px dashed #94a3b8;
+      background: rgba(255,255,255,.75);
+      border-radius: 14px;
+      padding: 12px 14px;
+    }
+
+    @media (max-width: 1300px) {
+      .layout { grid-template-columns: 1fr; }
+      .sys-grid { grid-template-columns: 1fr; padding-right: 0; }
+      .right-sticky { position: static; }
+      footer, .topic-grid, .qa-grid, .split { grid-template-columns: 1fr; }
+      .details-panel { max-height: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header id="top">
+      <h1>Контекст агента: Cursor / Claude Code / AGENTS.md</h1>
+      <div class="subtitle">Интерактивная схема + конфликты инструкций + учебник для assessment</div>
+      <nav class="nav">
+        <a href="#schema">Схема контекста</a>
+        <a href="#study">Учебник по темам</a>
+        <a href="#workflow-section">Workflow & Patterns</a>
+        <a href="#matrix">Таблица выбора</a>
+        <a href="#qa">Вопросы</a>
+        <a href="#tricky" style="background:#fff1f2;border-color:#fca5a5;color:#dc2626;">⚠️ Каверзные</a>
+      </nav>
+      <div class="hint">👆 Нажми на любой блок схемы — справа откроется подробное объяснение с деталями и кейсами</div>
+    </header>
+
+    <section class="layout" id="schema">
+      <aside>
+        <h2 class="column-title">Источники / слои</h2>
+        <div class="sources">
+          <button class="source-card clickable yellow yellow-text" data-key="conflicts">
+            <div class="source-head"><div class="icon">⚠️</div><div class="source-title">Conflicts / противоречия</div></div>
+            <ul><li>Rule vs Skill</li><li>AGENTS.md vs Chat</li><li>Memory vs RAG</li><li>Tool result vs assumption</li></ul>
+          </button>
+
+          <button class="source-card clickable orange orange-text" data-key="checkpoint">
+            <div class="source-head"><div class="icon">✅</div><div class="source-title">Checkpoint</div></div>
+            <ul><li>Снимок состояния</li><li>Что сделано</li><li>Решения / риски / next steps</li></ul>
+          </button>
+
+          <button class="source-card clickable red red-text" data-key="chat">
+            <div class="source-head"><div class="icon">💬</div><div class="source-title">Запрос / текущий чат</div></div>
+            <ul><li>Текущая задача</li><li>Последние сообщения</li><li>Файлы / ссылки</li></ul>
+          </button>
+
+          <button class="source-card clickable green green-text" data-key="rag">
+            <div class="source-head"><div class="icon">🔎</div><div class="source-title">RAG / retrieval</div></div>
+            <ul><li>Docs, code, wiki</li><li>Релевантные фрагменты</li><li>Факты из базы знаний</li></ul>
+          </button>
+
+          <button class="source-card clickable teal teal-text" data-key="mcp">
+            <div class="source-head"><div class="icon">🛠</div><div class="source-title">MCP / Tools</div></div>
+            <ul><li>API, базы, файлы, web</li><li>Живые данные</li><li>Реальные действия</li></ul>
+          </button>
+
+          <button class="source-card clickable purple purple-text" data-key="summary">
+            <div class="source-head"><div class="icon">🧾</div><div class="source-title">Summary / Compression</div></div>
+            <ul><li>Сжатая история</li><li>Экономия контекста</li><li>Может потерять детали</li></ul>
+          </button>
+
+          <button class="source-card clickable navy navy-text" data-key="subagents">
+            <div class="source-head"><div class="icon">👥</div><div class="source-title">Subagents</div></div>
+            <ul><li>Специализированные агенты</li><li>Делегирование</li><li>Свои инструкции</li></ul>
+          </button>
+        </div>
+      </aside>
+
+      <section class="main">
+        <div class="main-title">Что реально попадает в модель и что сильнее при конфликте</div>
+
+        <button class="system-card clickable" data-key="system">
+          <div class="sys-title">0. System Prompt / Platform Instructions</div>
+          <div class="sys-grid">
+            <div><b>Что это:</b> скрытые инструкции платформы: безопасность, формат работы, доступные инструменты.</div>
+            <div><b>Когда используют:</b> всегда. Пользователь обычно не видит этот слой.</div>
+            <div><b>При конфликте:</b> побеждает над AGENTS.md, Rules, Skills, Memory, RAG и запросом пользователя.</div>
+          </div>
+        </button>
+
+        <button class="conflict-box clickable" data-key="conflicts">
+          <div class="num yellow-bg">!</div><div class="big-icon yellow-text">⚠️</div>
+          <div>
+            <h2 class="yellow-text">Conflict Resolver: что делать при противоречиях</h2>
+            <p class="desc"><b>Что это:</b> логика выбора, если разные слои говорят разное: Rule vs Skill, AGENTS.md vs Chat, Memory vs RAG, RAG vs MCP.</p>
+            <ul><li><b>Главное:</b> выбираем более высокий, конкретный и свежий источник.</li><li><b>Для assessment:</b> объяснить, почему нельзя слепо выполнять нижний слой.</li></ul>
+          </div>
+          <div class="badge yellow-bg">ВАЖНО</div>
+        </button>
+
+        <div class="flow">
+          <button class="layer-card clickable red-border" data-key="agents">
+            <div class="num red-bg">1</div><div class="big-icon red-text">📄</div>
+            <div class="layer-body"><h2 class="red-text">AGENTS.md текущего репозитория / агента</h2><p class="desc"><b>Что это:</b> проектная инструкция: роль, стиль работы, ограничения, команды, workflow.</p><ul><li><b>Когда:</b> почти всегда в репозитории.</li><li><b>Зачем:</b> базовое поведение агента.</li></ul></div>
+            <div class="badge red-bg">ВЫСОКИЙ</div>
+          </button>
+
+          <button class="layer-card clickable purple-border" data-key="rules">
+            <div class="num purple-bg">2</div><div class="big-icon purple-text">⚖️</div>
+            <div class="layer-body"><h2 class="purple-text">Rules / Policy</h2><p class="desc"><b>Что это:</b> обязательные правила: code style, safety, compliance, формат, запреты.</p><ul><li><b>Когда:</b> когда нужно соблюдать стандарты.</li><li><b>При конфликте:</b> обычно сильнее Skill и текущего пожелания.</li></ul></div>
+            <div class="badge purple-bg">ОЧЕНЬ ВЫСОКИЙ</div>
+          </button>
+
+          <button class="layer-card clickable blue-border" data-key="chat">
+            <div class="num blue-bg">3</div><div class="big-icon blue-text">💬</div>
+            <div class="layer-body"><h2 class="blue-text">Запрос пользователя / текущий чат</h2><p class="desc"><b>Что это:</b> конкретная задача, последние сообщения, файлы, уточнения.</p><ul><li><b>Когда:</b> всегда.</li><li><b>Зачем:</b> определяет текущий output.</li></ul></div>
+            <div class="badge blue-bg">ВЫСОКИЙ</div>
+          </button>
+
+          <button class="layer-card clickable orange-border" data-key="memory">
+            <div class="num orange-bg">4</div><div class="big-icon orange-text">🧠</div>
+            <div class="layer-body"><h2 class="orange-text">Memory Bank</h2><p class="desc"><b>Что это:</b> долговременная память о проекте, пользователе, решениях и соглашениях.</p><ul><li><b>Когда:</b> для continuity.</li><li><b>Риск:</b> может устареть.</li></ul></div>
+            <div class="badge orange-bg">MEDIUM-HIGH</div>
+          </button>
+
+          <button class="layer-card clickable green-border" data-key="rag">
+            <div class="num green-bg">5</div><div class="big-icon green-text">🔎</div>
+            <div class="layer-body"><h2 class="green-text">RAG / релевантные фрагменты</h2><p class="desc"><b>Что это:</b> найденные куски docs/code/wiki/tickets/knowledge base.</p><ul><li><b>Когда:</b> когда нужны факты.</li><li><b>Риск:</b> может найти устаревший фрагмент.</li></ul></div>
+            <div class="badge green-bg">MEDIUM</div>
+          </button>
+
+          <button class="layer-card clickable teal-border" data-key="mcp">
+            <div class="num teal-bg">6</div><div class="big-icon teal-text">🛠</div>
+            <div class="layer-body"><h2 class="teal-text">MCP / Tools</h2><p class="desc"><b>Что это:</b> подключённые инструменты: API, БД, файлы, браузер, CI/CD, мониторинг.</p><ul><li><b>Когда:</b> когда нужно проверить или выполнить.</li><li><b>Приоритет фактов:</b> свежий tool-result часто сильнее Memory/RAG.</li></ul></div>
+            <div class="badge teal-bg">MEDIUM</div>
+          </button>
+
+          <button class="layer-card clickable blue-border" data-key="skills">
+            <div class="num blue-bg">7</div><div class="big-icon blue-text">🎓</div>
+            <div class="layer-body"><h2 class="blue-text">Skills / Playbooks</h2><p class="desc"><b>Что это:</b> готовые инструкции и сценарии выполнения типовых задач.</p><ul><li><b>Когда:</b> для повторяемых процессов.</li><li><b>При конфликте:</b> Skill ниже Rules и AGENTS.md.</li></ul></div>
+            <div class="badge blue-bg">MEDIUM-LOW</div>
+          </button>
+
+          <button class="layer-card clickable navy-border" data-key="subagents">
+            <div class="num navy-bg">8</div><div class="big-icon navy-text">👥</div>
+            <div class="layer-body"><h2 class="navy-text">Subagents / другие AGENTS.md</h2><p class="desc"><b>Что это:</b> отдельные специализированные агенты для подзадач.</p><ul><li><b>Когда:</b> при делегировании.</li><li><b>Ограничение:</b> видят не весь контекст.</li></ul></div>
+            <div class="badge navy-bg">TASK-SPECIFIC</div>
+          </button>
+        </div>
+
+        <div class="result-card">
+          <div class="check">✓</div>
+          <div><b>Сформированный контекст передаётся модели</b><span>Модель использует инструкции, память, retrieved-данные, tools, skills и результаты subagents. При конфликте она должна выбрать более приоритетный и надёжный источник.</span></div>
+        </div>
+      </section>
+
+      <aside class="right-sticky">
+        <section class="details-panel" id="details"></section>
+        <section class="legend-card">
+          <h3>Формула для assessment</h3>
+          <p><b>Сначала приоритет, потом конкретность, потом свежесть.</b> System выше всех. Rules/AGENTS.md задают рамки. User request задаёт задачу. MCP/tool-result часто даёт самые свежие факты. Skill — способ выполнения, но не право нарушать правила.</p>
+        </section>
+      </aside>
+    </section>
+
+    <section class="study" id="study">
+      <div class="section-heading">
+        <h2>Учебник по ключевым темам</h2>
+        <p>Эта часть нужна для подготовки: не просто знать термины, а уметь объяснить, когда что использовать, чем отличается одно от другого и какие есть ограничения.</p>
+      </div>
+
+      <div class="topic-grid">
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon green-text">🔎</div><div><h3>RAG / Retrieval-Augmented Generation</h3><div class="tagline">Поиск релевантных знаний и добавление их в контекст</div></div></div>
+          <h4>Простыми словами</h4>
+          <p>RAG — это когда модель не пытается всё помнить сама, а сначала ищет нужные фрагменты в документах, коде, wiki, базе знаний или тикетах, а потом использует найденное для ответа.</p>
+          <div class="split">
+            <div class="mini-box"><b>Когда использовать</b><ul><li>Нужно ответить по документации.</li><li>Нужно найти API/класс/метод в коде.</li><li>Нужно подтянуть knowledge base.</li><li>Нужно уменьшить hallucination.</li></ul></div>
+            <div class="mini-box"><b>Ограничения</b><ul><li>Может найти устаревший документ.</li><li>Может найти похожий, но не тот фрагмент.</li><li>Не задаёт поведение агента.</li><li>Требует хорошего indexing/chunking.</li></ul></div>
+          </div>
+          <h4>Важно для assessment</h4>
+          <p>RAG отвечает за факты, но не за правила поведения. Если RAG нашёл старую инструкцию, а Rules говорят другое — Rules выше. Если нужно текущее состояние системы, лучше проверить через MCP/tools.</p>
+        </article>
+
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon orange-text">🧠</div><div><h3>Memory Bank</h3><div class="tagline">Долговременная память проекта, пользователя или workflow</div></div></div>
+          <h4>Простыми словами</h4>
+          <p>Memory Bank — это сохранённые устойчивые знания: какие решения уже приняли, какие правила у проекта, какие предпочтения у пользователя, какие команды работают, какие подходы не подходят.</p>
+          <div class="split">
+            <div class="mini-box"><b>Когда использовать</b><ul><li>Нужна continuity между сессиями.</li><li>Есть долгий проект.</li><li>Нужно помнить решения.</li><li>Нужно не спрашивать одно и то же.</li></ul></div>
+            <div class="mini-box"><b>Ограничения</b><ul><li>Может устареть.</li><li>Может быть слишком общей.</li><li>Может конфликтовать с текущими файлами.</li><li>Не заменяет проверку фактов.</li></ul></div>
+          </div>
+          <h4>Memory Bank vs RAG</h4>
+          <p>Memory Bank — это curated память о важных вещах. RAG — поиск по источникам. Memory помогает помнить “что мы решили”, RAG помогает найти “что написано в документации”.</p>
+        </article>
+
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon teal-text">🛠</div><div><h3>MCP / Tools</h3><div class="tagline">Доступ к внешним системам, данным и действиям</div></div></div>
+          <h4>Простыми словами</h4>
+          <p>MCP и tools дают агенту возможность не только рассуждать, но и действовать: открыть файл, сходить в API, прочитать Jira, проверить CI, посмотреть логи, выполнить поиск.</p>
+          <div class="split">
+            <div class="mini-box"><b>Когда использовать</b><ul><li>Нужно проверить реальное состояние.</li><li>Нужно прочитать файл/лог/тикет.</li><li>Нужно выполнить действие.</li><li>Нужно получить свежие данные.</li></ul></div>
+            <div class="mini-box"><b>Ограничения</b><ul><li>Нужны permissions.</li><li>Tools могут быть read-only.</li><li>Опасные действия требуют осторожности.</li><li>Subagent может не иметь доступа.</li></ul></div>
+          </div>
+          <h4>Важно</h4>
+          <p>MCP не делает агента “умнее” сам по себе. Он даёт доступ к данным и действиям. Качество зависит от того, какие tools доступны, какие права есть и как агент интерпретирует результат.</p>
+        </article>
+
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon orange-text">✅</div><div><h3>Checkpoint</h3><div class="tagline">Структурный снимок состояния задачи</div></div></div>
+          <h4>Простыми словами</h4>
+          <p>Checkpoint — это не просто summary, а структурированная точка сохранения: цель, что уже сделано, какие решения приняты, какие есть риски и что делать дальше.</p>
+          <div class="split">
+            <div class="mini-box"><b>Когда использовать</b><ul><li>Длинная задача.</li><li>Переход между сессиями.</li><li>Нужно передать работу другому агенту.</li><li>Перед context compression.</li></ul></div>
+            <div class="mini-box"><b>Что включать</b><ul><li>Цель.</li><li>Done / not done.</li><li>Decisions.</li><li>Risks / blockers.</li><li>Next steps.</li></ul></div>
+          </div>
+          <h4>Checkpoint vs Summary</h4>
+          <p>Summary просто кратко пересказывает. Checkpoint сохраняет состояние работы так, чтобы можно было продолжить без потери логики.</p>
+        </article>
+
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon purple-text">🧾</div><div><h3>Summary / Compression</h3><div class="tagline">Сжатие истории, когда контекст переполняется</div></div></div>
+          <h4>Простыми словами</h4>
+          <p>Compression — это уменьшение объёма контекста. Summary — один из способов compression: длинный диалог превращается в краткое содержание.</p>
+          <div class="split">
+            <div class="mini-box"><b>Когда использовать</b><ul><li>Длинный чат.</li><li>Много деталей и файлов.</li><li>Нужно продолжить позже.</li><li>Окно контекста ограничено.</li></ul></div>
+            <div class="mini-box"><b>Риски</b><ul><li>Теряются нюансы.</li><li>Может исказить решение.</li><li>Может забыть edge case.</li><li>Не заменяет исходные файлы.</li></ul></div>
+          </div>
+          <h4>Лучший формат</h4>
+          <p>Для рабочих задач лучше использовать structured checkpoint: цель, контекст, сделано, решения, команды, риски, next steps.</p>
+        </article>
+
+                <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon blue-text">🎓</div><div><h3>Skills / Playbooks / Commands</h3><div class="tagline">SKILL.md · .cursor/commands/ · прогрессивное раскрытие · лаконичность</div></div></div>
+          <h4>Три формата в разных инструментах</h4>
+          <p><b>Claude Code:</b> <code>SKILL.md</code> в папке скилла. <b>Cursor:</b> <code>.cursor/commands/name.md</code> (slash-команды). <b>Cline:</b> <code>.clinerules/workflows/</code>. Принцип один: пошаговый runbook, который AI выполняет при вызове.</p>
+          <div class="split">
+            <div class="mini-box"><b>SKILL.md структура (Claude Code)</b><ul><li>YAML frontmatter: <b>name</b> + <b>description</b>.</li><li>name: строчные + дефисы, max 64 символа.</li><li>description: от 3-го лица — что делает + когда (max 1024).</li><li>Тело: до 500 строк; всё остальное — доп. файлы.</li><li>Прогрессивное раскрытие: SKILL.md → reference files (1 уровень).</li></ul></div>
+            <div class="mini-box"><b>Best practices (Claude docs)</b><ul><li><b>Лаконичность</b> — не объяснять очевидное.</li><li>Description из 3-го лица: не “я помогу”, а “Обрабатывает...”.</li><li>Ссылки глубиной 1 уровень (no deep nesting).</li><li>Свобода: high (текст) / medium (псевдокод) / low (точный скрипт).</li><li>Evaluation-driven: сначала eval, потом документация.</li><li>Тестировать с Haiku, Sonnet, Opus.</li></ul></div>
+          </div>
+          <h4>Rule vs Command vs Skill vs Subagent (A3/A4 Cursor)</h4>
+          <p><b>Rule:</b> всегда применяется в проекте. <b>Command:</b> slash-команда, вызывается явно (/mr-self-review, /catalog-field-change). <b>Skill:</b> переиспользуемая экспертиза, агент применяет сам. <b>Subagent:</b> специализированный агент для workstream (A4). Skill не нарушает Rule.</p>
+          <div class="split">
+            <div class="mini-box"><b>Cursor Command структура (A3)</b><ul><li>Input: параметры задачи.</li><li>Research: что найти в Ask mode.</li><li>Plan: что подтвердить до edit.</li><li>Implementation: шаги в Agent mode.</li><li>Validation: что запустить.</li><li>Guardrails: явные запреты.</li><li>Output: что вернуть.</li></ul></div>
+            <div class="mini-box"><b>Антипаттерны Skills</b><ul><li>SKILL.md объясняет очевидное (тратит токены).</li><li>Description "помогает с файлами" — не обнаружим.</li><li>Глубокая вложенность ссылок (A → B → C).</li><li>Зависящие от времени инструкции.</li><li>Слишком много вариантов без дефолта.</li></ul></div>
+          </div>
+        </article>
+
+                <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon red-text">📄</div><div><h3>AGENTS.md / CLAUDE.md</h3><div class="tagline">Проектная инструкция · иерархия · .cursorignore · глобальный vs проектный</div></div></div>
+          <h4>Разные инструменты — разные файлы</h4>
+          <p><b>Cursor</b> читает AGENTS.md в корне + <code>.cursor/rules/</code>. <b>Claude Code</b> использует <code>CLAUDE.md</code> (проектный) + <code>~/.claude/CLAUDE.md</code> (глобальный). <b>Cline</b>: <code>.clinerules/</code>. <b>OpenAI Codex</b>: AGENTS.md. Принцип: более специфичный файл переопределяет общий.</p>
+          <div class="split">
+            <div class="mini-box"><b>Что класть в AGENTS.md / CLAUDE.md</b><ul><li>Команды тестов, build, lint, import.</li><li>Архитектурные правила и stack.</li><li>Definition of Done.</li><li>Запрещённые технологии/действия.</li><li>Source of truth (где данные, как обновлять).</li><li>Workflow: как вносить изменения.</li></ul></div>
+            <div class="mini-box"><b>Что НЕ класть</b><ul><li>Секреты и токены.</li><li>Большие логи и generated dumps.</li><li>Часто меняющиеся данные (→ RAG/MCP).</li><li>Огромные docs (→ ссылки или RAG).</li><li>A4/A5 scope в A3 артефакте.</li></ul></div>
+          </div>
+          <h4>.cursorignore и контекстные фильтры</h4>
+          <p><b>.cursorignore</b> (Cursor) — файл в корне проекта, исключает файлы из AI контекста (синтаксис как .gitignore): node_modules, generated JSON, dist, secrets, бинарники. <b>Claude Code:</b> аналогично через exclusion patterns. <b>Зачем:</b> уменьшает шум, защищает чувствительные файлы, фокусирует контекст на нужном. Меньше токенов = лучше качество ответа.</p>
+          <h4>AGENTS.md vs Rules vs Skills</h4>
+          <p><b>AGENTS.md</b> = роль агента и workflow (всегда активен). <b>Rules</b> (.mdc) = что нельзя/обязательно (высший приоритет). <b>Skill</b> = как выполнять (по вызову). <b>Command</b> = конкретный workflow (явный вызов). Конфликт AGENTS.md + Rules: Rules побеждает.</p>
+        </article>
+
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon purple-text">⚖️</div><div><h3>Rules / Policy</h3><div class="tagline">.cursor/rules/*.mdc · .clinerules/ · always-apply vs auto-attach vs conditional</div></div></div>
+          <h4>Что это</h4>
+          <p>Rules — обязательные ограничения: code style, safety, compliance, запреты на технологии, архитектурные стандарты. Rules отвечают на вопрос “что нельзя/обязательно”, а не “как делать”. Применяются автоматически — выше Skill и Command в иерархии.</p>
+          <div class="split">
+            <div class="mini-box"><b>Cursor Rules (.cursor/rules/)</b><ul><li>Файлы <code>.mdc</code> в <code>.cursor/rules/</code>.</li><li><b>Always-apply:</b> в каждом чате (глобальные стандарты).</li><li><b>Auto-attach:</b> к конкретным файловым паттернам.</li><li><b>Conditional:</b> через @ в чате.</li><li>Видны агенту высокоприоритетно.</li></ul></div>
+            <div class="mini-box"><b>Примеры правил</b><ul><li>Нельзя добавлять DB/Docker/real auth в демо.</li><li>Stack: Java 17, Quarkus, React 19, RTK Query.</li><li>Generated JSON — не редактировать вручную.</li><li>Preserve sourceFile/sourceSheet/sourceRow.</li><li>Не добавлять зависимости без approval.</li></ul></div>
+          </div>
+          <h4>Rules vs AGENTS.md vs Command (финальная таблица)</h4>
+          <p><b>Rule</b> (.mdc) = что всегда запрещено/обязательно → автоматически. <b>AGENTS.md</b> = роль и workflow агента → всегда. <b>Command</b> (.cursor/commands/) = как выполнять процесс → явный вызов. <b>Skill</b> = экспертиза → агент выбирает сам. Rule самый сильный из них при конфликте.</p>
+        </article>
+
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon navy-text">👥</div><div><h3>Subagents</h3><div class="tagline">Делегирование подзадач специализированным агентам</div></div></div>
+          <h4>Простыми словами</h4>
+          <p>Subagent — отдельный агент или режим, которому главный агент передаёт часть задачи: найти причину, проверить гипотезу, собрать факты, сделать review.</p>
+          <div class="split">
+            <div class="mini-box"><b>Когда полезны</b><ul><li>Сложная задача.</li><li>Параллельный анализ.</li><li>Нужна специализация.</li><li>Нужно разделить поиск и решение.</li></ul></div>
+            <div class="mini-box"><b>Ограничения</b><ul><li>Может видеть не весь контекст.</li><li>Может иметь ограниченные tools.</li><li>Может ошибиться.</li><li>Главный агент должен проверить итог.</li></ul></div>
+          </div>
+          <h4>Главный принцип</h4>
+          <p>Subagent не заменяет ответственность главного агента. Он возвращает findings, а главный агент объединяет, проверяет конфликт с Rules/AGENTS.md и принимает финальное решение.</p>
+        </article>
+
+        <article class="topic-card" id="workflow-section">
+          <div class="topic-head"><div class="topic-icon teal-text">🔄</div><div><h3>Workflow / Агентский цикл</h3><div class="tagline">Perceive → Plan → Act → Observe — как агент строит задачи</div></div></div>
+          <h4>Агентский цикл</h4>
+          <p>Агент не выполняет задачу одним шагом. Он воспринимает ситуацию, планирует шаги, выполняет действие через tool/MCP, наблюдает результат и повторяет цикл до достижения цели или остановки.</p>
+          <div class="split">
+            <div class="mini-box"><b>Типы workflow</b><ul><li><b>Linear:</b> шаги строго последовательно.</li><li><b>Branching:</b> if/else ветки по условию.</li><li><b>Parallel:</b> несколько шагов одновременно.</li><li><b>Loop:</b> повтор до достижения цели.</li><li><b>DAG:</b> граф зависимостей шагов.</li></ul></div>
+            <div class="mini-box"><b>Human-in-the-loop</b><ul><li>Пауза перед критическим действием.</li><li>Запрос approval у пользователя.</li><li>Подтверждение опасной операции.</li><li>Итерация по обратной связи.</li><li>Обязательно при деплое / удалении данных.</li></ul></div>
+          </div>
+          <h4>Обработка ошибок в цикле</h4>
+          <p>Хороший агент: при ошибке tool — retry с backoff; при неверном результате — Reflexion (самокритика и новая попытка); при тупике — остановиться и спросить человека, не продолжать бесконечный цикл.</p>
+        </article>
+
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon blue-text">✍️</div><div><h3>Prompt Engineering</h3><div class="tagline">Как строить инструкции для получения лучших результатов от LLM</div></div></div>
+          <h4>Простыми словами</h4>
+          <p>Prompt Engineering — создание инструкций для LLM. От качества промпта зависит всё: структура ответа, точность, безопасность, формат. Применяется и к system prompt, и к user prompt, и к AGENTS.md.</p>
+          <div class="split">
+            <div class="mini-box"><b>Техники</b><ul><li><b>Zero-shot:</b> прямой вопрос без примеров.</li><li><b>Few-shot:</b> 1–5 примеров в промпте.</li><li><b>Chain-of-Thought:</b> "шаг за шагом".</li><li><b>Role prompting:</b> "Ты эксперт в...".</li><li><b>Structured output:</b> JSON/XML формат.</li><li><b>Negative constraints:</b> "Не делай X".</li></ul></div>
+            <div class="mini-box"><b>Что включать в хороший промпт</b><ul><li>Роль и контекст агента.</li><li>Чёткая задача и ограничения.</li><li>Формат ожидаемого ответа.</li><li>Примеры (few-shot) если нужно.</li><li>Что явно запрещено делать.</li><li>Как обрабатывать неизвестное.</li></ul></div>
+          </div>
+          <h4>Важно для assessment</h4>
+          <p>System prompt задаёт роль и поведение. CoT помогает с многошаговыми рассуждениями. Structured output снижает риск нераспарсиваемых ответов. Few-shot повышает точность для специфичных форматов. Temperature=0 даёт предсказуемость при работе с tools.</p>
+        </article>
+
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon purple-text">🧩</div><div><h3>Agentic Patterns</h3><div class="tagline">ReAct, CoT, Plan-then-Execute, Reflexion — архитектура рассуждений</div></div></div>
+          <h4>Основные паттерны</h4>
+          <p>Паттерны агентов — это архитектурные подходы к тому, как агент рассуждает и действует. Разные задачи требуют разных паттернов.</p>
+          <div class="split">
+            <div class="mini-box"><b>Паттерны и когда</b><ul><li><b>ReAct:</b> tools + итерация → для большинства агентов.</li><li><b>CoT:</b> сложная логика/math → рассуждения вслух.</li><li><b>Plan-then-Execute:</b> план → исполнение → длинные предсказуемые задачи.</li><li><b>Reflexion:</b> самокритика + retry → когда первый ответ плохой.</li><li><b>ToT:</b> дерево вариантов → исследование решений.</li></ul></div>
+            <div class="mini-box"><b>ReAct цикл подробнее</b><ul><li><b>Thought:</b> что делать и зачем.</li><li><b>Action:</b> вызов tool с аргументами.</li><li><b>Observation:</b> результат tool.</li><li>→ повтор до финального ответа.</li><li>Большинство LLM-агентов используют именно ReAct.</li></ul></div>
+          </div>
+          <h4>Plan-then-Execute vs ReAct</h4>
+          <p><b>Plan-then-Execute:</b> задача хорошо определена, шаги известны заранее — агент строит полный план и выполняет. <b>ReAct:</b> результат каждого шага влияет на следующий, нужна адаптация по ходу. В реальности часто комбинируют: высокоуровневый план + ReAct на каждом шаге.</p>
+        </article>
+
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon green-text">📊</div><div><h3>Vector DB & Embeddings</h3><div class="tagline">Как RAG хранит и ищет знания под капотом</div></div></div>
+          <h4>Как работает</h4>
+          <p>Embedding — числовое представление текста (вектор размерностью 768–3072). Похожие по смыслу тексты → близкие векторы. Vector DB хранит векторы и умеет быстро искать ближайшие по cosine similarity / ANN (Approximate Nearest Neighbor).</p>
+          <div class="split">
+            <div class="mini-box"><b>Indexing pipeline</b><ul><li>Документ → <b>Chunking.</b></li><li>Chunk → <b>Embedding model.</b></li><li>Вектор → <b>Vector DB.</b></li><li>Метаданные (дата, тип, источник).</li><li>Примеры DB: Pinecone, Chroma, pgvector.</li></ul></div>
+            <div class="mini-box"><b>Retrieval pipeline</b><ul><li>Запрос → Embedding.</li><li>Similarity search → Top-K кандидатов.</li><li><b>Reranking</b> (cross-encoder, опционально).</li><li>Inject top-1..3 chunk'ов в контекст.</li><li>Dense / Sparse / Hybrid retrieval.</li></ul></div>
+          </div>
+          <h4>Chunking стратегии</h4>
+          <p><b>Fixed-size</b> (по N токенов с overlap), <b>по абзацам/секциям</b> (семантические границы), <b>code-aware</b> (по функциям/классам), <b>semantic chunking</b> (разбивка по перепаду смысла). Плохой chunking → плохой retrieval. Overlap 10–20% помогает не терять контекст на границах.</p>
+        </article>
+
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon orange-text">📏</div><div><h3>Context Window & Tokens</h3><div class="tagline">Что умещается в голове модели и как этим управлять</div></div></div>
+          <h4>Простыми словами</h4>
+          <p>Context window — максимальный объём текста, который LLM держит "в голове" за один вызов. Всё суммируется в токенах: system prompt, AGENTS.md, история чата, RAG-фрагменты, tool results, user message, ответ модели.</p>
+          <div class="split">
+            <div class="mini-box"><b>Что съедает контекст</b><ul><li>System prompt / AGENTS.md.</li><li>История чата (растёт линейно).</li><li>RAG-фрагменты (top-K × размер chunk).</li><li>Tool results (могут быть огромными).</li><li>Прикреплённые файлы.</li></ul></div>
+            <div class="mini-box"><b>Как управлять</b><ul><li>Summary / Checkpoint истории.</li><li>Умный RAG: только top-K нужных chunk'ов.</li><li>Truncation старых сообщений.</li><li>Subagents (параллельная разгрузка).</li><li>Sliding window (скользящее окно).</li><li>Tool results → только нужная часть.</li></ul></div>
+          </div>
+          <h4>Важно для assessment</h4>
+          <p>При переполнении контекста модель "забывает" старые части. Токены = стоимость + качество. GPT-4o: 128K токенов. Claude 3.5: 200K. Gemini 1.5 Pro: 1M. Но больше не всегда лучше — "lost in the middle": модель хуже использует середину длинного контекста.</p>
+        </article>
+
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon purple-text">🤖</div><div><h3>Agent Card</h3><div class="tagline">Формальный контракт агента: что, как, с чем и при каких условиях (A4)</div></div></div>
+          <h4>Что это и зачем</h4>
+          <p>Agent Card — документ, задающий рабочий контракт агента. Без него агент может выйти за scope, вызвать запрещённый tool, нарушить безопасность или провалить quality check. Это не просто описание — это техническое соглашение команды с агентом.</p>
+          <div class="split">
+            <div class="mini-box"><b>Обязательные поля Agent Card</b><ul><li><b>Name:</b> имя агента.</li><li><b>Purpose:</b> что делает.</li><li><b>Inputs:</b> что принимает.</li><li><b>Outputs:</b> что возвращает.</li><li><b>Allowed tools:</b> разрешённые инструменты.</li><li><b>Forbidden actions:</b> явный список запретов.</li><li><b>Approval gates:</b> когда стоп → человек.</li><li><b>Quality checks:</b> как проверяем результат.</li><li><b>Risks:</b> scope creep, data exposure, wrong tool.</li></ul></div>
+            <div class="mini-box"><b>Approval gates (A4)</b><ul><li>После research → перед реализацией.</li><li>Перед изменением API контракта.</li><li>Перед принятием финального diff.</li><li>Снижают риск неправильных tool calls.</li><li>Не заменяют тесты — дополняют.</li></ul></div>
+          </div>
+          <h4>Каверзный момент</h4>
+          <p>Забыть Forbidden actions = критическая ошибка. Агент должен знать не только что он делает, но и что явно запрещено: реальные платежи, production данные, внешние write-действия без approval, DB/auth/deployment в тренировочном демо.</p>
+        </article>
+
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon teal-text">🔗</div><div><h3>Internal MCPs: jira / graylog / atp</h3><div class="tagline">Netcracker-специфичные MCP-серверы и cross-MCP investigation workflow</div></div></div>
+          <h4>Три внутренних MCP-сервера</h4>
+          <p>В Netcracker есть три основных internal MCP: <b>jira-mcp</b> (Jira + Confluence), <b>graylog-mcp</b> (логи), <b>atp-mcp</b> (тест-системы ATP). Все запускаются через <code>npx</code> из npm — не нужен local build.</p>
+          <div class="split">
+            <div class="mini-box"><b>Сценарии использования</b><ul><li><b>jira-mcp:</b> найти задачу, прочитать описание, найти x-request-id, подготовить plan/MR description.</li><li><b>graylog-mcp:</b> найти логи по x-request-id, timeline, top errors, root cause candidates.</li><li><b>atp-mcp:</b> тест-сценарии, failed execution, скриншоты, logs, datasets.</li></ul></div>
+            <div class="mini-box"><b>Cross-MCP workflow: Jira→Graylog</b><ul><li>jira-mcp → найти x-request-id в тикете.</li><li>graylog-mcp → найти логи по x-request-id.</li><li>Собрать timeline + top errors + affected services.</li><li>AI → investigation summary (hypotheses).</li><li>Human → решение и next actions.</li></ul></div>
+          </div>
+          <h4>MCP Security — правило №1</h4>
+          <p>Реальные токены/пароли — <b>только в локальном конфиге</b> (user-level ~/.cursor/mcp.json). В Git, Confluence, артефактах — только плейсхолдеры (<code>&lt;JIRA_BEARER_TOKEN&gt;</code>). Auto-run для write tools — выключен. A2: только read-only Confluence smoke test. Write action → только с явным approval. Три типа MCP серверов: internal, vendor-managed, community/open-source — начинать с allowlist approach.</p>
+        </article>
+
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon red-text">🚨</div><div><h3>Hallucination & AI Verification</h3><div class="tagline">Как AI ошибается, как проверять результат и R-C-T-F-Q структура промпта</div></div></div>
+          <h4>Что такое hallucination</h4>
+          <p>Hallucination — AI уверенно выдаёт технически правдоподобный, но неверный ответ: несуществующий класс/метод/endpoint, запрещённая библиотека, неверный fix, тест на мок вместо реального behaviour, MR description с выдуманными изменениями.</p>
+          <div class="split">
+            <div class="mini-box"><b>Как проверять AI-ответ</b><ul><li>Сверить с реальными файлами/кодом.</li><li>Запустить тесты и build.</li><li>Проверить diff вручную.</li><li>Спросить: "на каких файлах основан ответ?"</li><li>Self-review с конкретными категориями.</li><li>"LGTM" без evidence = бесполезный review.</li></ul></div>
+            <div class="mini-box"><b>R-C-T-F-Q структура промпта (A0)</b><ul><li><b>R</b>ole: кто AI (Senior Java Developer).</li><li><b>C</b>ontext: stack, файлы, ограничения, diff.</li><li><b>T</b>ask: что сделать.</li><li><b>F</b>ormat: формат ответа.</li><li><b>Q</b>uality bar: критерии хорошего ответа.</li></ul></div>
+          </div>
+          <h4>Правила для разработчика (A0/A1)</h4>
+          <p><b>Research first, then implementation.</b> Сначала AI находит релевантные файлы и объясняет flow, потом план, потом реализация после approval. Нельзя сразу просить менять код. Всегда запускать реальные validation commands (тесты, build, smoke check) — не доверять словам AI.</p>
+        </article>
+      </div>
+
+      <div class="matrix-card" id="matrix">
+        <h3>Таблица выбора: что использовать в какой ситуации</h3>
+        <table class="priority-table">
+          <thead><tr><th>Ситуация</th><th>Лучший слой</th><th>Почему</th><th>Риск</th></tr></thead>
+          <tbody>
+            <tr><td>Нужно понять, как работать в проекте</td><td>AGENTS.md + Rules</td><td>Они задают project workflow и ограничения</td><td>Могут быть неполными или устаревшими</td></tr>
+            <tr><td>Нужно узнать факт из документации</td><td>RAG</td><td>Подтягивает релевантные фрагменты docs/wiki/code</td><td>Может найти не тот или старый фрагмент</td></tr>
+            <tr><td>Нужно проверить текущее состояние системы</td><td>MCP / Tools</td><td>Даёт живые данные: logs, CI, API, файлы</td><td>Нужны права; tools могут быть read-only</td></tr>
+            <tr><td>Нужно продолжить длинную задачу</td><td>Checkpoint + Memory Bank</td><td>Сохраняют решения, done/not done, next steps</td><td>Memory может устареть</td></tr>
+            <tr><td>Нужно выполнить типовой процесс</td><td>Skill / Playbook</td><td>Даёт пошаговый workflow</td><td>Не должен нарушать Rules</td></tr>
+            <tr><td>Задача большая и много направлений</td><td>Subagents</td><td>Можно делегировать поиск, анализ, review</td><td>Subagent может видеть не весь контекст</td></tr>
+            <tr><td>Есть конфликт инструкций</td><td>Conflict Resolver</td><td>Сначала priority, потом specificity, потом freshness</td><td>Если не решить — нужен safe fallback / clarification</td></tr>
+            <tr><td>Нужно снизить hallucination</td><td>RAG + MCP/Tools</td><td>Грундируем ответ на реальных данных и live-проверках</td><td>RAG может найти нерелевантный chunk; tool нужны права</td></tr>
+            <tr><td>Контекст переполнен / задача очень длинная</td><td>Checkpoint + Subagents + Compression</td><td>Разгрузка окна: summary истории, делегирование подзадач</td><td>Summary теряет детали; subagent видит меньше контекста</td></tr>
+            <tr><td>Нужно выполнить итерационную задачу с tools</td><td>ReAct pattern</td><td>Thought → Action → Observation цикл адаптируется к результатам</td><td>Может зациклиться без ограничения числа итераций</td></tr>
+            <tr><td>Нужно подключить новый внешний сервис к агенту</td><td>MCP Server</td><td>Один протокол вместо кастомных интеграций; capability discovery</td><td>Нужно реализовать MCP Server; permissions и безопасность</td></tr>
+            <tr><td>Нужно искать по большой knowledge base</td><td>RAG с hybrid retrieval + reranking</td><td>Dense+sparse поиск покрывает и семантику и ключевые слова</td><td>Качество зависит от chunking и embedding модели</td></tr>
+            <tr><td>Критическое / необратимое действие</td><td>Human-in-the-loop</td><td>Остановка и подтверждение человека перед выполнением</td><td>Снижает автономность; нужно правильно определить "критическое"</td></tr>
+            <tr><td>Нужно расследовать инцидент по Jira + логи</td><td>jira-mcp → graylog-mcp (cross-MCP)</td><td>Найти x-request-id в тикете → найти логи → timeline + root cause</td><td>Токены только локально; только read-only; write = отдельный approval</td></tr>
+            <tr><td>Нужно сформулировать запрос к AI</td><td>R-C-T-F-Q prompt structure</td><td>Role + Context + Task + Format + Quality bar = верифицируемый ответ</td><td>Без контекста AI угадывает; без quality bar — непонятно хорош ли ответ</td></tr>
+            <tr><td>Нужно создать agentic workflow для команды (A4)</td><td>Agent Card + Workstreams + Approval Gates</td><td>Формальный контракт агента + decomposition + human checkpoints</td><td>Без Forbidden actions — небезопасный агент; workflow должен быть reusable</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="matrix-card" id="qa">
+        <h3>Типовые вопросы для assessment и хорошие ответы</h3>
+        <div class="qa-grid">
+          <div class="qa-card"><h4>Чем RAG отличается от Memory Bank?</h4><p>RAG ищет релевантные фрагменты во внешних источниках. Memory Bank хранит устойчивый контекст и прошлые решения. RAG — “найти факт”, Memory — “помнить, что уже решили”.</p></div>
+          <div class="qa-card"><h4>Чем Skill отличается от Rule?</h4><p>Skill описывает, как выполнять задачу. Rule задаёт ограничения: что можно, нельзя и какой стандарт соблюдать. При конфликте Rule выше Skill.</p></div>
+          <div class="qa-card"><h4>Что такое Checkpoint?</h4><p>Checkpoint — структурный снимок состояния: цель, контекст, что сделано, решения, риски, next steps. Он лучше обычного summary для продолжения работы.</p></div>
+          <div class="qa-card"><h4>Может ли subagent использовать MCP?</h4><p>Зависит от платформы и permissions. Иногда у subagent те же tools, иногда ограниченные, иногда tools доступны только главному агенту.</p></div>
+          <div class="qa-card"><h4>Что делать, если RAG противоречит Rule?</h4><p>Rule выше, потому что RAG даёт факты, а Rule задаёт ограничения поведения. Нужно проверить, не устарел ли найденный документ.</p></div>
+          <div class="qa-card"><h4>Что делать, если Memory противоречит файлу?</h4><p>Для актуального факта файл или tool-result обычно надёжнее. Memory могла устареть. Но нужно проверить, что файл действительно актуален.</p></div>
+          <div class="qa-card"><h4>Зачем нужен AGENTS.md?</h4><p>Чтобы агент понимал проектный workflow: как запускать тесты, что нельзя менять, как оформлять изменения, какие команды и стандарты использовать.</p></div>
+          <div class="qa-card"><h4>Почему одна модель работает по-разному?</h4><p>Потому что различаются system prompt, rules, context, tools, MCP, RAG, memory, temperature, permissions, IDE implementation и качество retrieved data.</p></div>
+          <div class="qa-card"><h4>Что важнее: текущий чат или Rules?</h4><p>Текущий чат задаёт задачу, но Rules задают рамки. Если пользователь просит нарушить Rule, агент должен объяснить ограничение и предложить безопасный вариант.</p></div>
+
+          <div class="qa-card"><h4>Что такое MCP Protocol и как он работает?</h4><p>Model Context Protocol — открытый стандарт (Anthropic, 2024) для подключения агентов к внешним сервисам. Три примитива: Resources (данные), Prompts (шаблоны), Tools (функции). Агент отправляет tool_use → MCP Server выполняет → возвращает tool_result. Один протокол для любых серверов без кастомных интеграций.</p></div>
+          <div class="qa-card"><h4>Как работает embedding в RAG?</h4><p>Текст → embedding model → числовой вектор (768–3072 измерений). Похожие по смыслу тексты → близкие векторы. При поиске запрос тоже превращается в вектор и сравнивается с векторами в Vector DB через cosine similarity. Топ-K ближайших chunk'ов попадают в контекст.</p></div>
+          <div class="qa-card"><h4>Что такое ReAct паттерн?</h4><p>ReAct = Reason + Act. Агент чередует шаги: Thought (что делать и зачем) → Action (вызов tool с аргументами) → Observation (результат tool). Повторяет цикл до финального ответа. Большинство современных AI-агентов работают по этому паттерну.</p></div>
+          <div class="qa-card"><h4>Как агент строит workflow?</h4><p>Агент планирует шаги, определяет нужные tools, выполняет шаги последовательно или параллельно, обрабатывает ошибки (retry/Reflexion), при критических действиях останавливается для human approval. Цикл: Perceive → Plan → Act → Observe → повтор до цели.</p></div>
+          <div class="qa-card"><h4>Что такое hallucination и как бороться?</h4><p>Hallucination — модель уверенно выдаёт неверный факт. Методы снижения: RAG (грундируем на реальных данных), tool-use (проверяем через API/файлы), structured output, temperature снижение, явное "скажи 'не знаю' если не уверен" в промпте.</p></div>
+          <div class="qa-card"><h4>Что такое chunking в RAG?</h4><p>Chunking — разбивка документов на фрагменты для индексации. Стратегии: fixed-size (по токенам с overlap), по абзацам, code-aware (по функциям), семантический. Плохой chunking = плохой retrieval. Overlap 10–20% помогает не терять контекст на границах.</p></div>
+          <div class="qa-card"><h4>Чем zero-shot отличается от few-shot?</h4><p>Zero-shot: задача без примеров — модель полагается только на обучение. Few-shot: 1–5 примеров input→output в промпте, модель обучается "на лету". Few-shot повышает точность для специфичных форматов и нестандартных задач.</p></div>
+          <div class="qa-card"><h4>Что такое human-in-the-loop?</h4><p>Паттерн: агент останавливает workflow и запрашивает подтверждение человека перед критическим действием (удаление данных, деплой, финансовые операции). Снижает риск автономных ошибок. Обязателен при необратимых операциях.</p></div>
+          <div class="qa-card"><h4>Чем MCP отличается от обычного REST API?</h4><p>Обычный API — кастомная интеграция: свой формат, своя документация, свой SDK. MCP — один стандартный протокол для всех серверов. Агент с MCP-клиентом динамически узнаёт доступные tools (capability discovery) и работает с любым MCP-сервером без дополнительного кода.</p></div>
+          <div class="qa-card"><h4>Что такое temperature у LLM?</h4><p>Temperature контролирует случайность ответов. Temperature=0: детерминированный, всегда самый вероятный токен. Temperature=1+: творческий, разнообразный. Для агентов с tools рекомендуется низкая temperature (0–0.2) для предсказуемости и правильных tool calls.</p></div>
+          <div class="qa-card"><h4>Что такое reranking в RAG?</h4><p>После первичного retrieval top-K кандидатов cross-encoder reranker переоценивает каждый попарно с запросом — более точно, чем cosine similarity. Результат: top-1–3 действительно релевантных chunk'а из 20 кандидатов. Дороже, но точнее.</p></div>
+          <div class="qa-card"><h4>Когда нужен Plan-then-Execute vs ReAct?</h4><p>Plan-then-Execute: задача хорошо определена, шаги известны заранее, нужна предсказуемость. ReAct: результат каждого шага влияет на следующий, много неопределённости, нужна адаптация. На практике часто комбинируют: высокоуровневый план + ReAct внутри каждого шага.</p></div>
+          <div class="qa-card"><h4>Что такое "lost in the middle" эффект?</h4><p>Модель хуже использует информацию из середины длинного контекста — лучше всего помнит начало (system prompt) и конец (последнее сообщение). Решение: важное класть в начало или конец, использовать структурированные маркеры, не надеяться на "найдёт сам" в середине.</p></div>
+          <div class="qa-card"><h4>Что такое Reflexion паттерн?</h4><p>Reflexion — агент генерирует ответ, затем критически оценивает его ("что пошло не так?"), генерирует вывод о причине ошибки и повторяет попытку с учётом самокритики. Полезен, когда первый ответ явно неудовлетворительный и есть критерий качества.</p></div>
+          <div class="qa-card"><h4>Как контролировать что subagent не нарушит Rules?</h4><p>Передавать subagent'у релевантные Rules/AGENTS.md явно в задаче. Главный агент проверяет результат subagent'а на соответствие Rules перед применением. Subagent не имеет автономного доступа к Rules главного агента — нужно явно включать.</p></div>
+          <div class="qa-card"><h4>Зачем нужен Chain-of-Thought (CoT)?</h4><p>CoT заставляет модель "думать вслух" — пошагово рассуждать перед ответом. Снижает ошибки на сложных логических, математических и многошаговых задачах. Достигается добавлением "Think step by step" или few-shot примерами с рассуждениями.</p></div>
+
+          <div class="qa-card"><h4>Чем Cline skill отличается от Cline workflow?</h4><p>Skill = on-demand expertise для области (mr-self-review, анализ логов). Workflow = последовательность шагов для типовой задачи (catalog-field-change). Skill отвечает "как проверять/анализировать", workflow — "какие шаги выполнять". Хранятся в .cline/skills/ и .clinerules/workflows/.</p></div>
+          <div class="qa-card"><h4>Чем Cursor command отличается от Cursor rule?</h4><p>Rule = persistent project context, применяется всегда (.cursor/rules/) — задаёт что можно/нельзя, code style, архитектуру. Command = slash-команда для конкретного workflow (.cursor/commands/) — описывает какие шаги выполнять. Rule постоянный, command вызывается явно.</p></div>
+          <div class="qa-card"><h4>Что такое x-request-id в Netcracker workflow?</h4><p>Correlation ID для трассировки запроса через систему. Находят в Jira ticket (description/comments) через jira-mcp → используют graylog-mcp для поиска логов по этому ID → строят timeline инцидента. Ключевой артефакт cross-MCP расследования.</p></div>
+          <div class="qa-card"><h4>Что такое 7-этапный AI workflow (A3)?</h4><p>Research → Plan → Approval → Implementation → Validation → Review → Documentation. Важно не пропускать этапы: нельзя сразу менять код (риск неверных файлов), нельзя пропускать validation (код может выглядеть правильно, но ломать build), нельзя пропускать self-review.</p></div>
+          <div class="qa-card"><h4>Что такое agentic workflow vs one-off feature (A4)?</h4><p>One-off feature — выполнить задачу один раз. Agentic workflow — переиспользуемая процедура с workstreams, approval gates, quality checks, subagents. A4 результат: не просто реализованный /shop/bundles, а workflow catalog-sales-journey который можно применить для любого нового sales journey.</p></div>
+          <div class="qa-card"><h4>Чем AGENTS.md отличается от CLAUDE.md?</h4><p>Это два названия одного подхода в разных инструментах. Cursor и OpenAI Codex читают AGENTS.md. Claude Code использует CLAUDE.md (проектный) и ~/.claude/CLAUDE.md (глобальный). Cline — .clinerules/. Принцип одинаков: файл объясняет агенту роль, workflow, ограничения и команды в проекте.</p></div>
+          <div class="qa-card"><h4>Зачем нужен .cursorignore?</h4><p>Исключает файлы из AI-контекста (синтаксис как .gitignore): node_modules, generated JSON, dist, бинарники, secrets. Меньше шума → лучше качество ответа, меньше токенов. Важно: это не .gitignore — оба файла существуют независимо. Claude Code реализует то же через exclusion patterns в настройках.</p></div>
+          <div class="qa-card"><h4>Что такое always-apply Rule vs auto-attach Rule?</h4><p>Always-apply (.cursor/rules/): применяется в каждом чате автоматически — глобальные стандарты проекта. Auto-attach: применяется только к файлам, подходящим под паттерн (например, *.java). Conditional: включается явно через @ в чате. Always-apply — наивысший приоритет в иерархии правил.</p></div>
+          <div class="qa-card"><h4>Как Claude выбирает нужный Skill из 100+ доступных?</h4><p>По полю description в YAML frontmatter SKILL.md. При старте только name+description всех скиллов грузятся в системный промпт. SKILL.md читается только когда skill релевантен. Поэтому description должно: быть от 3-го лица, содержать ключевые слова, описывать КОГДА использовать. "Помогает с файлами" — плохой description, Claude не выберет такой skill.</p></div>
+          <div class="qa-card"><h4>Что такое прогрессивное раскрытие в SKILL.md?</h4><p>Архитектурный принцип: SKILL.md содержит обзор и ссылки на детальные файлы (FORMS.md, reference.md, scripts/). Claude читает SKILL.md когда skill активирован, а дополнительные файлы — только по мере необходимости. Это экономит токены. Ключевое правило: ссылки только 1 уровня глубины (SKILL.md → файл, не SKILL.md → A.md → B.md).</p></div>
+          <div class="qa-card"><h4>В чём разница между degrees of freedom в Skill?</h4><p>High freedom (текстовые инструкции): несколько подходов допустимы, контекст определяет лучший (code review). Medium freedom (псевдокод/шаблоны): есть предпочтительный паттерн, вариации допустимы (generate report). Low freedom (точные скрипты): задача хрупкая, нужна согласованность (DB migration — точная команда, без флагов). Чем хрупче задача, тем ниже свобода.</p></div>
+
+        </div>
+      </div>
+
+      <div class="matrix-card" id="tricky" style="border-color: #fca5a5; background: linear-gradient(180deg, #fff1f2, #fff8f8); margin-top: 16px;">
+        <h3 style="color: #dc2626;">⚠️ Каверзные вопросы: где легко ошибиться на assessment</h3>
+        <p style="color: #7f1d1d; font-size: 15px; margin: 0 0 14px; line-height: 1.45;">Эти вопросы звучат просто, но типичный ответ — неверный. Знать термин недостаточно: нужно понять <b>почему</b> стандартная реакция ошибочна.</p>
+        <div class="qa-grid">
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 Subagent может редактировать файлы сам?</h4><p><b>Нет.</b> По умолчанию subagent read-only (A4 safe model). Файлы меняются ТОЛЬКО в main Agent flow после approval. Subagent возвращает findings → главный агент решает → человек подтверждает → только тогда edit.</p></div>
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 AI self-review написал "LGTM" — достаточно?</h4><p><b>Нет.</b> Хороший self-review проверяет конкретные категории с evidence: scope, тесты, контракты, generated files, security/privacy. "LGTM" без ссылок на файлы — формальность, не реальная проверка. Нужно ещё и вручную проверить.</p></div>
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 Можно закоммитить mcp.json с реальными токенами?</h4><p><b>НИКОГДА.</b> Реальные токены, пароли, credentials — только в локальном конфиге (~/.cursor/mcp.json). В Git, Confluence, артефактах — только плейсхолдеры &lt;JIRA_BEARER_TOKEN&gt;. Нарушение — security incident.</p></div>
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 Generated JSON из Excel можно редактировать вручную?</h4><p><b>Нет.</b> Excel/source data — source of truth. JSON должен генерироваться через import с трейсабилити (sourceFile, sourceSheet, sourceRow, importedAt). Ручные правки ломают трейсабилити и делают state неверифицируемым.</p></div>
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 Skill говорит установить библиотеку, Rule запрещает. Что делать?</h4><p><b>Rule выше.</b> Skill — способ выполнения, не право нарушать policy. Нужно адаптировать Skill: найти способ без новой зависимости, или получить явный approval в исключительном случае.</p></div>
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 Пользователь: "быстро поменяй без тестов". Что делать?</h4><p><b>Не игнорировать AGENTS.md.</b> Текущий запрос не отменяет проектный workflow. Объяснить риск, предложить минимальный smoke check. AGENTS.md/Rules выше сиюминутного запроса пользователя.</p></div>
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 MCP tool вернул "success" — задача выполнена?</h4><p><b>Нет.</b> Tool result нужно интерпретировать и верифицировать. "Success" может быть неполным или ложным. Нужно проверить: тесты, build, реальное состояние системы. Tool result = данные для рассуждения, не окончательный вердикт.</p></div>
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 Можно сразу просить AI менять файлы?</h4><p><b>Нет (A0/A1/A3).</b> Research first, then plan, then approval, then implementation. Цена пропуска: изменение неверных файлов, scope creep, сломанный API контракт. Cursor: Ask mode → планирование → Agent mode после подтверждения.</p></div>
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 Контекст переполнен — продолжать?</h4><p><b>Нет без управления.</b> При переполнении модель "забывает" ранние части. Решения: structured checkpoint, summary/compression, subagent, убрать лишние attachments. Нельзя надеяться что модель "запомнит сама".</p></div>
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 AI написал "все тесты прошли" — верить?</h4><p><b>Нет.</b> Всегда запускай реальные validation commands самостоятельно. AI может иметь устаревший контекст или ошибиться. Только реальный build pass/test green = факт. Это ключевое правило A0.</p></div>
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 Что должен включать Agent Card?</h4><p><b>Девять полей:</b> Name, Purpose, Inputs, Outputs, Allowed tools, Forbidden actions, Approval gates, Quality checks, Risks. Отсутствие Forbidden actions — критическая ошибка. Агент без ограничений — небезопасный агент.</p></div>
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 RAG нашёл документ — можно использовать?</h4><p><b>Проверить сначала.</b> Документ может быть устаревшим (старая версия, другой продукт). Проверить метаданные (дата, версия). Если противоречит Rules — Rules выше. Для актуального состояния системы лучше проверить через MCP/tool.</p></div>
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 Какие данные нельзя отправлять в AI?</h4><p><b>Никогда:</b> секреты, токены, пароли, production URLs с credentials, реальные данные клиентов, личные данные, коммерчески чувствительная информация. Использовать анонимизированные примеры и плейсхолдеры.</p></div>
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 Чем Cursor Ask mode отличается от Agent mode?</h4><p><b>Ask mode:</b> research и планирование — читает файлы, объясняет, предлагает план. <b>Agent mode:</b> выполняет изменения после подтверждения. Правило A1/A3: сначала Ask/Plan mode, потом Agent mode только после согласованного плана.</p></div>
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 Зачем нужны approval gates если есть тесты?</h4><p><b>Они не заменяют друг друга.</b> Тесты проверяют корректность кода. Approval gates — контрольные точки для человека: подтвердить план, API изменение, финальный diff. Вместе: тесты = автоматика, gates = человеческий контроль ключевых решений.</p></div>
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 Для чего нужен x-request-id в Netcracker?</h4><p><b>Correlation ID для cross-system tracing.</b> Находят в Jira (description/comments) → ищут в Graylog логи → строят timeline. Cross-MCP workflow: jira-mcp (найти ID) → graylog-mcp (найти логи) → AI (investigation summary) → Human (решение).</p></div>
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 Memory сказала одно, актуальный файл — другое. Что выбрать?</h4><p><b>Актуальный файл/tool-result для фактов.</b> Memory может устареть. Но проверь: не является ли файл тоже устаревшей копией? Для актуального состояния системы: tool-result > Memory > RAG. Для правил поведения: AGENTS.md/Rules сильнее Memory.</p></div>
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 Reusable workflow vs один раз сделал задачу (A4)?</h4><p><b>Reusable workflow</b> — это runbook, который другой разработчик может применить к следующей похожей задаче. Один раз = нет ценности для команды. A4 артефакт должен доказывать переиспользуемость: описать inputs, steps, checks, constraints так, чтобы это работало для следующего sales journey.</p></div>
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 SKILL.md в 1000 строк — это нормально?</h4><p><b>Нет — нарушает принцип лаконичности.</b> Лимит: 500 строк для тела SKILL.md. Всё сверх этого должно быть в отдельных reference файлах (FORMS.md, reference.md, scripts/). Иначе каждый раз когда skill активен, весь SKILL.md занимает токены контекста. Прогрессивное раскрытие: Claude читает доп. файлы только по мере необходимости.</p></div>
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 Я написал Rule про стек проекта — этого достаточно для агента?</h4><p><b>Нет.</b> Rule говорит "что нельзя". Для полной конфигурации нужны: <b>AGENTS.md</b> (роль, команды, workflow агента), <b>Rules</b> (запреты, стандарты), <b>Commands</b> (конкретные процессы). Rule без AGENTS.md — агент знает ограничения, но не знает роль и workflow. AGENTS.md без Rules — не знает ограничений.</p></div>
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 .cursorignore не нужен — node_modules же в .gitignore?</h4><p><b>Это разные системы.</b> .gitignore не влияет на Cursor AI контекст. Cursor индексирует всё кроме явно исключённого в .cursorignore. node_modules без .cursorignore = тысячи файлов в AI контексте = шум, медлительность, плохие ответы. Обязательно иметь оба файла для нормальной работы.</p></div>
+          <div class="qa-card" style="border-color: #fca5a5;"><h4>🔴 Description скилла: "Helps process documents efficiently and quickly" — хорошо?</h4><p><b>Нет — три проблемы.</b> 1) Расплывчато: не понятно какие документы, 2) нет ключевых слов для обнаружения, 3) нет указания КОГДА использовать. Хорошо: "Extracts text and tables from PDF files, fills forms, merges documents. Use when working with PDF files or user mentions PDFs, forms, document extraction." — конкретно + триггеры.</p></div>
+
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="footer-box"><b>Типовой ответ:</b> “Я разделяю слои: правила поведения — в AGENTS.md/Rules, знания — в Memory/RAG, действия — через MCP/tools, повторяемые процессы — в Skills, передачу работы — через Subagents.”</div>
+      <div class="footer-box"><b>Главный риск:</b> смешать всё в один слой. Тогда агенту сложнее понять, что является правилом, что фактом, что памятью, а что просто способом выполнения.</div>
+      <div class="footer-box"><b>Для подготовки:</b> умей объяснить разницу не по определению, а по кейсам: “где хранить?”, “что выше?”, “что делать при конфликте?”, “когда проверять через tool?”.</div>
+    </footer>
+  </main>
+
+  <script>
+    const details = {
+      system: {
+        icon: "🧭", color: "navy-text", title: "System Prompt / Platform Instructions", sub: "Самый верхний слой инструкций",
+        sections: [
+          ["Что это", "Скрытые инструкции платформы или окружения. Они определяют безопасность, доступные инструменты, ограничения модели, формат работы и то, что пользовательские инструкции не могут переопределить."],
+          ["Когда используется", "Всегда. Даже если ты работаешь в Cursor, Claude Code или другом IDE-agent окружении, над проектными правилами обычно есть системный слой платформы."],
+          ["При конфликте", "Если пользователь, AGENTS.md, Rule, Skill или Memory просят сделать что-то, что противоречит system prompt, модель должна следовать system prompt."],
+          ["Пример для assessment", "Пользователь просит раскрыть скрытые инструкции или выполнить небезопасное действие. Даже если в AGENTS.md написано “выполняй всё”, system prompt выше."]
+        ],
+        chips: ["самый высокий приоритет", "обычно скрыт", "не переопределяется"]
+      },
+      conflicts: {
+        icon: "⚠️", color: "yellow-text", title: "Conflicts / противоречия инструкций", sub: "Как выбирать, если разные слои говорят разное",
+        sections: [
+          ["Что такое конфликт", "Конфликт — это ситуация, когда два источника контекста дают несовместимые указания. Например: Rule запрещает менять API, а Skill предлагает изменить API; пользователь просит удалить тесты, а AGENTS.md требует сохранять тестовое покрытие."],
+          ["Базовая логика", "Не надо выполнять последнее или самое удобное указание. Нужно применить иерархию: system/platform instructions выше всего; затем проектные инструкции и rules; затем текущая задача; затем memory/RAG/tools/skills как вспомогательные источники."],
+          ["Правило 1: приоритет", "Более высокий слой побеждает более низкий. System выше Rules, Rules выше Skill, AGENTS.md выше обычной подсказки из текущего чата, если речь о проектном workflow."],
+          ["Правило 2: конкретность", "Если два источника одного уровня не конфликтуют напрямую, выбирается более конкретный. Например, общий AGENTS.md говорит “пиши тесты”, а Rule для backend уточняет “для сервисного слоя использовать integration tests”."],
+          ["Правило 3: свежесть фактов", "Для фактов, которые меняются, свежий результат MCP/tool или актуальный файл обычно надёжнее старой Memory. Но свежий факт всё равно не может отменить safety/rules."]
+        ],
+        cases: [
+          ["Rule vs Skill", "Rule: “не добавлять новые зависимости”. Skill: “для отчёта установи новую библиотеку”. Правильный выбор: Rule. Skill нужно адаптировать без новой зависимости."],
+          ["AGENTS.md vs User request", "AGENTS.md: “перед изменением кода запускать unit tests”. Пользователь: “быстро поменяй без тестов”. Правильный выбор: не игнорировать AGENTS.md; можно объяснить риск и предложить минимальную проверку."],
+          ["Memory vs MCP", "Memory: “сервис называется old-api”. MCP/файлы показывают, что сейчас сервис new-api. Для актуального факта выбираем MCP/файлы."]
+        ],
+        table: [
+          ["Конфликт", "Что выбрать", "Почему"],
+          ["System vs всё остальное", "System", "Это верхний слой платформы."],
+          ["Rules vs Skills", "Rules", "Skill — способ работы, Rules — ограничения."],
+          ["AGENTS.md vs текущий чат", "Зависит от темы, чаще AGENTS.md для workflow", "Чат задаёт задачу, но не отменяет проектные правила."],
+          ["Memory vs MCP/tool result", "MCP/tool result для актуальных фактов", "Memory может устареть."],
+          ["RAG vs AGENTS.md/Rules", "AGENTS.md/Rules для поведения", "RAG даёт факты, но не управляет поведением."]
+        ],
+        chips: ["priority", "specificity", "freshness", "source of truth", "safe fallback"]
+      },
+      checkpoint: {
+        icon: "✅", color: "orange-text", title: "Checkpoint", sub: "Структурная точка сохранения состояния задачи",
+        sections: [
+          ["Что это", "Checkpoint — это structured snapshot: цель, что сделано, какие решения приняты, какие есть риски, что делать дальше, какие команды/файлы/ссылки важны."],
+          ["Чем отличается от summary", "Summary просто кратко пересказывает. Checkpoint фиксирует рабочее состояние так, чтобы другой агент или ты сам мог продолжить задачу без потери логики."],
+          ["Когда использовать", "Перед длинной паузой, перед context compression, при передаче работы subagent'у, после важного решения, перед сменой направления."],
+          ["Хороший шаблон", "Goal → Current state → Done → Decisions → Open questions → Risks/blockers → Next steps → Commands/files/links."]
+        ],
+        cases: [["Плохой checkpoint", "“Мы чинили CI, что-то падало”. Нельзя продолжить."], ["Хороший checkpoint", "“Goal: починить job X. Done: проверены логи A/B. Decision: причина не infra. Risk: flaky test. Next: проверить commit abc.”"]],
+        chips: ["goal", "done", "decisions", "risks", "next steps"]
+      },
+      agents: {
+        title: "AGENTS.md / CLAUDE.md — проектная инструкция",
+        body: [
+          "<b>Разные инструменты:</b> Cursor→AGENTS.md, Claude Code→CLAUDE.md (проектный + ~/.claude/CLAUDE.md глобальный), Cline→.clinerules/, OpenAI Codex→AGENTS.md.",
+          "<b>Иерархия:</b> более специфичный файл переопределяет общий. Проектный > глобальный.",
+          "<b>Что класть:</b> команды тестов/build/lint/import, архитектурные правила, stack, Definition of Done, запрещённые технологии, source of truth, workflow.",
+          "<b>Что НЕ класть:</b> секреты/токены, большие логи, generated dumps, часто меняющиеся данные (→ RAG/MCP), огромные docs (→ ссылки), A4 scope в A3 файле.",
+          "<b>.cursorignore:</b> файл в корне проекта (синтаксис как .gitignore), исключает файлы из AI-контекста. Отличается от .gitignore! Типичные исключения: node_modules, dist, generated JSON, secrets, бинарники.",
+          "<b>AGENTS.md vs Rules:</b> AGENTS.md = роль и workflow (всегда активен). Rules (.mdc) = запреты и стандарты (высший приоритет). При конфликте Rules побеждает.",
+          "<b>Принцип:</b> AGENTS.md — стабильный workflow. Меньше токенов = лучше качество."
+        ]
+      },
+      rules: {
+        icon: "⚖️", color: "purple-text", title: "Rules / Policy", sub: "Обязательные ограничения и стандарты",
+        sections: [
+          ["Что это", "Правила проекта, команды, компании или IDE. Они задают code style, формат ответа, запреты, безопасность, compliance, ограничения по библиотекам и архитектурные стандарты."],
+          ["Rules vs AGENTS.md", "AGENTS.md часто описывает роль и workflow. Rules чаще задают жёсткие ограничения. Они могут пересекаться, но лучше архитектурно разделять."],
+          ["Rules vs Skills", "Если Skill предлагает шаг, который нарушает Rule, Skill нужно адаптировать. Skill — это playbook, а не разрешение нарушать policy."],
+          ["Пример", "Rule: “не менять public API”. Skill: “для быстрого фикса поменяй сигнатуру метода”. Правильный выбор: не менять API; искать другой фикс."]
+        ],
+        chips: ["ограничения", "compliance", "code style", "safety"]
+      },
+      chat: {
+        icon: "💬", color: "blue-text", title: "Запрос пользователя / текущий чат", sub: "Самая актуальная задача",
+        sections: [
+          ["Что это", "То, что пользователь просит сделать прямо сейчас: задача, уточнения, последние сообщения, прикреплённые файлы, скриншоты, ссылки."],
+          ["Почему важен", "Именно текущий запрос определяет конкретный output: ответить, изменить файл, проверить ошибку, сделать схему, написать письмо, найти баг."],
+          ["Ограничение", "Текущий запрос не отменяет System Prompt, Rules и проектные ограничения. Если пользователь просит нарушить Rule, агент должен объяснить ограничение и выбрать безопасный вариант."],
+          ["Пример", "Пользователь: “удали failing test”. Rule: “не удалять тесты без анализа”. Правильно: сначала понять причину падения, а не удалять тест."]
+        ],
+        chips: ["текущая задача", "уточнения", "файлы", "output"]
+      },
+      memory: {
+        icon: "🧠", color: "orange-text", title: "Memory Bank", sub: "Долговременная память проекта или пользователя",
+        sections: [
+          ["Что это", "Сохранённый контекст: решения, договорённости, архитектурные факты, предпочтения пользователя, история проекта, важные ограничения."],
+          ["Когда используется", "Когда важно не терять continuity между сессиями: что уже решили, какие команды работают, какие подходы не подходят."],
+          ["Memory vs RAG/MCP", "Memory полезна для устойчивого контекста, но может устареть. Если MCP или актуальные файлы показывают другое текущее состояние, лучше доверять свежему источнику."],
+          ["Пример", "Memory помнит, что проект использовал Java 17. В pom.xml сейчас Java 21. Для текущего факта выбираем файл."]
+        ],
+        chips: ["continuity", "решения", "предпочтения", "может устареть"]
+      },
+      rag: {
+        icon: "🔎", color: "green-text", title: "RAG / Retrieval-Augmented Generation", sub: "Поиск и инъекция релевантных знаний перед генерацией",
+        sections: [
+          ["Что это", "RAG — архитектурный паттерн: перед генерацией агент ищет релевантные фрагменты в knowledge base и добавляет их в контекст. Снижает hallucination, позволяет работать с актуальными корпоративными данными без дообучения модели."],
+          ["Indexing pipeline (подготовка)", "Документ → Chunking (разбивка на фрагменты) → Embedding model (текст → числовой вектор) → Vector DB (хранение векторов + метаданные: источник, дата, версия). Качество indexing определяет качество retrieval."],
+          ["Retrieval pipeline (поиск)", "Запрос → Embedding → Cosine similarity / ANN search в Vector DB → Top-K кандидатов → (Reranking cross-encoder'ом) → Inject лучших chunk'ов в контекст модели."],
+          ["Chunking стратегии", "Fixed-size (по N токенов с overlap 10–20%). По абзацам/секциям (семантические границы). Code-aware (по функциям/классам). Semantic chunking (разбивка по перепаду смысла). Плохой chunking = потеря контекста на границах."],
+          ["Типы retrieval", "Dense (семантический, embedding-based). Sparse (keyword-based, BM25). Hybrid (комбинация dense + sparse) — лучший результат на большинстве задач. Filtered (по метаданным: дата, тип, раздел)."],
+          ["Reranking", "Первичный retrieval быстрый (ANN). Cross-encoder reranker делает более точную оценку: сравнивает запрос + каждый кандидат попарно. Итого: top-1–3 действительно релевантных chunk'а из top-20 кандидатов."],
+          ["RAG vs Rules / поведение", "RAG даёт факты, но не управляет поведением агента. Если найденный документ говорит одно, а Rules запрещают — Rules выше. Если найденный chunk устарел — tool-result или актуальный файл надёжнее."]
+        ],
+        cases: [
+          ["Хороший retrieval", "Вопрос: 'Как настроить SSO?'. RAG находит актуальную страницу docs с конфигурацией SSO за 2024 год → агент отвечает на основе реального документа, не придумывает."],
+          ["Плохой retrieval", "RAG нашёл README из версии 1.2, сейчас версия 3.0. Агент даёт устаревший совет. Решение: фильтрация по версии/дате в метаданных, или проверить актуальность через MCP/tool."],
+          ["RAG vs Memory", "RAG ищет по всей knowledge base каждый раз. Memory Bank — curated факты, которые агент помнит устойчиво. RAG = 'найти в библиотеке'. Memory = 'помню, что мы решили'."]
+        ],
+        chips: ["chunking", "embeddings", "vector DB", "cosine similarity", "ANN", "reranking", "dense/sparse/hybrid", "top-K", "факты не поведение"]
+      },
+      mcp: {
+        icon: "🛠", color: "teal-text", title: "MCP / Model Context Protocol", sub: "Открытый стандарт для подключения агентов к внешним системам",
+        sections: [
+          ["Что такое MCP", "Model Context Protocol (Anthropic, 2024) — открытый протокол, стандартизирующий способ подключения AI-агентов к любым внешним сервисам. Вместо кастомных интеграций — один универсальный протокол. Клиент (агент) + Сервер (сервис с данными/инструментами)."],
+          ["Три примитива MCP", "Resources: данные, которые сервер делает доступными (файлы, БД, API-ответы). Prompts: переиспользуемые шаблоны. Tools: функции, которые агент может вызвать — главный рабочий примитив для агентов."],
+          ["Как работает Tool call (пошагово)", "1. Агент в контексте решает использовать tool. 2. Отправляет блок tool_use: {name, arguments}. 3. MCP Server выполняет функцию. 4. Возвращает tool_result в контекст. 5. Агент продолжает рассуждение с результатом и решает: ещё tool или финальный ответ."],
+          ["Transport layers", "stdio: локальный MCP-сервер (subprocess). HTTP+SSE: удалённый сервер. Агент-клиент подключается и динамически узнаёт список доступных tools через capability discovery — не надо hardcode-ить каждый endpoint."],
+          ["MCP vs обычный API", "Обычный API — кастомная интеграция для каждого сервиса, свой формат, своя документация. MCP — один протокол для всех серверов. Агент с MCP-клиентом работает с любым MCP-сервером без дополнительного кода интеграции."],
+          ["Приоритет tool-result", "Свежий результат MCP/tool обычно надёжнее старой Memory или найденного RAG-фрагмента для актуального состояния системы. Но tool-result не отменяет Rules и Policy — safety проверяется до вызова опасного tool."],
+          ["Ограничения", "Tools требуют permissions. Опасные действия (удаление данных, деплой, финансовые операции) требуют явного намерения пользователя и policy check перед вызовом. Subagent может не иметь доступа к тем же tools, что главный агент."]
+        ],
+        cases: [
+          ["Пример Tool call", "Агент: tool_use { name: 'read_file', args: {path: '/src/config.yaml'} } → MCP Server читает файл → tool_result { content: 'db_host: prod-db...' } → агент использует актуальный конфиг."],
+          ["Опасный сценарий", "Tool 'drop_database' технически доступен. Агент не должен вызывать его без явного подтверждения пользователя, проверки policy и human-in-the-loop шага — даже если задача звучит как 'очисти БД'."],
+          ["Capability discovery", "Агент запрашивает у MCP-сервера список tools → получает schemas с name, description, input_schema → выбирает нужный tool → вызывает. Это делает агентов динамически расширяемыми."]
+        ],
+        chips: ["open protocol", "Resources", "Prompts", "Tools", "tool_use → tool_result", "stdio/HTTP+SSE", "capability discovery", "permissions"]
+      },
+      skills: {
+        title: "Skills / Playbooks / Commands",
+        body: [
+          "<b>Три формата:</b> Claude Code (SKILL.md), Cursor (Commands .cursor/commands/), Cline (.clinerules/workflows/).",
+          "<b>SKILL.md структура:</b> YAML frontmatter {name, description} + тело до 500 строк. Прогрессивное раскрытие: SKILL.md → reference files (1 уровень глубины).",
+          "<b>name:</b> строчные буквы, цифры, дефисы. Мax 64. Герундиальная форма: processing-pdfs, analyzing-logs.",
+          "<b>description:</b> от 3-го лица, что делает + когда использовать. Max 1024. Используется для обнаружения среди 100+ скиллов.",
+          "<b>Загрузка:</b> при старте грузятся только name+description всех скиллов. SKILL.md читается только когда skill релевантен. Доп. файлы — только по мере необходимости.",
+          "<b>Degrees of freedom:</b> high (текст, code review) / medium (псевдокод, report) / low (точный скрипт, DB migration).",
+          "<b>Rule vs Command vs Skill vs Subagent (A3/A4):</b> Rule=запреты, Command=явный вызов, Skill=агент выбирает, Subagent=отдельный агент (A4).",
+          "<b>Evaluation-driven:</b> сначала eval-тест, потом документация скилла.",
+          "<b>Антипаттерны:</b> многословный SKILL.md, description от 1-го лица, глубокая вложенность ссылок, time-dependent content."
+        ]
+      },
+      summary: {
+        icon: "🧾", color: "purple-text", title: "Summary / Compression", sub: "Сжатие длинного контекста",
+        sections: [
+          ["Что это", "Когда история чата становится длинной, часть сообщений может быть сжата в summary. Это помогает уместить важное в окно контекста."],
+          ["Ограничение", "Summary может потерять детали или нюансы. Это не новый источник истины, а сжатая версия прошлого контекста."],
+          ["Summary vs текущий чат", "Если summary говорит одно, а пользователь в текущем чате уточнил другое, актуальное уточнение из текущего чата важнее."],
+          ["Практика", "Для важных задач лучше делать structured checkpoint: цель, сделано, решения, риски, next steps, команды, ссылки."]
+        ],
+        chips: ["compression", "checkpoint", "context window", "может потерять детали"]
+      },
+      subagents: {
+        icon: "👥", color: "navy-text", title: "Subagents", sub: "Специализированные агенты для делегирования",
+        sections: [
+          ["Что это", "Subagent — отдельный агент или специализированный режим, которому главный агент делегирует часть задачи: поиск по коду, анализ логов, review, сбор фактов, проверка гипотез."],
+          ["Когда используют", "Когда задача большая, параллельная или требует специализации. Например, один subagent смотрит CI logs, второй ищет изменения в коде, третий проверяет документацию."],
+          ["Какой контекст получает", "Обычно subagent не получает весь контекст главного чата. Ему передают подзадачу, нужные файлы/фрагменты, инструкции и иногда часть AGENTS.md/Rules."],
+          ["Может ли использовать MCP/tools", "Зависит от платформы. Возможны варианты: те же tools, ограниченные tools, tools только у главного агента, или каждое действие требует разрешения."],
+          ["Как возвращает результат", "Обычно возвращает summary: что проверил, что нашёл, доказательства, риски, рекомендации, ссылки/файлы/команды. Главный агент принимает итоговое решение."]
+        ],
+        cases: [["Хорошая постановка", "“Проверь, почему падает тест X. Используй файлы A/B, не меняй код, верни 3 гипотезы с доказательствами.”"], ["Риск", "Subagent нашёл workaround, но не знает Rule “не менять публичный контракт”. Главный агент должен проверить результат."]],
+        chips: ["делегирование", "ограниченный контекст", "MCP зависит от прав", "главный агент проверяет"]
+      }
+    };
+
+    function renderDetails(key) {
+      const item = details[key];
+      const panel = document.getElementById("details");
+      if (!item || !panel) return;
+
+      const cases = item.cases ? `
+        <div class="details-section">
+          <h3>Мини-кейсы</h3>
+          ${item.cases.map(([h, p]) => `<div class="case-card"><b>${h}:</b> ${p}</div>`).join("")}
+        </div>` : "";
+
+      const table = item.table ? `
+        <div class="details-section">
+          <h3>Таблица выбора при конфликте</h3>
+          <table class="priority-table">
+            <thead><tr>${item.table[0].map(x => `<th>${x}</th>`).join("")}</tr></thead>
+            <tbody>${item.table.slice(1).map(row => `<tr>${row.map(x => `<td>${x}</td>`).join("")}</tr>`).join("")}</tbody>
+          </table>
+        </div>` : "";
+
+      panel.innerHTML = `
+        <div class="details-top">
+          <div class="details-icon ${item.color}">${item.icon}</div>
+          <div>
+            <h2>${item.title}</h2>
+            <div class="details-sub">${item.sub}</div>
+          </div>
+        </div>
+        ${item.sections.map(([h, p]) => `
+          <div class="details-section">
+            <h3>${h}</h3>
+            <p>${p}</p>
+          </div>
+        `).join("")}
+        ${cases}
+        ${table}
+        <div class="chips">${item.chips.map(c => `<span class="chip">${c}</span>`).join("")}</div>
+      `;
+
+      document.querySelectorAll(".clickable").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(`[data-key="${key}"]`).forEach(el => el.classList.add("active"));
+    }
+
+    document.querySelectorAll("[data-key]").forEach(el => {
+      el.addEventListener("click", () => renderDetails(el.dataset.key));
+    });
+
+    renderDetails("conflicts");
+  </script>
+</body>
+</html>
+

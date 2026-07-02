@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>MCP / Tools — протокол, uvx/npm, Registry, Inspector, как AI выбирает инструмент</title>
+  <link rel="stylesheet" href="../assets/style.css"/>
+  <style>
+    .schema-box{background:#0f172a;color:#e2e8f0;border-radius:16px;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.65;overflow:auto;margin:10px 0;white-space:pre-wrap}
+    .schema-box .h{color:#c084fc;font-weight:900}
+    .schema-box .c{color:#64748b}
+    .schema-box .k{color:#93c5fd}
+    .schema-box .v{color:#86efac}
+    .schema-box .s{color:#fcd34d}
+    .schema-box .r{color:#f87171}
+    .nuance-card{border-left:4px solid;border-radius:0 14px 14px 0;padding:12px 16px;margin:8px 0;background:#fff;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+    .nc-blue{border-left-color:#2563eb}
+    .nc-green{border-left-color:#16a34a}
+    .nc-orange{border-left-color:#f97316}
+    .nc-red{border-left-color:#dc2626}
+    .nc-teal{border-left-color:#0891b2}
+    .install-tab{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .install-card{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff}
+    .install-card h4{margin:0 0 8px;display:flex;align-items:center;gap:8px;font-size:15px}
+    .install-card .badge{border-radius:999px;padding:3px 9px;font-size:11px;font-weight:900;border:1px solid}
+    code{background:#f1f5f9;padding:2px 5px;border-radius:5px;font-family:ui-monospace,Menlo,monospace;font-size:12px}
+    .reg-card{display:flex;gap:12px;text-decoration:none;border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff;transition:.12s;margin:8px 0}
+    .reg-card:hover{border-color:#93c5fd;box-shadow:0 4px 16px rgba(37,99,235,.10)}
+    .reg-ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+    .reg-card h4{margin:0 0 3px;font-size:14px;color:#0f172a}
+    .reg-card p{margin:0;font-size:12px;color:#64748b;line-height:1.4}
+    @media(max-width:900px){.install-tab{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>
+    <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html" class="active"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div>
+  <div class="progressBox"><b>Правило MCP</b><p class="sourceNote">MCP = протокол. Tools = реализация. Агент выбирает tool по description, не по имени. Плохой description → неправильный выбор.</p></div>
+</aside>
+
+<main class="main">
+<section class="hero">
+  <div class="kicker">Agent Context Academy</div>
+  <h2>MCP / Tools</h2>
+  <p>Model Context Protocol — стандартный протокол подключения AI-агентов к внешним системам. Как работает, как устанавливать (uvx vs npm), MCP Registry, Inspector для отладки, и как AI решает какой инструмент вызвать.</p>
+  <div class="heroActions">
+    <a class="btn primary" href="home.html">На главную</a>
+    <a class="btn" href="https://registry.modelcontextprotocol.io/" target="_blank">MCP Registry ↗</a>
+    <a class="btn" href="https://modelcontextprotocol.io/docs/tools/inspector" target="_blank">Inspector ↗</a>
+    <button class="markDone">Отметить страницу изученной</button>
+  </div>
+</section>
+
+<!-- ── Что такое MCP ── -->
+<section class="section">
+  <h2>Что такое MCP и зачем он нужен</h2>
+  <div class="grid">
+    <div class="card bg-teal">
+      <h3>MCP = протокол</h3>
+      <p>Model Context Protocol — открытый стандарт Anthropic для подключения AI-агентов к внешним данным и действиям. Как USB для AI-инструментов: один протокол, разные устройства.</p>
+      <ul>
+        <li>Стандартный формат tool descriptions</li>
+        <li>JSON-RPC поверх stdio или SSE</li>
+        <li>Агент вызывает <code>tools/call</code> → сервер отвечает</li>
+      </ul>
+    </div>
+    <div class="card bg-blue">
+      <h3>MCP Server = набор tools</h3>
+      <p>MCP сервер — процесс, который предоставляет инструменты. Агент подключается к нему и получает список доступных tools со схемами и описаниями.</p>
+      <ul>
+        <li>Один сервер = одна область (filesystem, Jira, GitHub)</li>
+        <li>Может быть несколько серверов одновременно</li>
+        <li>Запускается локально или как remote сервис</li>
+      </ul>
+    </div>
+    <div class="card bg-green">
+      <h3>Tool = отдельная функция</h3>
+      <p>Каждый tool — это функция с именем, description и JSON schema параметров. Агент видит список всех доступных tools и их схемы — по этому и решает что вызвать.</p>
+      <ul>
+        <li><code>read_file(path)</code></li>
+        <li><code>search_issues(query, project)</code></li>
+        <li><code>run_tests(command)</code></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── Как AI выбирает tool ── -->
+<section class="section">
+  <h2>Как AI решает какой tool вызвать</h2>
+  <p class="sectionIntro">Это один из самых важных вопросов для assessment. Агент <em>не знает</em> инструменты наперёд — он читает их описания в context и выбирает по смыслу.</p>
+
+  <div class="callout" style="margin-bottom:16px">
+    <b>Ключевой принцип:</b> агент видит список tools как часть своего context window. Каждый tool имеет <code>name</code>, <code>description</code>, и <code>inputSchema</code>. Агент принимает решение на основе description — если description плохой, агент выберет не тот tool.
+  </div>
+
+  <div class="grid two">
+    <div>
+      <h3 style="margin-bottom:10px">Что агент видит (tool list в context)</h3>
+      <div class="schema-box"><span class="c">// Фрагмент context агента — список tools</span>
+Available tools:
+[
+  {
+    <span class="k">"name"</span>: <span class="s">"search_code"</span>,
+    <span class="k">"description"</span>: <span class="s">"Search for code patterns
+      in the repository using ripgrep.
+      Use for finding usages, definitions,
+      or specific strings in source files."</span>,
+    <span class="k">"inputSchema"</span>: {
+      <span class="k">"type"</span>: <span class="s">"object"</span>,
+      <span class="k">"properties"</span>: {
+        <span class="k">"pattern"</span>: {<span class="k">"type"</span>:<span class="s">"string"</span>},
+        <span class="k">"path"</span>: {<span class="k">"type"</span>:<span class="s">"string"</span>}
+      }
+    }
+  },
+  {
+    <span class="k">"name"</span>: <span class="s">"read_file"</span>,
+    <span class="k">"description"</span>: <span class="s">"Read contents of a file.
+      Use when you need to see the full
+      content of a specific file."</span>,
+    <span class="k">"inputSchema"</span>: {
+      <span class="k">"properties"</span>: {
+        <span class="k">"path"</span>: {<span class="k">"type"</span>:<span class="s">"string"</span>}
+      }
+    }
+  }
+]</div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:10px">Алгоритм выбора tool агентом</h3>
+      <div class="flow">
+        <div class="flowStep"><div class="flowNum">1</div><div><h4>Читает задачу</h4><p>Агент понимает что нужно сделать.</p></div></div>
+        <div class="flowStep"><div class="flowNum">2</div><div><h4>Сканирует descriptions</h4><p>Читает description каждого доступного tool и сопоставляет с задачей семантически.</p></div></div>
+        <div class="flowStep"><div class="flowNum">3</div><div><h4>Выбирает наиболее подходящий</h4><p>На основе description и inputSchema определяет какой tool решит задачу.</p></div></div>
+        <div class="flowStep"><div class="flyNum">4</div><div><h4>Формирует аргументы</h4><p>По inputSchema строит корректный JSON вызов.</p></div></div>
+        <div class="flowStep"><div class="flowNum">5</div><div><h4>Интерпретирует результат</h4><p>Tool result попадает в context → агент решает следующий шаг.</p></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nuance-card nc-red" style="margin-top:16px">
+    <h4>Почему плохой description = сломанный tool</h4>
+    <p>Агент не читает исходный код tool. Он видит только description. Если description расплывчатый ("does stuff with data"), агент не будет его вызывать. Если description конфликтует с другим tool, агент может выбрать неправильный. <b>Правило:</b> первые 2 предложения description — самые важные, они в "горячей зоне" attention агента.</p>
+  </div>
+</section>
+
+<!-- ── Схема взаимодействия ── -->
+<section class="section">
+  <h2>Схема взаимодействия: как работает MCP</h2>
+  <p class="sectionIntro">Ниже — полная цепочка от запроса пользователя до ответа через MCP сервер. Понимание этой схемы критично для диагностики проблем.</p>
+
+  <div style="background:#0f172a;border-radius:20px;padding:24px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.8;color:#e2e8f0;overflow:auto;margin:12px 0">
+    <div style="color:#c084fc;font-weight:900;margin-bottom:14px">MCP Interaction Flow</div>
+<pre style="margin:0;background:none;padding:0;color:inherit;font-family:inherit;font-size:inherit;white-space:pre">┌─────────────────────────────────────────────────────────────────┐
+│                        USER                                     │
+│              "Найди открытые PR в репозитории"                  │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ user message
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   AI AGENT (Claude / GPT)                       │
+│  Context window содержит:                                       │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ System prompt + Rules + AGENTS.md                       │   │
+│  │ Available tools: [                                      │   │
+│  │   { name: "list_pull_requests",                         │   │
+│  │     description: "Lists open PRs in a repository..." } │   │
+│  │   { name: "get_file", description: "..." }              │   │
+│  │ ]                                                       │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│  Агент анализирует описания → выбирает list_pull_requests       │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ tool call (JSON-RPC)
+                           │ { "name": "list_pull_requests",
+                           │   "params": { "repo": "my-org/my-repo",
+                           │               "state": "open" } }
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              MCP CLIENT (встроен в Cursor/Claude Code)          │
+│  • Читает .cursor/mcp.json или claude_desktop_config.json       │
+│  • Запускает нужный MCP сервер (если ещё не запущен)            │
+│  • Маршрутизирует tool call → нужному серверу                   │
+│  • Проверяет permissions (нужен ли human approval?)             │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ JSON-RPC over stdio / SSE
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              MCP SERVER (локальный процесс)                     │
+│                                                                 │
+│  ┌───────────────────────┐  ┌──────────────────────────────┐   │
+│  │  npm/npx вариант      │  │  Python/uvx вариант          │   │
+│  │                       │  │                              │   │
+│  │  node gitlab-mcp.js   │  │  uvx mcp-atlassian           │   │
+│  │  (TypeScript/JS)      │  │  (Python/PyPI)               │   │
+│  └───────────┬───────────┘  └──────────────┬───────────────┘   │
+│              └─────────────────────────────┘                   │
+│                           │ HTTP/REST/GraphQL                   │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ API call с credentials из env
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│           EXTERNAL SERVICE (GitHub, Jira, Jenkins...)           │
+│                                                                 │
+│  GitHub API → [ {id:1, title:"Fix auth", state:"open"}, ... ]  │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ response
+                           ▼
+          MCP Server → MCP Client → tool result в context агента
+                           │
+                           ▼
+              Агент формирует ответ пользователю
+              с учётом полученных данных</pre>
+  </div>
+
+  <div class="grid two" style="margin-top:12px">
+    <div class="nuance-card nc-blue" style="margin:0">
+      <h4>Где хранится конфиг</h4>
+      <ul style="font-size:13px;margin:0;padding-left:16px">
+        <li><b>Cursor</b>: <code>.cursor/mcp.json</code> (проект) или Settings → MCP (глобально)</li>
+        <li><b>Claude Code</b>: <code>claude_desktop_config.json</code></li>
+        <li>Конфиг описывает: команду запуска сервера + env vars с секретами</li>
+      </ul>
+    </div>
+    <div class="nuance-card nc-green" style="margin:0">
+      <h4>Транспорт: stdio vs SSE</h4>
+      <ul style="font-size:13px;margin:0;padding-left:16px">
+        <li><b>stdio</b>: локальный процесс, обмен через stdin/stdout. Самый простой.</li>
+        <li><b>SSE (Server-Sent Events)</b>: remote сервер по HTTP. Для облачных и командных серверов.</li>
+        <li>Большинство серверов из реестра работают через stdio.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── Установка: uvx vs npm ── -->
+<section class="section">
+  <h2>Установка MCP серверов: uvx vs npx/npm</h2>
+  <p class="sectionIntro">MCP серверы могут быть написаны на Python (запускаются через <code>uvx</code>) или JavaScript/TypeScript (через <code>npx</code>/<code>npm</code>). Выбор зависит от экосистемы сервера.</p>
+
+  <div class="install-tab">
+    <div class="install-card">
+      <h4><span style="font-size:20px">🐍</span> Python серверы — uvx <span class="badge" style="background:#fefce8;border-color:#fde68a;color:#92400e">PyPI</span></h4>
+      <p style="font-size:13px;color:#475569;margin-bottom:10px"><code>uvx</code> — это <code>uv</code> (быстрый Python package manager) в режиме run-without-install. Запускает Python MCP сервер изолированно.</p>
+      <div class="schema-box" style="font-size:12px"><span class="c"># Запуск Python MCP сервера без установки</span>
+npx @modelcontextprotocol/inspector \
+  uvx mcp-server-git \
+  --repository ~/code/my-project
+
+<span class="c"># В claude_desktop_config.json:</span>
+{
+  <span class="k">"mcpServers"</span>: {
+    <span class="k">"git"</span>: {
+      <span class="k">"command"</span>: <span class="s">"uvx"</span>,
+      <span class="k">"args"</span>: [<span class="s">"mcp-server-git"</span>,
+               <span class="s">"--repository"</span>,
+               <span class="s">"/path/to/repo"</span>]
+    }
+  }
+}</div>
+      <div class="callout" style="margin-top:8px;font-size:12px">
+        <b>Когда uvx:</b> сервер из PyPI, написан на Python. Не нужно устанавливать в систему — uvx создаёт временный venv.
+      </div>
+    </div>
+
+    <div class="install-card">
+      <h4><span style="font-size:20px">📦</span> JS/TS серверы — npx/npm <span class="badge" style="background:#eff6ff;border-color:#93c5fd;color:#1e40af">npm</span></h4>
+      <p style="font-size:13px;color:#475569;margin-bottom:10px"><code>npx</code> запускает npm пакет без глобальной установки. Большинство официальных MCP серверов Anthropic написаны на TypeScript.</p>
+      <div class="schema-box" style="font-size:12px"><span class="c"># Запуск через npx (без установки)</span>
+npx @modelcontextprotocol/inspector \
+  npx @modelcontextprotocol/server-filesystem \
+  /Users/username/Desktop
+
+<span class="c"># В claude_desktop_config.json:</span>
+{
+  <span class="k">"mcpServers"</span>: {
+    <span class="k">"filesystem"</span>: {
+      <span class="k">"command"</span>: <span class="s">"npx"</span>,
+      <span class="k">"args"</span>: [
+        <span class="s">"-y"</span>,
+        <span class="s">"@modelcontextprotocol/server-filesystem"</span>,
+        <span class="s">"/allowed/path"</span>
+      ]
+    }
+  }
+}</div>
+      <div class="callout" style="margin-top:8px;font-size:12px">
+        <b>Когда npx:</b> сервер из npm registry. <code>-y</code> флаг — автоматически соглашаться на установку без запроса.
+      </div>
+    </div>
+  </div>
+
+  <div class="tableWrap" style="margin-top:16px"><table>
+    <thead><tr><th>Аспект</th><th>uvx (Python)</th><th>npx (Node.js)</th></tr></thead>
+    <tbody>
+      <tr><td>Экосистема</td><td>Python / PyPI</td><td>JavaScript / npm</td></tr>
+      <tr><td>Установка</td><td>Не нужна — uvx создаёт venv</td><td>Не нужна — npx загружает временно</td></tr>
+      <tr><td>Скорость старта</td><td>Быстро (uv очень быстрый)</td><td>Быстро (кешируется)</td></tr>
+      <tr><td>Официальные серверы</td><td>mcp-server-git, mcp-server-fetch...</td><td>@modelcontextprotocol/server-filesystem, server-github...</td></tr>
+      <tr><td>Кастомный сервер</td><td><code>uv run python my_server.py</code></td><td><code>node path/to/server/index.js</code></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ── Реальный mcp.json пример ── -->
+<section class="section">
+  <h2>Реальный mcp.json — шаблон конфигурации</h2>
+  <p class="sectionIntro">Пример production-конфигурации с npm и Python серверами. Структура одинакова для <code>.cursor/mcp.json</code> и <code>claude_desktop_config.json</code>.</p>
+
+  <div class="install-tab">
+    <!-- npm/npx серверы -->
+    <div class="install-card">
+      <h4><span style="font-size:20px">📦</span> npm/npx серверы <span class="badge" style="background:#eff6ff;border-color:#93c5fd;color:#1e40af">Node.js</span></h4>
+      <div class="schema-box" style="font-size:12px"><span class="c">{</span>
+  <span class="k">"mcpServers"</span>: {
+
+    <span class="c">// Context7 — актуальная документация библиотек</span>
+    <span class="k">"context7"</span>: {
+      <span class="k">"command"</span>: <span class="s">"npx"</span>,
+      <span class="k">"args"</span>: [<span class="s">"-y"</span>, <span class="s">"@upstash/context7-mcp@latest"</span>],
+      <span class="k">"env"</span>: {}
+    },
+
+    <span class="c">// GitLab MCP — PR, issues, commits</span>
+    <span class="k">"gitlab-mcp"</span>: {
+      <span class="k">"command"</span>: <span class="s">"npx"</span>,
+      <span class="k">"args"</span>: [
+        <span class="s">"-y"</span>,
+        <span class="s">"@zereight/mcp-gitlab@latest"</span>,
+        <span class="s">"--token=glpat--YOUR_TOKEN"</span>,
+        <span class="s">"--api-url=https://gitlab.yourcompany.com/api/v4"</span>
+      ]
+    },
+
+    <span class="c">// Task Master AI — управление задачами</span>
+    <span class="k">"task-master-ai"</span>: {
+      <span class="k">"command"</span>: <span class="s">"npx"</span>,
+      <span class="k">"args"</span>: [<span class="s">"-y"</span>, <span class="s">"task-master-ai"</span>],
+      <span class="k">"env"</span>: {
+        <span class="k">"TASK_MASTER_TOOLS"</span>: <span class="s">"get_tasks,next_task,set_task_status"</span>
+      }
+    },
+
+    <span class="c">// Chrome DevTools — отладка браузера</span>
+    <span class="k">"chrome-devtools"</span>: {
+      <span class="k">"command"</span>: <span class="s">"npx"</span>,
+      <span class="k">"args"</span>: [<span class="s">"-y"</span>, <span class="s">"chrome-devtools-mcp@latest"</span>]
+    },
+
+    <span class="c">// Webex — корпоративный мессенджер</span>
+    <span class="k">"webex"</span>: {
+      <span class="k">"command"</span>: <span class="s">"npx"</span>,
+      <span class="k">"args"</span>: [<span class="s">"-y"</span>, <span class="s">"@yuryev89/webex-mcp@latest"</span>],
+      <span class="k">"env"</span>: {
+        <span class="k">"WEBEX_CLIENT_ID"</span>: <span class="s">"YOUR_CLIENT_ID"</span>,
+        <span class="k">"WEBEX_CLIENT_SECRET"</span>: <span class="s">"YOUR_SECRET"</span>
+      }
+    }
+  }
+<span class="c">}</span></div>
+      <div class="callout" style="margin-top:8px;font-size:12px">
+        <b>Ключевые поля:</b> <code>command: "npx"</code> + <code>args: ["-y", "package-name"]</code>. Флаг <code>-y</code> — автоматически подтверждать установку. Секреты передаются через <code>env</code>.
+      </div>
+    </div>
+
+    <!-- Python/uvx серверы -->
+    <div class="install-card">
+      <h4><span style="font-size:20px">🐍</span> Python/uvx серверы <span class="badge" style="background:#fefce8;border-color:#fde68a;color:#92400e">PyPI</span></h4>
+      <div class="schema-box" style="font-size:12px"><span class="c">{</span>
+  <span class="k">"mcpServers"</span>: {
+
+    <span class="c">// Atlassian — Jira + Confluence через uvx</span>
+    <span class="k">"mcp-atlassian"</span>: {
+      <span class="k">"command"</span>: <span class="s">"uvx"</span>,
+      <span class="k">"args"</span>: [<span class="s">"mcp-atlassian"</span>],
+      <span class="k">"env"</span>: {
+        <span class="k">"JIRA_URL"</span>: <span class="s">"https://jira.yourcompany.com"</span>,
+        <span class="k">"JIRA_PERSONAL_TOKEN"</span>: <span class="s">"YOUR_JIRA_TOKEN"</span>,
+        <span class="k">"CONFLUENCE_URL"</span>: <span class="s">"https://confluence.yourcompany.com"</span>,
+        <span class="k">"CONFLUENCE_PERSONAL_TOKEN"</span>: <span class="s">"YOUR_CONF_TOKEN"</span>
+      }
+    },
+
+    <span class="c">// Jenkins через mcp-jenkins (uvx)</span>
+    <span class="k">"jenkins-deployer"</span>: {
+      <span class="k">"command"</span>: <span class="s">"uvx"</span>,
+      <span class="k">"args"</span>: [
+        <span class="s">"mcp-jenkins"</span>,
+        <span class="s">"--jenkins-url=https://ci.yourcompany.com"</span>,
+        <span class="s">"--jenkins-user=your-user"</span>,
+        <span class="s">"--jenkins-password=YOUR_API_TOKEN"</span>
+      ]
+    },
+
+    <span class="c">// Graylog — просмотр логов</span>
+    <span class="k">"graylog-prod"</span>: {
+      <span class="k">"command"</span>: <span class="s">"npx"</span>,
+      <span class="k">"args"</span>: [
+        <span class="s">"-y"</span>, <span class="s">"@alexbuzo/graylog-mcp"</span>,
+        <span class="s">"--graylog-url"</span>,
+        <span class="s">"https://graylog.yourcompany.com/"</span>,
+        <span class="s">"--token"</span>, <span class="s">"YOUR_GRAYLOG_TOKEN"</span>,
+        <span class="s">"--ssl-verify=false"</span>
+      ]
+    },
+
+    <span class="c">// Кастомный Python MCP сервер</span>
+    <span class="k">"my-internal-mcp"</span>: {
+      <span class="k">"command"</span>: <span class="s">"uv"</span>,
+      <span class="k">"args"</span>: [
+        <span class="s">"--directory"</span>,
+        <span class="s">"/path/to/my-mcp-server"</span>,
+        <span class="s">"run"</span>,
+        <span class="s">"my-mcp-server"</span>
+      ],
+      <span class="k">"env"</span>: {
+        <span class="k">"DATABASE_URL"</span>: <span class="s">"postgresql://..."</span>
+      }
+    }
+  }
+<span class="c">}</span></div>
+      <div class="callout" style="margin-top:8px;font-size:12px">
+        <b>uvx vs uv run:</b> <code>uvx package-name</code> — запуск из PyPI без установки. <code>uv --directory /path run server</code> — запуск локального Python проекта через uv.
+      </div>
+    </div>
+  </div>
+
+  <div class="nuance-card nc-red" style="margin-top:14px">
+    <h4>Никогда не храни токены прямо в mcp.json</h4>
+    <p>Файл <code>.cursor/mcp.json</code> может попасть в git. Используй переменные окружения через env vars системы или <code>.env</code> файл (в <code>.gitignore</code>). В enterprise: secrets manager (Vault, AWS SSM). Пример безопасного подхода: <code>"JIRA_TOKEN": "${JIRA_PERSONAL_TOKEN}"</code> — читается из переменной окружения системы.</p>
+  </div>
+
+  <h3 style="margin:18px 0 10px">Структура одной записи mcpServers</h3>
+  <div class="schema-box"><span class="c">// Полная схема записи в mcpServers</span>
+<span class="k">"server-name"</span>: {                         <span class="c">// уникальный ключ (произвольный)</span>
+  <span class="k">"command"</span>: <span class="s">"npx"</span> <span class="c">| "uvx" | "node" | "python" | "uv"</span>,
+  <span class="k">"args"</span>: [<span class="s">"arg1"</span>, <span class="s">"arg2"</span>],              <span class="c">// список аргументов командной строки</span>
+  <span class="k">"env"</span>: {                                  <span class="c">// переменные окружения для процесса</span>
+    <span class="k">"API_KEY"</span>: <span class="s">"your-secret-key"</span>,
+    <span class="k">"BASE_URL"</span>: <span class="s">"https://api.example.com"</span>
+  },
+  <span class="k">"disabled"</span>: <span class="v">false</span>,                      <span class="c">// true = отключить сервер без удаления</span>
+  <span class="k">"alwaysAllow"</span>: [<span class="s">"tool_name"</span>]            <span class="c">// инструменты без запроса разрешения (Cursor)</span>
+}</div>
+</section>
+
+<!-- ── MCP Registry ── -->
+<section class="section">
+  <h2>MCP Registry — официальный каталог серверов</h2>
+  <p class="sectionIntro">Официальный реестр MCP серверов по адресу <a href="https://registry.modelcontextprotocol.io/" target="_blank">registry.modelcontextprotocol.io</a> — место где публикуются верифицированные серверы сообщества и Anthropic.</p>
+
+  <div class="callout">
+    <b>Что такое MCP Registry:</b> открытый каталог MCP серверов. Каждый сервер — это набор tools для конкретной системы (GitHub, Jira, filesystem, database...). Серверы публикуются через GitHub, доступны как npm пакеты или PyPI пакеты.
+  </div>
+
+  <div class="grid">
+    <a class="reg-card" href="https://registry.modelcontextprotocol.io/" target="_blank" style="text-decoration:none;display:flex">
+      <div class="reg-ico" style="background:#eff6ff">🗂</div>
+      <div><h4>registry.modelcontextprotocol.io</h4><p>Официальный реестр. Список серверов с описаниями, версиями и ссылками на GitHub / npm / PyPI.</p></div>
+    </a>
+    <div class="card">
+      <h3>Как пользоваться</h3>
+      <ol style="font-size:14px;color:#334155;padding-left:18px;margin:0">
+        <li>Найти нужный сервер по категории или поиску</li>
+        <li>Посмотреть список tools с описаниями</li>
+        <li>Скопировать конфигурацию для claude_desktop_config.json</li>
+        <li>Запустить через uvx или npx</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h3>Популярные серверы</h3>
+      <ul style="font-size:14px;color:#334155;padding-left:18px;margin:0">
+        <li><b>filesystem</b> — read/write локальных файлов</li>
+        <li><b>github</b> — Issues, PRs, repos</li>
+        <li><b>git</b> — git log, diff, blame</li>
+        <li><b>fetch</b> — HTTP запросы к URL</li>
+        <li><b>postgres / sqlite</b> — SQL запросы</li>
+        <li><b>puppeteer</b> — браузерная автоматизация</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── MCP Inspector ── -->
+<section class="section">
+  <h2>MCP Inspector — инструмент отладки</h2>
+  <p class="sectionIntro">MCP Inspector — интерактивный web UI для тестирования и дебаггинга MCP серверов. Запускается через npx без установки.</p>
+
+  <div class="nuance-card nc-teal">
+    <h4>Зачем нужен Inspector</h4>
+    <p>Когда создаёшь или отлаживаешь MCP сервер, нужно проверить: правильно ли он отвечает, корректны ли описания tools, как выглядит фактический JSON ответ. Inspector даёт web UI для этого без написания тестового кода.</p>
+  </div>
+
+  <div class="grid two">
+    <div>
+      <h3 style="margin-bottom:10px">Запуск Inspector</h3>
+      <div class="schema-box"><span class="c"># npm пакет</span>
+npx @modelcontextprotocol/inspector \
+  npx @modelcontextprotocol/server-filesystem \
+  /Users/username/Desktop
+
+<span class="c"># Python пакет</span>
+npx @modelcontextprotocol/inspector \
+  uvx mcp-server-git \
+  --repository ~/code/my-project
+
+<span class="c"># Локальный сервер (TypeScript)</span>
+npx @modelcontextprotocol/inspector \
+  node path/to/server/index.js
+
+<span class="c"># Локальный сервер (Python)</span>
+npx @modelcontextprotocol/inspector \
+  uv --directory path/to/server \
+  run package-name</div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:10px">Что показывает Inspector</h3>
+      <div class="card" style="margin-bottom:10px">
+        <h4>📋 Resources tab</h4>
+        <p style="font-size:13px">Список доступных ресурсов (файлов, данных). MIME типы и содержимое.</p>
+      </div>
+      <div class="card" style="margin-bottom:10px">
+        <h4>🛠 Tools tab</h4>
+        <p style="font-size:13px">Все доступные tools с JSON Schema. Можно вызвать любой tool вручную и увидеть результат.</p>
+      </div>
+      <div class="card" style="margin-bottom:10px">
+        <h4>💬 Prompts tab</h4>
+        <p style="font-size:13px">Шаблоны промптов сервера (если есть). Тестирование с кастомными аргументами.</p>
+      </div>
+      <div class="card">
+        <h4>🔔 Notifications pane</h4>
+        <p style="font-size:13px">Все логи и уведомления от сервера в реальном времени.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top:14px">
+    <b>Workflow разработки MCP сервера:</b> Launch Inspector → проверь connectivity → добавь tool → проверь описание в Tools tab → протестируй вызов → смотри результат → исправь description если агент не понимает.
+  </div>
+</section>
+
+<!-- ── Типы tools и lifecycle ── -->
+<section class="section">
+  <h2>Типы tools и lifecycle вызова</h2>
+  <div class="grid two">
+    <div class="card"><h3>Read tools</h3><ul><li>read_file, search_code</li><li>fetch_jira_ticket</li><li>get_ci_logs</li><li>query_metrics</li></ul></div>
+    <div class="card"><h3>Write / Action tools</h3><ul><li>write_file, create_pr</li><li>run_command</li><li>trigger_pipeline</li><li>update_ticket</li></ul></div>
+    <div class="card"><h3>Data / Query tools</h3><ul><li>sql_query</li><li>get_feature_flags</li><li>fetch_metrics</li><li>list_artifacts</li></ul></div>
+    <div class="card"><h3>Governance tools</h3><ul><li>approval_prompt</li><li>audit_log</li><li>permission_check</li><li>allow/deny rules</li></ul></div>
+  </div>
+
+  <div class="flow" style="margin-top:16px">
+    <div class="flowStep"><div class="flowNum">1</div><div><h4>Need detection</h4><p>Агент понимает что знаний недостаточно — нужен живой факт или действие.</p></div></div>
+    <div class="flowStep"><div class="flowNum">2</div><div><h4>Tool selection</h4><p>Читает descriptions всех доступных tools → выбирает наиболее подходящий по смыслу.</p></div></div>
+    <div class="flowStep"><div class="flowNum">3</div><div><h4>Permission check</h4><p>Платформа (Cursor/Claude Code) проверяет: разрешён ли вызов, нужен ли approval пользователя.</p></div></div>
+    <div class="flowStep"><div class="flowNum">4</div><div><h4>Hook check (Claude Code)</h4><p>PreToolUse hook (если настроен) проверяет параметры. При exit ≠ 0 — tool блокируется.</p></div></div>
+    <div class="flowStep"><div class="flowNum">5</div><div><h4>Execution + result</h4><p>MCP сервер выполняет. Результат (JSON/text/error) возвращается агенту в context.</p></div></div>
+  </div>
+</section>
+
+<!-- ── Permissions ── -->
+<section class="section">
+  <h2>Permissions и safety</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Режим</th><th>Что означает</th><th>Когда использовать</th><th>Риск</th></tr></thead>
+    <tbody>
+      <tr><td>Read-only</td><td>Только read tools</td><td>Audit, investigation, review</td><td>Не исправит сам</td></tr>
+      <tr><td>Ask before write</td><td>Write требует approval</td><td>Обычная разработка</td><td>Медленнее</td></tr>
+      <tr><td>Allowed tools list</td><td>Явный список разрешённых</td><td>Subagents, CI agents</td><td>Может не хватить tool</td></tr>
+      <tr><td>Deny rules</td><td>Запрет опасных actions</td><td>Production / DB / security</td><td>Нужно поддерживать</td></tr>
+      <tr><td>Hooks (Claude Code)</td><td>Системное принуждение</td><td>Enterprise, compliance</td><td>Нужен devops для поддержки</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ── MCP vs RAG ── -->
+<section class="section">
+  <h2>MCP vs RAG — чем отличаются</h2>
+  <div class="grid two">
+    <div class="card bg-green">
+      <h3>RAG</h3>
+      <p>Достаёт фрагменты знаний из corpus: docs, code, wiki.</p>
+      <ul><li>Поиск по смыслу (embeddings)</li><li>Статичный corpus (нужна переиндексация)</li><li>Нет side effects</li><li>Результат — текстовые chunks</li></ul>
+    </div>
+    <div class="card bg-teal">
+      <h3>MCP / Tools</h3>
+      <p>Даёт live данные и действия через tool calls.</p>
+      <ul><li>Live API / DB / CI</li><li>Актуальные данные всегда</li><li>Возможны side effects (write, trigger)</li><li>Нужны permissions и safety</li></ul>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:12px">
+    <b>Когда что:</b> документация и архивные данные → RAG. Текущий статус CI, тикеты, live метрики → MCP. Часто используются вместе: RAG находит контекст из docs, MCP даёт актуальные данные из систем.
+  </div>
+</section>
+
+<!-- ── Тонкости ── -->
+<section class="section">
+  <h2>Тонкости и нюансы MCP</h2>
+
+  <div class="nuance-card nc-red">
+    <h4>Description — это всё что видит агент</h4>
+    <p>Агент выбирает tool исключительно по description. Нет UI, нет icon, нет hint — только текст. Плохое description ("does stuff with files") → агент не поймёт когда использовать. Хорошее: "Reads file content by path. Use when you need to inspect source code, config, or any text file. Returns full content as string." Первые 1-2 предложения — самые важные.</p>
+  </div>
+
+  <div class="nuance-card nc-orange">
+    <h4>MCP сервер ≠ MCP tool</h4>
+    <p>MCP сервер — это процесс (Python/Node.js), который предоставляет несколько tools. Один сервер может содержать 5-20 tools. В конфигурации ты подключаешь сервер, а агент автоматически получает доступ ко всем его tools. Если добавил новый tool в сервер — перезапусти сервер, не меняй конфиг хоста.</p>
+  </div>
+
+  <div class="nuance-card nc-blue">
+    <h4>Slop descriptions засоряют context</h4>
+    <p>Каждый подключённый MCP сервер добавляет descriptions своих tools в system prompt (context) агента. Если у тебя 5 серверов по 10 tools с длинными descriptions — теряешь ~2000-5000 токенов на описания. Подключай только нужные для задачи серверы. В production: ограничивай список tools явно, не подключай всё подряд.</p>
+  </div>
+
+  <div class="nuance-card nc-purple">
+    <h4>uvx и npx: без глобальной установки, но с кешем</h4>
+    <p>uvx/npx не устанавливают постоянно, но кешируют. Первый запуск — скачивание пакета. Последующие — из кеша. Это значит: <b>нет сети → нет MCP</b> если кеш пуст. В enterprise среде с ограниченным интернетом используй локальные пакеты или Docker-образ сервера.</p>
+  </div>
+
+  <div class="nuance-card nc-green">
+    <h4>Тестируй tool вызовы через Inspector перед production</h4>
+    <p>MCP Inspector (npx @modelcontextprotocol/inspector ...) позволяет вызвать любой tool вручную и увидеть raw JSON ответ. Обязательный шаг при создании своего сервера: проверь description читаемость, убедись что JSON schema параметров корректна, протестируй edge cases. Это дешевле чем debuggить через агента в реальном чате.</p>
+  </div>
+</section>
+
+<!-- ── Best practices ── -->
+<section class="section">
+  <h2>Best practices — Делай / Не делай</h2>
+  <div class="grid two">
+    <div class="card bg-green">
+      <h3>✅ Делай</h3>
+      <ul>
+        <li>Пиши description в формате: <b>что делает</b> + <b>когда использовать</b> + <b>что возвращает</b></li>
+        <li>Добавляй <code>Use for X, NOT for Y</code> чтобы различить похожие tools</li>
+        <li>Подключай только нужные для задачи MCP серверы (меньше tool bloat)</li>
+        <li>Тестируй каждый новый tool через MCP Inspector перед использованием</li>
+        <li>Используй <code>uvx</code> для Python MCP серверов, <code>npx</code> для Node.js</li>
+        <li>Храни конфиг в репо (<code>claude_desktop_config.json</code> или <code>.cursor/mcp.json</code>) для команды</li>
+      </ul>
+    </div>
+    <div class="card bg-red">
+      <h3>❌ Не делай</h3>
+      <ul>
+        <li>Не пиши однословные descriptions: "file tool", "database" — агент не поймёт</li>
+        <li>Не подключай все известные MCP серверы сразу — засоришь context</li>
+        <li>Не давай write/action tools без Permissions или Hooks для safety</li>
+        <li>Не забывай <code>chmod +x</code> для кастомных скриптов-серверов</li>
+        <li>Не смешивай MCP и RAG для одних данных — выбери одно (live → MCP, archive → RAG)</li>
+        <li>Не экспонируй production DB без allow/deny rules в permissions</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── Q&A ── -->
+<section class="section">
+<h2>Вопросы по уровням</h2>
+<div class="qlevel-group">Junior — 10 вопросов</div>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое MCP (Model Context Protocol)?</summary>
+<div class="inside">MCP — открытый протокол, разработанный Anthropic, стандартизирующий способ предоставления инструментов и контекста AI-агентам. MCP определяет формат описания инструментов (tools), вызовов и результатов. Вместо того чтобы каждая платформа изобретала свой формат tool calling, MCP предоставляет единый стандарт. Агент подключается к MCP-серверам, которые предоставляют tools — функции для взаимодействия с внешними системами.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое MCP server?</summary>
+<div class="inside">MCP server — процесс или сервис, который предоставляет набор tools агенту через MCP протокол. Сервер декларирует список доступных tools с их описаниями, схемами входных параметров и возвращаемых данных. Примеры: MCP server для GitHub (создание PR, чтение issues), для файловой системы (чтение/запись файлов), для базы данных (выполнение SQL запросов). MCP серверы могут быть локальными (процесс на машине) или remote (HTTP сервис).</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое MCP tool?</summary>
+<div class="inside">MCP tool — именованная функция с описанием, которую агент может вызвать через MCP server. Каждый tool имеет: name (идентификатор), description (для агента — как понять когда вызывать), inputSchema (JSON Schema параметров), возвращаемый тип. Пример: tool 'create_pull_request' с параметрами title, body, branch. Агент видит descriptions всех tools в своём context window и на их основе решает, какой tool вызвать.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Как агент использует MCP tool — опиши flow?</summary>
+<div class="inside">Flow: (1) Агент читает descriptions всех доступных tools (они в system context). (2) Агент решает что для задачи нужен определённый tool. (3) Агент генерирует tool call с параметрами. (4) MCP client (платформа) перехватывает tool call, передаёт его MCP серверу. (5) MCP сервер выполняет функцию (обращается к API, читает файл, выполняет запрос). (6) Результат возвращается агенту как tool result. (7) Агент продолжает reasoning с полученными данными.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое tool description и почему она критически важна?</summary>
+<div class="inside">Tool description — текстовое описание tool для LLM: что делает, когда вызывать, какие параметры ожидаются. Агент не 'знает' что умеет tool — он читает description и принимает решение по ней. Плохое description ('process data') → агент не знает когда применять. Хорошее description ('Use this tool to create a new GitHub Pull Request from a branch. Do NOT use for reading existing PRs.') → чёткие границы применения. Первые 2 предложения description критичны — они в 'горячей зоне' attention модели.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Как MCP отличается от RAG?</summary>
+<div class="inside">RAG — поиск по статическому corpus документов (что написано в документации). MCP — вызов live инструментов для получения актуальных данных или выполнения действий (что происходит прямо сейчас). RAG даёт историческое/документальное знание; MCP даёт live state и позволяет совершать действия. Пример: 'какова схема таблицы users' — RAG найдёт в docs; MCP tool выполнит DESCRIBE TABLE и вернёт актуальную схему. Для live data → MCP; для archived knowledge → RAG.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Где конфигурируется MCP в Cursor и Claude Code?</summary>
+<div class="inside">Cursor: в настройках (Settings → MCP) или в .cursor/mcp.json файле в корне проекта. Конфигурация задаёт список MCP серверов с командами запуска и переменными окружения. Claude Code: через claude_desktop_config.json (глобальная конфигурация) или через CLAUDE.md с ссылкой на настройки. В обоих случаях конфиг определяет: какие серверы запустить, какие команды выполнить, какие env vars передать (API keys). Проверить активные tools: запросить у агента 'list available tools'.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое tool call и tool result?</summary>
+<div class="inside">Tool call — структурированный запрос от агента к MCP серверу: имя tool + параметры в JSON формате. Tool result — ответ MCP сервера: данные, статус выполнения (успех/ошибка), metadata. И tool call, и tool result становятся частью conversation context — агент видит что он запрашивал и что получил. Важно: tool result занимает место в context window, особенно если возвращает большие данные (JSON dump базы данных).</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое tool result и как он влияет на context window?</summary>
+<div class="inside">Tool result — ответ внешней системы, возвращённый через MCP, добавляется в conversation как отдельное сообщение. Проблема: большие tool results (например, полный список из 10000 файлов) занимают огромную часть context window. Решения: (1) Просить агента summarize результат перед добавлением; (2) Настроить MCP tool возвращать только нужные поля; (3) Pagination — получать данные по частям; (4) Фильтрация на стороне tool (передавай параметры фильтрации при вызове).</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Какие MCP серверы существуют и что они делают?</summary>
+<div class="inside">Основные категории MCP серверов: (1) File system — чтение/запись файлов, дерево директорий. (2) Version control — GitHub/GitLab: PR, issues, commits, branches. (3) Databases — SQL запросы, schema inspection. (4) Project management — Jira, Linear, Trello: tasks, sprints. (5) Communication — Slack, Email: отправка сообщений, чтение каналов. (6) Cloud/Infra — AWS, GCP: ресурсы, логи, metrics. (7) Browser — web scraping, playwright. Anthropic и сообщество публикуют open-source MCP servers на GitHub. Можно создавать кастомные под нужды проекта.</div></details>
+<div class="qlevel-group">Middle — 10 вопросов</div>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Когда использовать MCP vs RAG vs прямое чтение файла?</summary>
+<div class="inside">Правило выбора по типу данных: Live/real-time state (текущий статус сервиса, активные PR, deployment статус) → MCP tool. Historical/archived knowledge (документация, старые решения, архитектурные решения) → RAG. Конкретный файл который точно знаешь → direct read / @mention. Combo: RAG для discovery ('что есть'), MCP для verification ('что сейчас'), direct read для precision ('полный файл'). Никогда не используй RAG для 'текущее состояние' — там устаревшие данные.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как tool result от MCP попадает в context агента?</summary>
+<div class="inside">После вызова tool агент получает tool result как отдельное сообщение в conversation history. Этот результат становится частью context window наравне с другими сообщениями. Если агент делает несколько tool calls подряд — все results накапливаются в context. Важно: большие results (dump таблицы, список файлов) могут заполнить context window быстро. Стратегия: просить агента summarize и filter results прежде чем продолжать. Tool calls + results видны в conversation как structured data.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Зачем использовать MCP для live данных а не просить агента самостоятельно найти информацию?</summary>
+<div class="inside">Агент без tools не может получить live данные — он ограничен своими весами обучения и тем что ему передали в context. 'Найди сам' без tools = агент придумает (hallucination) или скажет 'не знаю'. MCP tool обращается к реальному API/файлу/БД и возвращает актуальный факт. Разница: 'Какой статус PR #123?' — без MCP агент не знает (PR создан после обучения). С MCP tool get_pull_request → реальный статус из GitHub API. MCP = глаза и руки агента в живом мире.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как обеспечить безопасность при использовании MCP — какие риски и как управлять?</summary>
+<div class="inside">Риски MCP: (1) Over-permissive tools — tool имеет доступ к production DB write когда нужен только read. (2) Credential exposure — API keys в tool config, могут утечь через logs. (3) Lateral movement — через один tool агент получает доступ к другим системам. Меры: (1) Least privilege — каждый tool только с необходимыми permissions (read-only DB tool). (2) Secrets management — API keys через env vars, не в config файлах. (3) Tool sandboxing — ограничить scope каждого tool (только определённые репозитории). (4) Audit logging — каждый tool call логируется. (5) Human approval gate — destructive операции требуют confirm.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как MCP используется для интеграции с GitHub/Jira/Slack в рабочем процессе?</summary>
+<div class="inside">GitHub MCP tools в workflow: list_pull_requests (найти открытые PR) → get_pull_request_diff (получить diff) → create_review_comment (добавить review комментарий) → merge_pull_request. Jira workflow: create_issue (создать задачу) → update_issue_status (перевести в In Progress) → add_comment (добавить progress update). Slack: send_message (нотификация о deploy), read_channel (получить последние сообщения команды). Мощь в цепочке: агент сам orchestrates multi-step workflow без ручных переключений между инструментами.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как latency MCP вызовов влияет на опыт использования агента?</summary>
+<div class="inside">Каждый tool call добавляет latency: network round-trip (100–500ms для cloud API) + processing time + context update. Сложный workflow с 10 tool calls = +1–5 секунд к общему времени. Компенсация: (1) Parallel tool calls — если tools независимы, агент может вызывать несколько одновременно. (2) Caching — кэшировать результаты idempotent запросов (list repos меняется редко). (3) Batching — один tool call возвращает сразу несколько сущностей. (4) Early termination — если ответ получен из первых tool calls, не делать остальные. UX: показывать пользователю прогресс 'calling GitHub...'.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как агент выбирает нужный tool среди множества похожих?</summary>
+<div class="inside">Агент читает name и description всех доступных tools и на основе LLM reasoning выбирает наиболее подходящий для текущего шага. Критически важно: (1) Distinct descriptions — 'Use for reading file content' vs 'Use for listing directory contents' — чёткое разграничение. (2) 'When NOT to use' в description — явно указать что tool НЕ делает. (3) Naming conventions — verb_noun pattern (create_pr, list_issues, get_file). Если два tool имеют похожие descriptions — агент может ошибиться. Тестируй: попроси агента объяснить почему он выбрал именно этот tool.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как обрабатывать ошибки MCP tools в workflow агента?</summary>
+<div class="inside">MCP error handling стратегии: (1) Retry с backoff — для transient ошибок (rate limit, timeout). (2) Fallback — если primary tool failed, попробовать альтернативный путь. (3) Graceful degradation — не знает live статус → сообщить пользователю и продолжить с cached/documented данными. (4) Error propagation — tool result содержит error message → агент должен явно обработать ошибку, не игнорировать. (5) User notification — если критический tool недоступен → сообщить пользователю, не молча давать неполный результат. MCP protocol определяет standard error format: error code + message.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как тестировать MCP интеграцию в проекте?</summary>
+<div class="inside">Тестирование MCP: (1) Unit tests для MCP server функций — mock external APIs, тестируй tool logic изолированно. (2) Integration tests — реальный MCP server против test environment (test GitHub repo, test DB). (3) Contract tests — проверить что tool schema соответствует реальному API response. (4) Agent behavior tests — задай агенту сценарий, проверь что он вызывает правильные tools в правильном порядке. (5) Error scenario tests — как агент ведёт себя когда tool возвращает ошибку. CI pipeline: запускай MCP integration tests при каждом изменении server кода.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как использовать MCP server в CI/CD pipeline?</summary>
+<div class="inside">MCP в CI: агент в pipeline вызывает tools для automated workflow. Примеры: (1) Code review agent — создать PR review comments через GitHub MCP. (2) Deploy agent — check deployment status, run smoke tests через cloud MCP. (3) Documentation agent — обновить docs в Confluence через MCP после deploy. Настройка: MCP server запускается как процесс в CI job, переменные окружения (API keys) из secrets manager. Важно: в CI используй read-only permissions где возможно, destructive actions (delete, merge) — только с explicit approval step. MCP transform CI от скриптов к intelligent automated workflow.</div></details>
+<div class="qlevel-group">Senior — 5 вопросов</div>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как архитектурно спроектировать MCP для complex multi-step workflow?</summary>
+<div class="inside">Complex workflow design: (1) Decompose в atomic tools — каждый tool делает одну вещь. Не create_pr_and_merge, а отдельно create_pr + merge_pr. (2) Stateless tools — tool не хранит state между вызовами. State в агенте, не в tool. (3) Idempotent operations — повторный вызов create_pr c теми же параметрами не создаёт дубль (check if exists first). (4) Tool composition — агент orchestrates sequence; tool не должен знать о других tools. (5) Error contracts — каждый tool возвращает structured error с recoverable/fatal flag. (6) Tool namespacing — github.create_pr, jira.create_issue — избегать name collision в multi-server setup. (7) Versioning — tools/v1/create_pr vs tools/v2/create_pr для backwards compat.</div></details>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как диагностировать сложные MCP failures — агент не вызывает tools или вызывает неправильно?</summary>
+<div class="inside">Диагностика по слоям: (1) Tool visibility — агент видит tools? Запрос 'list all available tools' должен вернуть список. Если нет — проблема с MCP server connection или config. (2) Tool selection — агент выбирает неправильный tool → review descriptions на ambiguity. Добавь примеры вызова в description. (3) Parameter errors — tool вызывается с неверными параметрами → проверь inputSchema, добавь примеры в description. (4) Execution errors — tool вызван правильно, но server возвращает ошибку → check server logs, test tool напрямую через MCP inspector. (5) Result handling — агент получил result но игнорирует → посмотри conversation для evidence of processing. Enable verbose logging для трассировки.</div></details>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как проектировать MCP tool descriptions для максимальной точности выбора агентом?</summary>
+<div class="inside">Принципы хорошего tool description: (1) Первая строка — самый важный: одно предложение 'что делает'. (2) Explicit trigger — 'Use when you need to X'. (3) Anti-triggers — 'Do NOT use for Y, use Z instead'. (4) Input semantics — описывай что значит каждый параметр в бизнес-терминах. (5) Output description — что вернёт tool и в каком формате. (6) Examples — 1–2 примера вызова. Тест на качество: дай агенту задачу и проверь выбрал ли он правильный tool и правильно ли сформулировал параметры. Итерируй descriptions на основе ошибок выбора.</div></details>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как строить цепочки MCP вызовов без потери контекста и накопления ошибок?</summary>
+<div class="inside">Chain of tool calls best practices: (1) State tracking — после каждого tool call агент явно summarize полученное перед следующим. (2) Error gates — если критический tool failed → stop chain, report error пользователю. Не продолжать workflow на broken state. (3) Context compression — длинные tool results summarize перед следующим call (экономия context window). (4) Checkpoint pattern — после каждого значимого шага агент сохраняет checkpoint: 'PR создан (#123), переходим к review'. (5) Rollback design — деструктивные операции: сначала создай backup/draft, потом apply. (6) Validation — после create операции — verify: get созданный объект и проверь.</div></details>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как строить MCP + RAG hybrid стратегию для enterprise AI assistant?</summary>
+<div class="inside">MCP + RAG hybrid: используй оба, маршрутизируй по типу запроса. Query classifier: (1) 'Что сейчас происходит / какой статус / live данные' → MCP first, потом RAG для контекста. (2) 'Как сделать / что написано / что решили' → RAG first, потом MCP для verification. (3) 'Сделай действие' → MCP only. Hybrid flow: RAG даёт документальный контекст (как работает AuthService), MCP даёт live state (какая сейчас версия задеплоена). Реализация: router agent определяет тип запроса → dispatches к RAG/MCP/hybrid subagent. Важно: явно в prompt агенту: 'For current facts use tools, for documentation use search'.</div></details>
+<div class="qlevel-group">Lead — 5 вопросов</div>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Как выстроить governance MCP серверов в организации — кто одобряет, кто поддерживает?</summary>
+<div class="inside">Governance model: (1) Approval process — новый MCP server должен пройти security review (permissions, data access, secrets handling) и architecture review (нужен ли он, не дублирует ли существующий). (2) Registry — внутренний реестр всех одобренных MCP серверов с owner, purpose, status. (3) Ownership — каждый MCP server имеет designated owner (команда). Owner отвечает за availability, updates, deprecation. (4) Deprecation process — если server устарел: notify users, migration guide, sunset date. (5) Community servers — внешние open-source MCP: security audit перед adoption. Platform team — gateway для одобрения, product teams — requestors.</div></details>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Какой approval process установить для использования destructive MCP tools?</summary>
+<div class="inside">Destructive tool policy: (1) Классификация risk level — read (авто), write (авто для dev), delete/merge/deploy (require approval). (2) Approval gate types — human-in-the-loop confirm (для prod операций), PR-like review (для infra changes), dry-run first (показать что будет сделано). (3) Audit trail — каждый destructive call логируется: кто, что, когда, результат. (4) Rollback plan — destructive action должен иметь undo: backup перед delete, tag перед deploy. (5) Staging первым — обязательный dry-run в staging перед prod. (6) Rate limiting — ограничить количество destructive calls в unit time. HITL (Human-in-the-loop) обязателен для prod database changes.</div></details>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Как выстроить MCP security policy для enterprise?</summary>
+<div class="inside">Enterprise MCP security: (1) Zero-trust для tool permissions — каждый tool с минимально необходимыми правами. (2) Secrets management — все API keys/credentials через secrets manager (Vault, AWS Secrets Manager), никогда в конфиге. (3) Network isolation — MCP серверы в отдельном network segment, ingress/egress whitelist. (4) Audit logging — все tool calls в SIEM (Splunk, DataDog). Retention: 1 год. (5) Access control — RBAC на уровне MCP server: разные роли получают разные tools. (6) Data loss prevention — tool results проходят DLP scanner, чтобы PII не попало в conversation context. (7) Penetration testing — quarterly pentest MCP endpoints. Policy document: обновлять при каждом новом server.</div></details>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Как обучать команду эффективно использовать MCP и избегать ошибок?</summary>
+<div class="inside">Training program: (1) Foundations (1ч) — что такое MCP, как tool call работает, как читать tool result. (2) Tool catalog — демо всех доступных tools с примерами реальных use cases. (3) Anti-patterns (30 мин) — типичные ошибки: избыточные tool calls, игнорирование ошибок, неправильные permissions. (4) Security awareness — как защититься от tool misuse, почему нельзя давать write access когда нужен read. (5) Hands-on lab — практические сценарии: написать task для агента с tool calls, отладить failing workflow. (6) Office hours — weekly 30-min session для вопросов. Критерий успеха: engineer может написать task description вызывающий правильные tools.</div></details>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Как аудировать и логировать MCP использование для compliance?</summary>
+<div class="inside">Audit framework: (1) Structured logging — каждый tool call: timestamp, user/agent id, tool name, parameters (sanitized), result status, duration, error если есть. (2) PII scrubbing — в параметрах и results удалять/mask PII перед логированием. (3) Centralized log storage — все MCP logs в SIEM с retention policy (regulatory: 1–7 лет). (4) Real-time monitoring — алерты при: большом числе failed calls, unusual patterns (много destructive calls), new tool usage (security anomaly). (5) Regular audit reports — monthly: top tools by usage, error rates, permission violations. (6) Compliance reports — по запросу: все actions конкретного user/agent за период. SOC2/ISO27001: audit trail обязателен.</div></details>
+<div class="qlevel-group">Architect — 5 вопросов</div>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как спроектировать MCP как extensibility layer для enterprise AI platform?</summary>
+<div class="inside">MCP as extensibility platform: (1) Plugin architecture — MCP server как plugin: стандартный интерфейс для любого нового инструмента без изменения core agent. (2) Tool marketplace — внутренний registry одобренных MCP servers, self-service для команд. (3) Versioning — semantic versioning для tool schemas, backward compat для N-1 версий. (4) Discovery API — агент может запросить список доступных servers и их capabilities (dynamic tool loading). (5) Federated deployment — каждая команда деплоит свой MCP server, platform team managed gateway. (6) SLA framework — каждый MCP server имеет SLA: availability 99.9%, latency P95 < 200ms. Паттерн: API Gateway + service mesh для MCP серверов.</div></details>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как строить внутренние MCP серверы для proprietary business logic?</summary>
+<div class="inside">Internal MCP server design: (1) Domain separation — по domain: billing-mcp, user-mcp, inventory-mcp. Каждый сервер — bounded context. (2) Thin adapter pattern — MCP server как тонкий адаптер над существующими internal APIs. Не дублируй бизнес-логику в MCP server. (3) Async tool support — для long-running operations: tool возвращает job_id, отдельный tool check_job_status. (4) Schema-first — define tool schemas в OpenAPI/JSON Schema первым, автогенерация server skeleton. (5) Testing pyramid — unit tests для business logic (не MCP), integration tests для tool API contract. (6) Documentation — каждый tool с usage examples и rate limits. Мониторинг: tool call metrics per domain сервера.</div></details>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как проектировать MCP в enterprise security architecture?</summary>
+<div class="inside">MCP security architecture: (1) Zero-trust network — MCP серверы в DMZ, агент communicates через authenticated API gateway. (2) mTLS — mutual TLS между agent runtime и MCP servers. (3) Token-based auth — short-lived tokens (JWT, 1h TTL) per session, не static API keys. (4) Capability-based access — агент получает только tokens для tools которые ему разрешены (не все tools at once). (5) Request signing — каждый tool call cryptographically signed для non-repudiation. (6) Egress filtering — MCP server не может обращаться к arbitrary external URLs. (7) Threat model — MCP-specific threats: prompt injection через tool results, SSRF через URL parameters, data exfiltration через tool responses. Security review для каждого нового server.</div></details>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как обеспечить observability для multi-agent workflow с множественными MCP вызовами?</summary>
+<div class="inside">Multi-agent MCP observability: (1) Distributed tracing — trace_id прокидывается через весь workflow: main agent → subagent → tool call → external service. OpenTelemetry spans на каждом уровне. (2) Agent activity log — структурированный log всех decisions и tool calls каждого агента в workflow. (3) Tool call graph — визуализация: какие tools вызывались, в каком порядке, сколько времени, что вернули. (4) Error propagation tracking — если subagent tool failed → как ошибка прошла вверх по цепочке к main agent. (5) Cost tracking — tokens + tool calls per workflow, cost attribution per agent/tool. (6) Business outcome correlation — workflow metrics → business metrics (PR review time, deployment success rate). Dashboard: timeline view workflow с drill-down на каждый tool call.</div></details>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как проектировать MCP versioning и обеспечивать backward compatibility?</summary>
+<div class="inside">MCP versioning strategy: (1) Semantic versioning для tool schemas — major.minor.patch. Breaking changes только в major версии. (2) Version negotiation — при коннекте агент и server negotiates supported versions. (3) Backward compat policy — поддерживать N и N-1 major версии (deprecated = N-2). (4) Additive changes only для minor — новые optional поля, новые tools. Удаление = major. (5) Migration guides — для каждой major версии: что изменилось, как мигрировать, срок поддержки старой версии. (6) Feature flags — новые experimental tools за флагом, не ломают existing clients. (7) Contract testing — автоматические тесты совместимости: client v1 против server v1 и v2. Rollout: canary deployment нового server, monitor error rates перед full rollout.</div></details>
+</section>
+
+<div class="pageFooter"><div class="nextPrev">
+  <a href="memory.html">← Memory Bank</a>
+  <a href="checkpoints.html">Checkpoint / Summary →</a>
+</div></div>
+</main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

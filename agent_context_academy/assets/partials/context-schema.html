@@ -1,0 +1,134 @@
+<div class="overall-embed" id="overallSchema">
+    <section class="layout" id="schema">
+      <aside>
+        <h2 class="column-title">Источники / слои</h2>
+        <div class="sources">
+          <button class="source-card" data-key="conflicts">
+            <div class="source-head"><div class="icon">⚠️</div><div class="source-title">Conflicts / противоречия</div></div>
+            <ul><li>Rule vs Skill</li><li>AGENTS.md vs Chat</li><li>Memory vs RAG</li><li>Tool result vs assumption</li></ul>
+          </button>
+
+          <button class="source-card clickable orange orange-text" data-key="checkpoint">
+            <div class="source-head"><div class="icon">✅</div><div class="source-title">Checkpoint</div></div>
+            <ul><li>Снимок состояния</li><li>Что сделано</li><li>Решения / риски / next steps</li></ul>
+          </button>
+
+          <button class="source-card clickable red red-text" data-key="chat">
+            <div class="source-head"><div class="icon">💬</div><div class="source-title">Запрос / текущий чат</div></div>
+            <ul><li>Текущая задача</li><li>Последние сообщения</li><li>Файлы / ссылки</li></ul>
+          </button>
+
+          <button class="source-card clickable green green-text" data-key="rag">
+            <div class="source-head"><div class="icon">🔎</div><div class="source-title">RAG / retrieval</div></div>
+            <ul><li>Docs, code, wiki</li><li>Релевантные фрагменты</li><li>Факты из базы знаний</li></ul>
+          </button>
+
+          <button class="source-card clickable teal teal-text" data-key="mcp">
+            <div class="source-head"><div class="icon">🛠</div><div class="source-title">MCP / Tools</div></div>
+            <ul><li>API, базы, файлы, web</li><li>Живые данные</li><li>Реальные действия</li></ul>
+          </button>
+
+          <button class="source-card clickable purple purple-text" data-key="summary">
+            <div class="source-head"><div class="icon">🧾</div><div class="source-title">Summary / Compression</div></div>
+            <ul><li>Сжатая история</li><li>Экономия контекста</li><li>Может потерять детали</li></ul>
+          </button>
+
+          <button class="source-card clickable navy navy-text" data-key="subagents">
+            <div class="source-head"><div class="icon">👥</div><div class="source-title">Subagents</div></div>
+            <ul><li>Специализированные агенты</li><li>Делегирование</li><li>Свои инструкции</li></ul>
+          </button>
+        </div>
+      </aside>
+
+      <section class="overall-flow-main">
+        <div class="main-title">Что реально попадает в модель и что сильнее при конфликте</div>
+
+        <button class="system-card clickable" data-key="system">
+          <div class="sys-title">0. System Prompt / Platform Instructions</div>
+          <div class="sys-grid">
+            <div><b>Что это:</b> скрытые инструкции платформы: безопасность, формат работы, доступные инструменты.</div>
+            <div><b>Когда используют:</b> всегда. Пользователь обычно не видит этот слой.</div>
+            <div><b>При конфликте:</b> побеждает над AGENTS.md, Rules, Skills, Memory, RAG и запросом пользователя.</div>
+          </div>
+        </button>
+
+        <button class="conflict-box clickable" data-key="conflicts">
+          <div class="num yellow-bg">!</div><div class="big-icon yellow-text">⚠️</div>
+          <div>
+            <h2 class="yellow-text">Conflict Resolver: что делать при противоречиях</h2>
+            <p class="desc"><b>Что это:</b> логика выбора, если разные слои говорят разное: Rule vs Skill, AGENTS.md vs Chat, Memory vs RAG, RAG vs MCP.</p>
+            <ul><li><b>Главное:</b> выбираем более высокий, конкретный и свежий источник.</li><li><b>Для assessment:</b> объяснить, почему нельзя слепо выполнять нижний слой.</li></ul>
+          </div>
+          <div class="badge yellow-bg">ВАЖНО</div>
+        </button>
+
+        <div class="flow">
+          <button class="layer-card clickable red-border" data-key="agents">
+            <div class="num red-bg">1</div><div class="big-icon red-text">📄</div>
+            <div class="layer-body"><h2 class="red-text">AGENTS.md текущего репозитория / агента</h2><p class="desc"><b>Что это:</b> проектная инструкция: роль, стиль работы, ограничения, команды, workflow.</p><ul><li><b>Когда:</b> почти всегда в репозитории.</li><li><b>Зачем:</b> базовое поведение агента.</li></ul></div>
+            <div class="badge red-bg">ВЫСОКИЙ</div>
+          </button>
+
+          <button class="layer-card clickable purple-border" data-key="rules">
+            <div class="num purple-bg">2</div><div class="big-icon purple-text">⚖️</div>
+            <div class="layer-body"><h2 class="purple-text">Rules / Policy</h2><p class="desc"><b>Что это:</b> обязательные правила: code style, safety, compliance, формат, запреты.</p><ul><li><b>Когда:</b> когда нужно соблюдать стандарты.</li><li><b>При конфликте:</b> обычно сильнее Skill и текущего пожелания.</li></ul></div>
+            <div class="badge purple-bg">ОЧЕНЬ ВЫСОКИЙ</div>
+          </button>
+
+          <button class="layer-card clickable blue-border" data-key="chat">
+            <div class="num blue-bg">3</div><div class="big-icon blue-text">💬</div>
+            <div class="layer-body"><h2 class="blue-text">Запрос пользователя / текущий чат</h2><p class="desc"><b>Что это:</b> конкретная задача, последние сообщения, файлы, уточнения.</p><ul><li><b>Когда:</b> всегда.</li><li><b>Зачем:</b> определяет текущий output.</li></ul></div>
+            <div class="badge blue-bg">ВЫСОКИЙ</div>
+          </button>
+
+          <button class="layer-card clickable orange-border" data-key="memory">
+            <div class="num orange-bg">4</div><div class="big-icon orange-text">🧠</div>
+            <div class="layer-body"><h2 class="orange-text">Memory Bank</h2><p class="desc"><b>Что это:</b> долговременная память о проекте, пользователе, решениях и соглашениях.</p><ul><li><b>Когда:</b> для continuity.</li><li><b>Риск:</b> может устареть.</li></ul></div>
+            <div class="badge orange-bg">MEDIUM-HIGH</div>
+          </button>
+
+          <button class="layer-card clickable green-border" data-key="rag">
+            <div class="num green-bg">5</div><div class="big-icon green-text">🔎</div>
+            <div class="layer-body"><h2 class="green-text">RAG / релевантные фрагменты</h2><p class="desc"><b>Что это:</b> найденные куски docs/code/wiki/tickets/knowledge base.</p><ul><li><b>Когда:</b> когда нужны факты.</li><li><b>Риск:</b> может найти устаревший фрагмент.</li></ul></div>
+            <div class="badge green-bg">MEDIUM</div>
+          </button>
+
+          <button class="layer-card clickable teal-border" data-key="mcp">
+            <div class="num teal-bg">6</div><div class="big-icon teal-text">🛠</div>
+            <div class="layer-body"><h2 class="teal-text">MCP / Tools</h2><p class="desc"><b>Что это:</b> подключённые инструменты: API, БД, файлы, браузер, CI/CD, мониторинг.</p><ul><li><b>Когда:</b> когда нужно проверить или выполнить.</li><li><b>Приоритет фактов:</b> свежий tool-result часто сильнее Memory/RAG.</li></ul></div>
+            <div class="badge teal-bg">MEDIUM</div>
+          </button>
+
+          <button class="layer-card clickable blue-border" data-key="skills">
+            <div class="num blue-bg">7</div><div class="big-icon blue-text">🎓</div>
+            <div class="layer-body"><h2 class="blue-text">Skills</h2><p class="desc"><b>Что это:</b> готовые инструкции и сценарии выполнения типовых задач.</p><ul><li><b>Когда:</b> для повторяемых процессов.</li><li><b>При конфликте:</b> Skill ниже Rules и AGENTS.md.</li></ul></div>
+            <div class="badge blue-bg">MEDIUM-LOW</div>
+          </button>
+
+          <button class="layer-card clickable navy-border" data-key="subagents">
+            <div class="num navy-bg">8</div><div class="big-icon navy-text">👥</div>
+            <div class="layer-body"><h2 class="navy-text">Subagents / другие AGENTS.md</h2><p class="desc"><b>Что это:</b> отдельные специализированные агенты для подзадач.</p><ul><li><b>Когда:</b> при делегировании.</li><li><b>Ограничение:</b> видят не весь контекст.</li></ul></div>
+            <div class="badge navy-bg">TASK-SPECIFIC</div>
+          </button>
+        </div>
+
+        <div class="result-card">
+          <div class="check">✓</div>
+          <div><b>Сформированный контекст передаётся модели</b><span>Модель использует инструкции, память, retrieved-данные, tools, skills и результаты subagents. При конфликте она должна выбрать более приоритетный и надёжный источник.</span></div>
+        </div>
+
+        <section class="legend-card legend-below">
+          <h3>Формула для assessment</h3>
+          <p><b>Сначала приоритет, потом конкретность, потом свежесть.</b> System выше всех. Rules/AGENTS.md задают рамки. User request задаёт задачу. MCP/tool-result часто даёт самые свежие факты. Skill — способ выполнения, но не право нарушать правила.</p>
+        </section>
+      </section>
+    </section>
+
+    <div class="detail-float" id="detailFloat" hidden aria-hidden="true">
+      <div class="detail-float-backdrop" id="detailFloatBackdrop"></div>
+      <div class="detail-float-dialog">
+        <button type="button" class="detail-float-close" id="detailFloatClose" aria-label="Закрыть">×</button>
+        <section class="details-panel" id="details"></section>
+      </div>
+    </div>
+</div>

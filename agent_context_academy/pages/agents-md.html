@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>AGENTS.md / CLAUDE.md — архитектура, структура, тонкости</title>
+  <link rel="stylesheet" href="../assets/style.css"/>
+  <style>
+    .schema-box{background:#0f172a;color:#e2e8f0;border-radius:16px;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.65;overflow:auto;margin:10px 0;white-space:pre-wrap}
+    .schema-box .h{color:#c084fc;font-weight:900}
+    .schema-box .c{color:#64748b}
+    .schema-box .k{color:#93c5fd}
+    .schema-box .v{color:#86efac}
+    .schema-box .s{color:#fcd34d}
+    .platform-badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:900;border:1px solid}
+    .pb-cursor{background:#eff6ff;border-color:#93c5fd;color:#1e40af}
+    .pb-claude{background:#fdf4ff;border-color:#d8b4fe;color:#6b21a8}
+    .pb-both{background:#f0fdf4;border-color:#86efac;color:#166534}
+    .cascade-diagram{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff}
+    .cascade-row{display:grid;grid-template-columns:40px 160px 1fr auto;align-items:center;padding:12px 16px;border-bottom:1px solid #f1f5f9;gap:12px}
+    .cascade-row:last-child{border-bottom:none}
+    .cascade-level{width:32px;height:32px;border-radius:999px;display:grid;place-items:center;font-weight:900;font-size:13px;color:#fff}
+    .cascade-path{font-family:ui-monospace,Menlo,monospace;font-size:12px;font-weight:900}
+    .cascade-desc{font-size:13px;color:#475569}
+    .cascade-win{font-size:11px;font-weight:900;border-radius:999px;padding:3px 9px;border:1px solid}
+    .nuance-card{border-left:4px solid;border-radius:0 14px 14px 0;padding:12px 16px;margin:8px 0;background:#fff;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+    .nc-blue{border-left-color:#2563eb}
+    .nc-red{border-left-color:#dc2626}
+    .nc-orange{border-left-color:#f97316}
+    .nc-green{border-left-color:#16a34a}
+    .nc-purple{border-left-color:#7c3aed}
+    .diff-split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    /* file tree */
+    .file-tree{background:#0f172a;border-radius:18px;padding:20px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:2;overflow:auto;white-space:pre}
+    .ft-dir{color:#93c5fd;font-weight:900}
+    .ft-agents{color:#fcd34d}
+    .ft-rules{color:#f87171}
+    .ft-hooks{color:#fb923c}
+    .ft-skills{color:#86efac}
+    .ft-ignore{color:#c084fc}
+    .ft-mem{color:#67e8f9}
+    .ft-comment{color:#475569;font-size:12px}
+    /* priority ladder */
+    .priority-ladder{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff}
+    .pl-row{display:grid;grid-template-columns:44px 1fr auto;align-items:center;padding:12px 16px;border-bottom:1px solid #f1f5f9;gap:12px}
+    .pl-row:last-child{border-bottom:none}
+    .pl-rank{width:32px;height:32px;border-radius:999px;display:grid;place-items:center;font-weight:900;font-size:13px;color:#fff;flex-shrink:0}
+    .pl-name{font-weight:900;font-size:14px}
+    .pl-name small{display:block;font-weight:400;font-size:12px;color:#64748b}
+    .pl-badge{font-size:11px;font-weight:900;border-radius:999px;padding:3px 9px;border:1px solid;white-space:nowrap}
+    @media(max-width:900px){.diff-split{grid-template-columns:1fr}.cascade-row{grid-template-columns:40px 1fr}}
+  </style>
+</head>
+<body>
+<div class="app">
+
+<aside class="sidebar">
+  <div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>
+    <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub active"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div>
+  <div class="progressBox"><b>Правило</b><p class="sourceNote">AGENTS.md = "кто ты и как работаешь". Инструкции workflow, не политика. Cascade: global → repo → subdir.</p></div>
+</aside>
+
+<main class="main">
+<section class="hero">
+  <div class="kicker">Agent Context Academy · AGENTS / Rules / Skills</div>
+  <h2>AGENTS.md / CLAUDE.md</h2>
+  <p>Project Instructions — главный файл конфигурации агента. Задаёт роль, стиль, workflow, ограничения и ссылки на Memory/Rules/Skills. Читается автоматически при каждом запросе.</p>
+  <div class="heroActions">
+    <a class="btn" href="agents-rules-skills.html">← Обзор</a>
+    <a class="btn" href="rules.html">Rules →</a>
+    <a class="btn" href="skills.html">Skills →</a>
+    <button class="markDone">Отметить страницу изученной</button>
+  </div>
+</section>
+
+<!-- ── Назначение ── -->
+<section class="section">
+  <h2>Назначение и роль в системе</h2>
+  <div class="grid">
+    <div class="card bg-blue">
+      <h3>Что такое AGENTS.md</h3>
+      <p>Файл Project Instructions — инструкции для агента о том, как работать в <em>этом конкретном репозитории</em>. Читается автоматически при каждом чате.</p>
+      <ul>
+        <li>Задаёт <b>роль и контекст</b>: кто агент, что делает проект</li>
+        <li>Описывает <b>workflow</b>: как тестировать, как делать PR</li>
+        <li>Хранит <b>team conventions</b>: стиль кода, язык, форматы</li>
+        <li>Ссылается на <b>memory, rules, skills</b></li>
+      </ul>
+    </div>
+    <div class="card bg-purple">
+      <h3>Cursor vs Claude Code</h3>
+      <p style="margin-bottom:8px"><span class="platform-badge pb-cursor">🖱 Cursor</span> Файл называется <code>AGENTS.md</code>. Читается Cursor Agent при каждом запросе.</p>
+      <p style="margin-bottom:8px"><span class="platform-badge pb-claude">🤖 Claude Code</span> Файл называется <code>CLAUDE.md</code>. Тот же смысл, другое название.</p>
+      <p><span class="platform-badge pb-both">✓ Оба</span> Каскадность: global → repo-root → subdirectory.</p>
+    </div>
+    <div class="card bg-green">
+      <h3>AGENTS.md vs Rules</h3>
+      <ul>
+        <li><b>AGENTS.md</b> — описывает <em>как работать</em>, workflow, контекст. Рекомендации.</li>
+        <li><b>Rules</b> — <em>политика</em>, которую агент обязан соблюдать. Жёстче.</li>
+        <li>AGENTS.md → агент <em>старается</em> следовать. Rules → агент <em>обязан</em> соблюдать.</li>
+        <li>Правило: "как писать тесты" → AGENTS.md. "никогда не коммить .env" → Rule.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── Каскад ── -->
+<section class="section">
+  <h2>Каскадная загрузка — как агент находит и объединяет файлы</h2>
+  <p class="sectionIntro">AGENTS.md / CLAUDE.md применяется по иерархии от самого общего к самому специфичному. Более специфичный файл имеет приоритет при конфликте.</p>
+  <div class="cascade-diagram">
+    <div class="cascade-row">
+      <div class="cascade-level" style="background:#64748b">G</div>
+      <div class="cascade-path">~/.claude/CLAUDE.md<br><span style="color:#94a3b8;font-size:11px">Cursor: нет аналога</span></div>
+      <div class="cascade-desc">Глобальные предпочтения пользователя: стиль ответа, язык, личные нормы. Применяется ко ВСЕМ проектам.</div>
+      <div class="cascade-win" style="background:#f8fafc;border-color:#e2e8f0;color:#64748b">низший приоритет</div>
+    </div>
+    <div class="cascade-row">
+      <div class="cascade-level" style="background:#2563eb">R</div>
+      <div class="cascade-path">./AGENTS.md<br><span style="color:#94a3b8;font-size:11px">./CLAUDE.md</span></div>
+      <div class="cascade-desc">Root-level — главный проектный файл. Описывает проект, команды, conventions. Применяется ко всему репо.</div>
+      <div class="cascade-win" style="background:#eff6ff;border-color:#93c5fd;color:#1e40af">стандартный</div>
+    </div>
+    <div class="cascade-row">
+      <div class="cascade-level" style="background:#7c3aed">S</div>
+      <div class="cascade-path">./src/AGENTS.md<br><span style="color:#94a3b8;font-size:11px">./billing/CLAUDE.md</span></div>
+      <div class="cascade-desc">Subdirectory-level — переопределяет или дополняет для конкретного модуля. Применяется только когда агент работает в этой папке.</div>
+      <div class="cascade-win" style="background:#fdf4ff;border-color:#d8b4fe;color:#6b21a8">выше root</div>
+    </div>
+    <div class="cascade-row">
+      <div class="cascade-level" style="background:#dc2626">!</div>
+      <div class="cascade-path">.cursor/rules/*.mdc<br><span style="color:#94a3b8;font-size:11px">Hooks / Policy</span></div>
+      <div class="cascade-desc">Rules & Hooks — жёсткая политика. Всегда побеждает AGENTS.md при конфликте. Это не AGENTS.md, но в каскаде выше.</div>
+      <div class="cascade-win" style="background:#fff1f2;border-color:#fca5a5;color:#dc2626">высший приоритет</div>
+    </div>
+  </div>
+  <div class="callout">
+    <b>Как агент объединяет:</b> Global + Root + Subdir читаются и конкатенируются. При конфликте: subdir &gt; root &gt; global. Rules в Cursor могут переопределить всё. В Claude Code — Hooks (shell scripts) жёстко принуждают к соблюдению политики.
+  </div>
+</section>
+
+<!-- ── Структура файла ── -->
+<section class="section">
+  <h2>Архитектура файла AGENTS.md — рекомендованная структура</h2>
+  <div class="diff-split">
+    <div>
+      <h3 style="margin-bottom:10px">Полная структура</h3>
+      <div class="schema-box">
+<span class="h"># AGENTS.md — [Project Name]</span>
+<span class="c">## Last updated: YYYY-MM-DD</span>
+
+<span class="h">## Role & Context</span>
+<span class="c"># Кто агент, что делает проект, важный контекст</span>
+You are a senior Java developer working on
+the Order Management microservice. This service
+handles order lifecycle for NetCracker OSS.
+
+<span class="h">## Stack & Environment</span>
+- Java 21, Quarkus 3.x
+- PostgreSQL 15 (use JPA, not raw SQL)
+- Kafka for async events
+- K8s: namespace=order-ns
+
+<span class="h">## Build & Test Commands</span>
+- Run tests: `mvn test -pl order-service`
+- Build: `mvn clean install -DskipTests`
+- Integration: `mvn verify -Pit`
+- Docker: `docker compose up -d`
+
+<span class="h">## Workflow</span>
+<span class="c"># Как делать задачи, PR, review</span>
+1. Write tests BEFORE implementation (TDD).
+2. Run `mvn test` — must be green.
+3. PR format: Problem → Fix → Tests → Risk.
+4. Rollback plan required for DB migrations.
+
+<span class="h">## Architecture Decisions (ADRs)</span>
+- ADR-001: No raw SQL — use JPA only.
+- ADR-002: Kafka for cross-service events.
+- ADR-003: Circuit breaker via fault tolerance.
+
+<span class="h">## Code Conventions</span>
+- Respond in Russian.
+- Code comments in English.
+- Max method length: 30 lines.
+- No dependency without tech-lead approval.
+
+<span class="h">## References</span>
+<span class="c"># Ссылки на другие файлы конфигурации</span>
+@docs/memory.md
+@.cursor/rules/
+</div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:10px">Минимальная структура (must-have)</h3>
+      <div class="schema-box">
+<span class="h"># AGENTS.md</span>
+
+<span class="h">## Role</span>
+You are a [role] working on [project].
+
+<span class="h">## Stack</span>
+- [main tech stack]
+
+<span class="h">## Build & Test</span>
+- Test: `[command]`
+
+<span class="h">## Key Conventions</span>
+- [most important rule #1]
+- [most important rule #2]
+</div>
+
+      <h3 style="margin:18px 0 10px">Секции и их назначение</h3>
+      <div class="tableWrap"><table>
+        <thead><tr><th>Секция</th><th>Обязательно</th><th>Что включать</th></tr></thead>
+        <tbody>
+          <tr><td>Role & Context</td><td style="color:#16a34a;font-weight:900">✓</td><td>Кто агент, что за проект</td></tr>
+          <tr><td>Stack</td><td style="color:#16a34a;font-weight:900">✓</td><td>Технологии, версии</td></tr>
+          <tr><td>Build & Test</td><td style="color:#16a34a;font-weight:900">✓</td><td>Команды для запуска</td></tr>
+          <tr><td>Workflow</td><td style="color:#f97316;font-weight:900">рекомендовано</td><td>Как делать задачи, PR</td></tr>
+          <tr><td>ADRs / Decisions</td><td style="color:#f97316;font-weight:900">рекомендовано</td><td>Ключевые архитектурные решения</td></tr>
+          <tr><td>Conventions</td><td style="color:#f97316;font-weight:900">рекомендовано</td><td>Стиль кода, язык, форматы</td></tr>
+          <tr><td>References</td><td style="color:#94a3b8">опционально</td><td>@memory.md, @rules/</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Тонкости ── -->
+<section class="section">
+  <h2>Тонкости использования — то что не очевидно</h2>
+
+  <div class="nuance-card nc-blue">
+    <h4>Subdirectory AGENTS.md — когда и зачем</h4>
+    <p>Если в репо несколько модулей с разным стеком (например, <code>billing/</code> на Java и <code>portal/</code> на Python), каждый может иметь свой AGENTS.md. Агент читает root + subdir при работе в конкретной папке. Так conventions не смешиваются между модулями.</p>
+    <div class="schema-box" style="margin-top:8px">my-project/
+├── AGENTS.md           <span class="c"># общий: проект, команда, PR-формат</span>
+├── billing/
+│   └── AGENTS.md       <span class="c"># специфично: Java ADRs, billing commands</span>
+└── portal/
+    └── AGENTS.md       <span class="c"># специфично: Python, React, другие команды</span></div>
+  </div>
+
+  <div class="nuance-card nc-orange">
+    <h4>AGENTS.md не заменяет Rules</h4>
+    <p>Критически важная политика ("не коммить .env", "всегда запускать тесты перед PR") лучше в Rules (<code>.cursor/rules/</code>), а не в AGENTS.md. Причина: Rules соблюдаются жёстче — в Claude Code их нарушение можно перехватить через Hooks. AGENTS.md агент может проигнорировать в длинном контексте ("lost in the middle").</p>
+  </div>
+
+  <div class="nuance-card nc-red">
+    <h4>Проблема "lost in the middle"</h4>
+    <p>Если AGENTS.md большой и размещён в начале context window, его середина может не учитываться агентом при длинных диалогах. Решения: <b>1)</b> Ключевые инструкции — в первые и последние 20% файла. <b>2)</b> Критическое — в Rules (alwaysApply). <b>3)</b> Чем короче AGENTS.md, тем лучше внимание.</p>
+  </div>
+
+  <div class="nuance-card nc-green">
+    <h4>@include и ссылки на другие файлы</h4>
+    <p>В Claude Code CLAUDE.md может включать другие файлы через <code>@path/to/file.md</code>. Это позволяет держать memory, ADRs, conventions в отдельных файлах и инклудить их по необходимости. В Cursor — агент может читать упомянутые файлы если они указаны через @mention в запросе или AGENTS.md.</p>
+    <div class="schema-box" style="margin-top:8px"><span class="c"># В CLAUDE.md:</span>
+@docs/architecture.md    <span class="c"># архитектурные решения</span>
+@docs/memory.md          <span class="c"># project memory</span>
+@docs/conventions.md     <span class="c"># code conventions</span></div>
+  </div>
+
+  <div class="nuance-card nc-purple">
+    <h4>AGENTS.md vs system prompt</h4>
+    <p>В Cursor: System prompt задаётся harness (IDE), AGENTS.md добавляется сверху как project context. В Claude Code: CLAUDE.md включается в system prompt автоматически. Оба читаются раньше пользовательских сообщений — это выгодная позиция для attention, но не гарантирует что всё будет прочитано при очень большом контексте.</p>
+  </div>
+</section>
+
+<!-- ── Cursor vs Claude Code side-by-side ── -->
+<section class="section">
+  <h2>Cursor vs Claude Code — детальные отличия</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Аспект</th><th>Cursor (AGENTS.md)</th><th>Claude Code (CLAUDE.md)</th></tr></thead>
+    <tbody>
+      <tr><td>Имя файла</td><td><code>AGENTS.md</code></td><td><code>CLAUDE.md</code></td></tr>
+      <tr><td>Глобальный уровень</td><td>Нет нативного (нужен отдельный workaround)</td><td><code>~/.claude/CLAUDE.md</code> — работает из коробки</td></tr>
+      <tr><td>Subdirectory</td><td>✓ Поддерживается</td><td>✓ Поддерживается</td></tr>
+      <tr><td>@include файлов</td><td>Через @mention в запросе</td><td><code>@path/to/file</code> в самом CLAUDE.md</td></tr>
+      <tr><td>Автозагрузка</td><td>Да — при каждом запросе агента</td><td>Да — при каждом запросе</td></tr>
+      <tr><td>Жёсткое соблюдение</td><td>Rules (.cursor/rules/*.mdc)</td><td>Hooks (shell-скрипты)</td></tr>
+      <tr><td>Memory интеграция</td><td>Memory feature в IDE + memory.md</td><td>@docs/memory.md в CLAUDE.md</td></tr>
+      <tr><td>Документация</td><td><a href="https://docs.cursor.com/context/rules-for-ai" target="_blank">docs.cursor.com/context/rules-for-ai</a></td><td><a href="https://docs.anthropic.com/en/docs/claude-code/memory" target="_blank">docs.anthropic.com/claude-code/memory</a></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ── Best practices ── -->
+<section class="section">
+  <h2>Best practices</h2>
+  <div class="grid">
+    <div class="card bg-green">
+      <h3>Делай</h3>
+      <ul>
+        <li>Начинай с <b>Role section</b> — агент сразу знает контекст</li>
+        <li>Всегда указывай <b>команды тестов</b> — агент запустит правильную</li>
+        <li>ADRs с обоснованием: "используем JPA <em>потому что</em>..."</li>
+        <li>Обновляй дату <b>last updated</b> при изменениях</li>
+        <li>Держи файл <b>коротким</b> — &lt;200 строк идеал</li>
+        <li>Критическое — в Rules, не в AGENTS.md</li>
+      </ul>
+    </div>
+    <div class="card bg-red">
+      <h3>Не делай</h3>
+      <ul>
+        <li>Секреты, токены, пароли — никогда</li>
+        <li>Длинную документацию — это работа RAG</li>
+        <li>Противоречивые инструкции в разных секциях</li>
+        <li>Дублировать содержимое Rules в AGENTS.md</li>
+        <li>Забывать обновлять при смене стека</li>
+        <li>Оставлять без даты — нельзя понять насколько устарело</li>
+      </ul>
+    </div>
+    <div class="card bg-orange">
+      <h3>Anti-patterns</h3>
+      <ul>
+        <li><b>God AGENTS.md</b> — 1000+ строк всего подряд. Агент перестаёт читать.</li>
+        <li><b>Противоречие с subdir</b> — root говорит "Java", subdir не уточняет "здесь Python".</li>
+        <li><b>Только правила без контекста</b> — "не делай X" без объяснения почему.</li>
+        <li><b>Нет команд тестов</b> — агент угадывает или не проверяет.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── Файловое дерево ── -->
+<section class="section">
+  <h2>Файловое дерево — где что лежит</h2>
+  <div class="diff-split">
+    <div>
+      <h3 style="margin-bottom:10px">Cursor</h3>
+      <div class="file-tree"><span class="ft-dir">my-project/</span>
+├── <span class="ft-agents">AGENTS.md</span>           <span class="ft-comment">← Project instructions</span>
+├── <span class="ft-ignore">.cursorignore</span>       <span class="ft-comment">← Исключить из AI-индекса</span>
+│
+├── <span class="ft-dir">.cursor/</span>
+│   ├── <span class="ft-dir">rules/</span>
+│   │   ├── <span class="ft-rules">always-test.mdc</span>    <span class="ft-comment">← alwaysApply: true</span>
+│   │   ├── <span class="ft-rules">security.mdc</span>       <span class="ft-comment">← globs: ["**/auth/**"]</span>
+│   │   └── <span class="ft-rules">db-review.mdc</span>      <span class="ft-comment">← globs: ["**/*.sql"]</span>
+│   └── <span class="ft-dir">commands/</span>
+│       ├── <span class="ft-skills">debug-ci.md</span>
+│       └── <span class="ft-skills">weekly-report.md</span>
+│
+├── <span class="ft-dir">src/</span>
+│   └── <span class="ft-agents">AGENTS.md</span>          <span class="ft-comment">← subdir (merge с root)</span>
+└── <span class="ft-mem">.memory/memory.md</span>    <span class="ft-comment">← Memory Bank</span></div>
+      <div class="callout" style="margin-top:10px;font-size:13px">
+        <b>Важно:</b> Rules работают только с <code>.mdc</code> + YAML frontmatter. Обычный <code>.md</code> в <code>.cursor/rules/</code> игнорируется.
+      </div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:10px">Claude Code</h3>
+      <div class="file-tree"><span class="ft-dir">my-project/</span>
+├── <span class="ft-agents">CLAUDE.md</span>           <span class="ft-comment">← Project instructions</span>
+├── <span class="ft-ignore">.claudeignore</span>       <span class="ft-comment">← Исключить из AI-контекста</span>
+│
+├── <span class="ft-dir">.claude/</span>
+│   ├── <span class="ft-hooks">settings.json</span>      <span class="ft-comment">← Hooks (PreToolUse/PostToolUse)</span>
+│   └── <span class="ft-dir">commands/</span>
+│       ├── <span class="ft-skills">debug-ci.md</span>        <span class="ft-comment">← name + description в YAML</span>
+│       └── <span class="ft-skills">weekly-report.md</span>
+│
+├── <span class="ft-dir">scripts/</span>             <span class="ft-comment">← Hook shell-скрипты</span>
+│   ├── <span class="ft-hooks">check-secrets.sh</span>
+│   └── <span class="ft-hooks">audit-log.sh</span>
+│
+├── <span class="ft-dir">src/</span>
+│   └── <span class="ft-agents">CLAUDE.md</span>          <span class="ft-comment">← subdir (merge с root)</span>
+└── <span class="ft-mem">.memory/memory.md</span>
+
+<span class="ft-comment">~ глобально:</span>
+<span class="ft-dir">~/.claude/</span>
+├── <span class="ft-agents">CLAUDE.md</span>          <span class="ft-comment">← личные предпочтения</span>
+└── <span class="ft-dir">commands/</span>          <span class="ft-comment">← глобальные Skills</span></div>
+      <div class="callout warn" style="margin-top:10px;font-size:13px">
+        <b>Нет .mdc.</b> Rules реализуются через секцию MUST в CLAUDE.md + Hooks для hard enforcement.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Иерархия приоритетов ── -->
+<section class="section">
+  <h2>Иерархия приоритетов — что важнее</h2>
+  <div class="priority-ladder">
+    <div class="pl-row" style="background:#fff1f2">
+      <div class="pl-rank" style="background:#dc2626">1</div>
+      <div class="pl-name">Hooks (Claude Code) / Team Rules (Cursor Business)
+        <small>Shell-скрипты до/после tool call. Нельзя обойти из промпта — системный уровень.</small>
+      </div>
+      <span class="pl-badge" style="background:#fee2e2;border-color:#fca5a5;color:#dc2626">enforcement</span>
+    </div>
+    <div class="pl-row" style="background:#fff7ed">
+      <div class="pl-rank" style="background:#ea580c">2</div>
+      <div class="pl-name">Rules (alwaysApply: true)
+        <small>Всегда в context. Нельзя переопределить из чата. Побеждает AGENTS.md.</small>
+      </div>
+      <span class="pl-badge" style="background:#ffedd5;border-color:#fdba74;color:#c2410c">политика</span>
+    </div>
+    <div class="pl-row" style="background:#fefce8">
+      <div class="pl-rank" style="background:#ca8a04">3</div>
+      <div class="pl-name">AGENTS.md / CLAUDE.md (root)
+        <small>Workflow, stack, DoD. Cascade: global → root → subdir. Уступает Rules при конфликте.</small>
+      </div>
+      <span class="pl-badge" style="background:#fef9c3;border-color:#fde047;color:#854d0e">workflow</span>
+    </div>
+    <div class="pl-row" style="background:#f0fdf4">
+      <div class="pl-rank" style="background:#16a34a">4</div>
+      <div class="pl-name">Rules (auto-attach / agent-requested)
+        <small>По globs или по решению агента. Не всегда в context.</small>
+      </div>
+      <span class="pl-badge" style="background:#dcfce7;border-color:#86efac;color:#166534">контекстная политика</span>
+    </div>
+    <div class="pl-row">
+      <div class="pl-rank" style="background:#2563eb">5</div>
+      <div class="pl-name">Current task (chat)
+        <small>Что нужно сделать сейчас. Не переопределяет Rules и Hooks выше.</small>
+      </div>
+      <span class="pl-badge" style="background:#dbeafe;border-color:#93c5fd;color:#1e40af">задача</span>
+    </div>
+    <div class="pl-row">
+      <div class="pl-rank" style="background:#7c3aed">6</div>
+      <div class="pl-name">Skills / Commands
+        <small>Commands. Вызываются явно (/command). Рекомендации, не ограничения.</small>
+      </div>
+      <span class="pl-badge" style="background:#ede9fe;border-color:#c4b5fd;color:#5b21b6">playbook</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── Все артефакты: полная таблица ── -->
+<section class="section">
+  <h2>Все артефакты конфигурации — Cursor vs Claude Code</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Роль</th><th>Cursor</th><th>Claude Code</th><th>Формат</th><th>Когда активен</th></tr></thead>
+    <tbody>
+      <tr><td><b>Project instructions</b></td><td><code>AGENTS.md</code></td><td><code>CLAUDE.md</code></td><td>Markdown</td><td>Каждый запрос</td></tr>
+      <tr><td><b>Always-on policy</b></td><td><code>.cursor/rules/*.mdc</code> alwaysApply:true</td><td>Секция MUST в CLAUDE.md + Hooks</td><td>.mdc / Markdown</td><td>Каждый запрос</td></tr>
+      <tr><td><b>Context policy</b></td><td><code>.cursor/rules/*.mdc</code> globs:[...]</td><td>Нет аналога</td><td>.mdc</td><td>При совпадении файлов с globs</td></tr>
+      <tr><td><b>Hard enforcement</b></td><td>Team Rules (Cursor Business)</td><td><code>.claude/settings.json</code> Hooks</td><td>UI / JSON + shell</td><td>До/после каждого tool call</td></tr>
+      <tr><td><b>Commands</b></td><td><code>.cursor/commands/*.md</code></td><td><code>.claude/commands/*.md</code></td><td>Markdown (+ YAML в Claude)</td><td>/имя-команды</td></tr>
+      <tr><td><b>AI filter</b></td><td><code>.cursorignore</code></td><td><code>.claudeignore</code></td><td>gitignore-синтаксис</td><td>При индексации (RAG)</td></tr>
+      <tr><td><b>Global personal</b></td><td>Cursor Settings → Rules</td><td><code>~/.claude/CLAUDE.md</code></td><td>UI / Markdown</td><td>Всегда, ниже Project</td></tr>
+      <tr><td><b>Sub-dir context</b></td><td><code>src/AGENTS.md</code></td><td><code>src/CLAUDE.md</code></td><td>Markdown</td><td>Когда агент в этой папке</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><b>Главное отличие:</b> В Cursor жёсткое принуждение достигается через Rules (alwaysApply). В Claude Code уровень выше — Hooks в settings.json, которые работают на OS-уровне и не зависят от LLM-контекста.</div>
+</section>
+
+<!-- ── Platform split ── -->
+<section class="section">
+  <h2>Cursor и Claude Code — расположение и иерархия файлов</h2>
+  <div class="platform-split">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor — AGENTS.md</div>
+      <p>Файл <code>AGENTS.md</code> в корне проекта или поддиректории. Cursor читает его и включает в context агента. Можно использовать иерархию: корневой + поддиректорный AGENTS.md.</p>
+      <div class="schema-box" style="font-size:12px">📁 project/
+├── AGENTS.md          ← главный
+├── frontend/
+│   └── AGENTS.md      ← переопределяет для frontend/
+└── api/
+    └── AGENTS.md      ← переопределяет для api/</div>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code — CLAUDE.md</div>
+      <p>Файл называется <code>CLAUDE.md</code> (не AGENTS.md). Загружается автоматически при старте сессии. Поддерживает иерархию директорий. Перезагружается при каждом запросе — не compaction-ится.</p>
+      <div class="schema-box" style="font-size:12px">📁 project/
+├── CLAUDE.md          ← главный (= AGENTS.md в Cursor)
+├── frontend/
+│   └── CLAUDE.md      ← переопределяет для frontend/
+└── api/
+    └── CLAUDE.md      ← переопределяет для api/</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Cursor vs Claude Code сравнение ── -->
+<section class="section">
+  <h2>Cursor vs Claude Code — сравнение</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Аспект</th><th>Cursor</th><th>Claude Code</th></tr></thead>
+    <tbody>
+      <tr><td>Имя файла</td><td>AGENTS.md</td><td>CLAUDE.md</td></tr>
+      <tr><td>Расположение</td><td>Корень или поддиректория</td><td>Корень или поддиректория</td></tr>
+      <tr><td>Иерархия</td><td>Да — поддиректорный переопределяет</td><td>Да — поддиректорный переопределяет</td></tr>
+      <tr><td>Загрузка</td><td>При старте сессии агента</td><td>При каждом запросе (не compaction-ится)</td></tr>
+      <tr><td>Формат</td><td>Markdown, без frontmatter</td><td>Markdown, без frontmatter</td></tr>
+      <tr><td>Лимит размера</td><td>Рекомендуется &lt; 150 строк</td><td>Рекомендуется &lt; 150 строк</td></tr>
+      <tr><td>Дублирование в CLAUDE.md</td><td>—</td><td>Можно создать CLAUDE.md = копия AGENTS.md для совместимости</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><b>Главное отличие:</b> имя файла (AGENTS.md vs CLAUDE.md) и то что в Claude Code файл перезагружается при каждом запросе — поэтому он не теряется при compaction.</div>
+</section>
+
+<!-- ── Q&A ── -->
+<section class="section">
+  <h2>Вопросы по уровням</h2>
+
+  <div class="qlevel-group">Junior — 10 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое AGENTS.md и для чего он нужен?</summary>
+  <div class="inside">AGENTS.md — файл с инструкциями проекта для AI-агента, который читается автоматически при каждом запросе. Он описывает кто такой агент, в каком стеке работает проект, как запускать тесты, каковы workflow и конвенции команды. Без него агент начинает каждую сессию с нуля и вынужден угадывать контекст. В Claude Code аналогичный файл называется CLAUDE.md, но выполняет ту же функцию.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое CLAUDE.md и чем он отличается от AGENTS.md?</summary>
+  <div class="inside">CLAUDE.md — эквивалент AGENTS.md для платформы Claude Code (Anthropic). Содержимое и назначение идентичны: описать агенту проект, стек, команды, workflow. Основное отличие — название файла и механизм загрузки: в Claude Code есть глобальный уровень ~/.claude/CLAUDE.md, который применяется ко всем проектам пользователя, а в Cursor такого нативного аналога нет. Оба поддерживают каскадную загрузку из поддиректорий.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Где должен храниться файл AGENTS.md в репозитории?</summary>
+  <div class="inside">Основной AGENTS.md хранится в корне репозитория (root level) рядом с README.md. Дополнительные файлы можно создать в поддиректориях для модулей с особой спецификой — например billing/AGENTS.md для модуля с отдельным стеком. Каскадная загрузка: агент читает root-файл плюс все AGENTS.md на пути к текущей директории. Файл версионируется в git как обычный markdown.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что обязательно писать в AGENTS.md?</summary>
+  <div class="inside">Минимальный обязательный набор: (1) Role — кто такой агент и что за проект; (2) Tech Stack — языки, фреймворки, базы данных с версиями; (3) Build & Test — точные команды для сборки и тестирования (mvn test, npm test и т.д.); (4) Key Conventions — главные соглашения команды. Рекомендуется также добавить Workflow (как делать PR, DoD) и Architecture Decisions (почему выбраны те или иные решения).</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Чем AGENTS.md отличается от Rules (.mdc)?</summary>
+  <div class="inside">AGENTS.md описывает workflow и контекст: "как работать в этом проекте", стек, команды, DoD — это рекомендации. Rules — жёсткая политика: "что нельзя делать никогда" (не коммитить секреты, не удалять тесты). Rules с alwaysApply:true всегда присутствуют в context и агент обязан им следовать. AGENTS.md агент может частично проигнорировать при очень длинном контексте (lost in the middle), Rules — надёжнее.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Когда агент читает AGENTS.md?</summary>
+  <div class="inside">AGENTS.md читается автоматически при каждом новом запросе к агенту. Файл включается в context window в начале сессии как часть system context (Cursor) или как часть системного промпта (Claude Code). Это означает агент "знает" о проекте ещё до того как пользователь напишет первое сообщение. При очень длинном контексте и compaction файл может быть сжат.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое project context и зачем он нужен агенту?</summary>
+  <div class="inside">Project context — набор сведений о проекте, которые агент должен знать чтобы работать эффективно: стек, архитектура, команды, соглашения, ADR. Без project context агент не знает на каком языке писать тесты, какой build tool использовать, каков PR format. Это "ввод в должность" для агента — аналог инструктажа нового разработчика в команде. AGENTS.md является основным носителем project context.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Какие секции принято включать в AGENTS.md?</summary>
+  <div class="inside">Стандартные секции: ## Role (кто агент, что за проект), ## Stack (технологии, версии), ## Build &amp; Test (команды), ## Workflow (процесс, DoD), ## Architecture Decisions (ADR с обоснованием), ## Conventions (стиль кода, язык, форматы), ## References (ссылки на memory.md, rules). Обязательны первые три; остальные рекомендуются. Секция References позволяет разбить большой файл на несколько через @include.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Как AGENTS.md помогает агенту работать эффективнее?</summary>
+  <div class="inside">AGENTS.md устраняет необходимость объяснять контекст заново в каждой сессии. Агент сразу знает команды тестов (не угадывает), технологический стек (не предлагает несовместимые решения), PR-формат (формирует правильные коммиты). Это снижает количество уточняющих вопросов, ошибок от незнания контекста и итераций на исправление. Качественный AGENTS.md может сократить время выполнения задачи на 20–40%.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что произойдёт если в проекте нет AGENTS.md?</summary>
+  <div class="inside">Агент будет работать в "слепом" режиме: угадывать технологии, запускать случайные команды тестов, нарушать конвенции команды. Каждую сессию придётся вручную объяснять контекст — тратить токены и время. Риски: агент предложит добавить зависимость без одобрения, использует неверный PR-формат, сгенерирует код не совместимый со стеком проекта. Без AGENTS.md каждая сессия начинается с нуля.</div></details>
+
+  <div class="qlevel-group">Middle — 10 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как решить что класть в AGENTS.md, а что в Rules?</summary>
+  <div class="inside">Правило: AGENTS.md — для всего что описывает "как работать" (workflow, стек, команды, DoD). Rules — для всего что описывает "что нельзя" (safety, compliance, архитектурные запреты). Пример: "запускай тесты перед PR" → AGENTS.md (рекомендация). "Не коммитить .env файлы" → Rules (запрет). Критически важные ограничения всегда в Rules (alwaysApply:true) — они надёжнее при длинном контексте. AGENTS.md соблюдается "по желанию", Rules — принудительно.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как писать компактный AGENTS.md не теряя важного?</summary>
+  <div class="inside">Принципы компактного AGENTS.md: (1) Один факт — одна строка; (2) Команды точные, не объяснения ("mvn test" а не "запусти тесты через Maven"); (3) ADR — только решение и краткое обоснование, детали — в отдельном docs/ файле через @include; (4) Убрать всё что есть в README или документации — не дублировать; (5) Целевой размер ≤200 строк, идеал ≤100. Длинный AGENTS.md страдает от lost in the middle — критическое уходит из зоны внимания модели.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как AGENTS.md помогает при onboarding новых разработчиков?</summary>
+  <div class="inside">AGENTS.md — живая документация проекта, доступная мгновенно через AI-агента. Новый разработчик + агент: агент читает AGENTS.md и сразу знает стек, команды, конвенции — не нужно объяснять вручную. Это снижает time-to-first-contribution. Дополнительно: AGENTS.md сам по себе — документ для нового разработчика ("прочитай AGENTS.md — поймёшь проект за 10 минут"). Версионируется в git — всегда актуален.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда использовать AGENTS.md, а когда Memory Bank?</summary>
+  <div class="inside">AGENTS.md — стабильный контекст проекта (стек, команды, конвенции, workflow) который меняется редко и нужен всегда. Memory Bank — накопленные знания и решения которые появляются в ходе работы (ADR принятые сессия назад, gotchas найденные при отладке). AGENTS.md создаётся при старте и обновляется при архитектурных изменениях; Memory Bank растёт постепенно. В маленьких проектах их можно объединить в один файл.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Какова оптимальная структура секций AGENTS.md?</summary>
+  <div class="inside">Рекомендуемый порядок: (1) Role &amp; Context — вверху, агент читает первым; (2) Stack — технологии кратко; (3) Build &amp; Test — команды точно; (4) Workflow — процесс и DoD; (5) Architecture Decisions — краткие ADR с обоснованием; (6) Conventions — стиль кода, язык ответа; (7) References — @memory.md, @docs/. Критически важное в позицию 1-2 (горячая зона attention). Финальная секция References позволяет декомпозировать файл на части.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда и как обновлять AGENTS.md?</summary>
+  <div class="inside">Обновлять при: смене стека или версий (Java 11 → Java 21), добавлении нового сервиса/модуля, принятии нового ADR, изменении workflow или PR-формата, изменении команд сборки/тестов. Процесс: обновление как обычный PR с review — не хуже изменения кода. Добавить в PR checklist: "если изменились архитектурные решения или команды — обновить AGENTS.md". Обновлять дату "Last updated" в заголовке. Устаревший AGENTS.md — технический долг.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как организовать AGENTS.md для командной разработки?</summary>
+  <div class="inside">Правила для командного AGENTS.md: (1) Версионировать в git с обязательным review изменений; (2) Назначить "AGENTS.md owner" — человек ответственный за актуальность; (3) Включить team conventions, не личные предпочтения; (4) PR checklist с проверкой AGENTS.md при архитектурных изменениях; (5) Не включать имена людей — только роли (tech lead, DBA). Общие правила команды — в корневом AGENTS.md, модульные — в subdirectory AGENTS.md.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Что происходит при конфликте инструкций в AGENTS.md и Rules?</summary>
+  <div class="inside">Rules всегда побеждают AGENTS.md. Если AGENTS.md говорит "следуй TDD" (рекомендация), а Rule с alwaysApply:true говорит "никогда не запускай тесты в продакшн" — Rule соблюдается без исключений. Иерархия: Hooks (Claude Code) > alwaysApply Rules > AGENTS.md > auto-attach Rules > задача пользователя. Если конфликт не в пользу Rules — это ошибка проектирования: policy нужно выносить в Rules, не оставлять в AGENTS.md.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как использовать AGENTS.md для workflow инструкций?</summary>
+  <div class="inside">Workflow секция в AGENTS.md описывает шаги выполнения типовых задач: последовательность (Research → Plan → Implement → Test → PR), формат PR-описания (Problem → Fix → Tests → Risk), Definition of Done (тесты зелёные, linter чистый, changelog обновлён). Это рекомендации — агент старается следовать, но не обязан при прямом противоречии с задачей. Жёсткие workflow требования лучше в Hooks (Claude Code) или Rules.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Каков оптимальный размер AGENTS.md?</summary>
+  <div class="inside">Целевой диапазон: 50–200 строк, идеал ≤100 строк. При превышении 300–500 строк появляется риск lost in the middle — факты в середине файла получают меньше attention. Признаки "раздутого" AGENTS.md: дублирование README, подробные ADR (должны быть в docs/), примеры кода длиннее 5 строк, история изменений. Решение: вынести большие блоки в отдельные файлы через @include, оставить в AGENTS.md только сводку.</div></details>
+
+  <div class="qlevel-group">Senior — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как работает иерархия AGENTS.md файлов в разных директориях?</summary>
+  <div class="inside">Загрузка каскадная снизу вверх по директориям: глобальный (~/.claude/CLAUDE.md) → корневой (repo/AGENTS.md) → поддиректория (repo/src/AGENTS.md) → текущая директория. Все файлы конкатенируются. При конфликте: более специфичный (глубже в дереве) побеждает. В Claude Code все уровни мержатся. В Cursor поддиректорный перекрывает корневой при конфликте. Молчание поддиректорного файла = наследование родительского. Subdirectory AGENTS.md нужен только когда инструкции существенно отличаются.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как оптимизировать AGENTS.md чтобы минимизировать token overhead?</summary>
+  <div class="inside">Стратегии: (1) Декомпозиция — вынести большие блоки в docs/ файлы, в AGENTS.md оставить сводки и @include ссылки; (2) Prompt caching — стабильный AGENTS.md кешируется провайдером, реальный overhead = 0 со второго запроса; (3) Минималистичный контент — каждая строка должна добавлять information density; (4) Subdirectory AGENTS.md — агент загружает только релевантный для текущей директории контекст. Цель: минимум токенов при максимуме передаваемой информации.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как организовать AGENTS.md для монорепозитория с разными модулями?</summary>
+  <div class="inside">Паттерн для монорепо: корневой AGENTS.md содержит общее (технологии платформы, PR-формат, общие команды, CI/CD); каждый модуль имеет свой AGENTS.md с модуль-специфичным контентом (свой стек, команды тестов, ADR). Пример: billing/AGENTS.md — Java/Quarkus специфика, portal/AGENTS.md — React/TypeScript специфика. Агент при работе в billing/ читает оба файла: корневой + billing-уровень. Не дублировать общее в каждом subdirectory — только специфику.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как диагностировать ситуацию когда агент игнорирует AGENTS.md?</summary>
+  <div class="inside">Пошаговая диагностика: (1) Проверить расположение файла — в корне проекта? Правильное имя (AGENTS.md vs CLAUDE.md)? (2) Проверить размер — если >500 строк, инструкция в середине попала в lost in the middle зону; переместить вверх. (3) Проверить конфликты — есть ли Rule или chat-инструкция которая перекрывает AGENTS.md? (4) Проверить compaction — в длинной сессии context мог быть сжат. (5) Критические инструкции дублировать в Rules (alwaysApply:true) для гарантии.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Что такое AGENTS.md inheritance паттерн и когда его применять?</summary>
+  <div class="inside">Inheritance паттерн: каждый уровень AGENTS.md наследует от родительского и добавляет или переопределяет специфику. Root AGENTS.md = базовый класс: общие правила, stack платформы. Subdirectory AGENTS.md = дочерний класс: override для конкретного модуля. Применять когда: у модулей разный стек, разные команды тестов, разные ADR. Не применять для мелких отличий — overhead от поддержки множества файлов превысит пользу. Правило: subdirectory AGENTS.md только если есть ≥3 существенных отличия от родительского.</div></details>
+
+  <div class="qlevel-group">Lead — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как использовать AGENTS.md как командный договор?</summary>
+  <div class="inside">AGENTS.md как командный договор — явная документация того, что команда считает нормой для AI-агента. Включать: принятые ADR (не только что, но и почему), team conventions (язык кода, PR формат), запрещённые практики (почему не используем X). Ключевое: AGENTS.md должен быть результатом команды consensus, а не решением одного разработчика. Изменения — только через PR с review от всей команды. Это предотвращает конфликты когда разные разработчики дают агенту противоречивые инструкции.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как организовать governance AGENTS.md через git?</summary>
+  <div class="inside">Git governance для AGENTS.md: (1) Требовать PR для любого изменения — не прямой commit в main; (2) Обязательный review от ≥1 разработчика (или tech lead); (3) CODEOWNERS файл — назначить AGENTS.md owner кто обязательно review'ит изменения; (4) CI lint — проверять что AGENTS.md не превышает допустимый размер и содержит обязательные секции; (5) Changelog в самом файле. История изменений через git log AGENTS.md — это audit trail архитектурных решений.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как выстроить процесс обновления AGENTS.md в команде?</summary>
+  <div class="inside">Процесс обновления: (1) Триггеры — чёткий список событий требующих обновления: смена стека, принятый ADR, изменение команд, новый workflow; (2) PR checklist — "обновить AGENTS.md если изменились архитектурные решения или команды"; (3) Sprint review — раз в спринт проверять актуальность; (4) AGENTS.md owner — ответственный за напоминания команде; (5) CI hook при изменении pom.xml/package.json проверяет актуальность команд в AGENTS.md. Stale AGENTS.md = технический долг.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Когда нужен shared AGENTS.md, а когда team-specific?</summary>
+  <div class="inside">Shared (корневой) AGENTS.md — для всего что общее для всей команды и всего репо: платформа, CI/CD команды, PR-формат, safety требования. Team-specific (subdirectory) AGENTS.md — для модулей с разной спецификой: разный язык/фреймворк, разный владелец, разные ADR. Не создавать team-specific файл если отличия минимальны (2-3 строки). В enterprise: может быть organization-level AGENTS.md (как policy) + team-level (как workflow) + module-level (как spec).</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как использовать AGENTS.md для onboarding новых членов команды?</summary>
+  <div class="inside">AGENTS.md как onboarding артефакт: новый разработчик открывает проект, читает AGENTS.md — за 10-15 минут понимает стек, команды, workflow, ключевые решения. AI-агент с AGENTS.md даёт ответы в контексте проекта, а не общие советы. Рекомендации: (1) Добавить ссылку на AGENTS.md в README как первый шаг onboarding; (2) Включить раздел "Key files — где что лежит"; (3) ADR с обоснованием — новый разработчик понимает почему так; (4) Раздел "Common pitfalls" — типичные ошибки и как избежать.</div></details>
+
+  <div class="qlevel-group">Architect — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как AGENTS.md реализует паттерн declarative agent configuration?</summary>
+  <div class="inside">AGENTS.md — декларативная конфигурация: описываешь желаемое поведение агента, а не программируешь его шаги. Аналог Infrastructure as Code для AI: как terraform описывает желаемое состояние инфраструктуры, AGENTS.md описывает желаемое состояние агента в проекте. Преимущества: версионируется, reviewable, аудируемый. Ограничения: AGENTS.md — soft enforcement, не hard enforcement (как Hooks). Архитектурно: сочетать с Rules (политика) + Hooks (enforcement) для полной системы управления агентом.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как организовать AGENTS.md в multi-repo архитектуре?</summary>
+  <div class="inside">Multi-repo паттерны: (1) Federated — каждый репозиторий имеет свой AGENTS.md, общие правила продублированы или шаблонизированы через script; (2) Centralized — organization-level репозиторий с "master" AGENTS.md, каждый репо его импортирует/копирует через CI; (3) Layered — глобальный ~/.claude/CLAUDE.md для личных предпочтений + organization template + repo-specific. Проблема multi-repo: синхронизация общих правил при изменении — автоматизировать через CI/CD. Правило: organization conventions → centralized, project specifics → per-repo.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Какую стратегию versioning применять для AGENTS.md?</summary>
+  <div class="inside">Versioning стратегии: (1) Semantic versioning в заголовке файла: "## Version: 2.3.0" — major при архитектурных изменениях, minor при новых секциях, patch при правках; (2) Date-based: "Last updated: 2026-06-15" — проще, но не показывает масштаб изменений; (3) Git tags на репозитории при значимых изменениях AGENTS.md. Дополнительно: CHANGELOG секция в самом файле — 5-10 последних изменений с датами. Это позволяет понять эволюцию конвенций и не использовать устаревшие практики.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как автоматически генерировать и обновлять AGENTS.md из кодовой базы?</summary>
+  <div class="inside">Автогенерация паттерны: (1) CI pipeline — при изменении pom.xml/package.json автоматически обновляет секцию Stack в AGENTS.md и создаёт PR; (2) Git hooks (pre-commit) — проверяет что при изменении Makefile обновлены команды в AGENTS.md; (3) Script-based generation — скрипт parse'ит конфиг файлы и генерирует skeleton AGENTS.md; (4) LLM-assisted update — агент предлагает обновление AGENTS.md на основе diff PR, человек approve'ит. Полная автогенерация рискованна: AGENTS.md содержит "почему", что из кода не extract'ируется. Оптимум: автоматизировать "что" (стек, команды), сохранять ручное "почему" (ADR, rationale).</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как превратить AGENTS.md в living documentation системы?</summary>
+  <div class="inside">Living documentation через AGENTS.md: (1) ADR tracking — каждое архитектурное решение сразу попадает в AGENTS.md с датой и обоснованием; (2) Automated validation — CI проверяет что факты в AGENTS.md соответствуют кодовой базе (версии в pom.xml, команды в Makefile); (3) Bidirectional sync — изменения в коде триггерят обновление AGENTS.md; (4) Cross-referencing — AGENTS.md ссылается на ADR файлы. Результат: AGENTS.md становится single source of truth о проекте, который актуален потому что это часть процесса разработки.</div></details>
+
+</section>
+
+<div class="pageFooter"><div class="nextPrev">
+  <a href="agents-rules-skills.html">← Обзор AGENTS/Rules/Skills</a>
+  <a href="rules.html">Rules →</a>
+  <a href="hooks.html">Hooks →</a>
+</div></div>
+</main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

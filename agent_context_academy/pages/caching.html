@@ -1,0 +1,393 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Prompt Caching · Токены · Оптимизация</title><link rel="stylesheet" href="../assets/style.css"/>
+<style>
+.cache-diagram{display:flex;flex-direction:column;gap:0;max-width:800px}
+.cache-row{display:grid;grid-template-columns:180px 1fr;gap:0;align-items:stretch}
+.cache-label{padding:12px 16px;font-size:13px;font-weight:900;color:#475569;border-right:2px solid #e2e8f0;display:flex;align-items:center}
+.cache-bar-wrap{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #f1f5f9}
+.cache-bar{height:32px;border-radius:6px;display:flex;align-items:center;padding:0 10px;font-size:12px;font-weight:800;color:#fff;white-space:nowrap}
+.bar-cached{background:#16a34a}
+.bar-new{background:#2563eb}
+.bar-total{background:#94a3b8}
+.cost-badge{font-size:11px;font-weight:900;padding:3px 8px;border-radius:999px;border:1px solid var(--line)}
+</style>
+</head><body><div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>
+    <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html" class="active"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div>
+  <div class="progressBox"><b>Запомни</b><p class="sourceNote">Prompt cache = экономия на одинаковом prefix. Не смысловая память! Инвалидируется при любом изменении prefix.</p></div>
+</aside>
+
+<main class="main">
+<section class="hero">
+  <div class="kicker">Agent Context Academy</div>
+  <h2>Prompt Caching · Почему тратится меньше токенов</h2>
+  <p>Как работает кеш промпта у Claude/Anthropic, почему одни запросы дешевле, что такое prefix caching, когда cache инвалидируется и чем это отличается от Memory Bank.</p>
+  <div class="heroActions">
+    <a class="btn primary" href="home.html">На главную</a>
+    <a class="btn" href="assessment.html">К assessment</a>
+    <button class="markDone">Отметить страницу изученной</button>
+  </div>
+</section>
+
+<!-- What is prompt caching -->
+<section class="section">
+  <h2>Что такое Prompt Caching</h2>
+  <p class="sectionIntro">Prompt Caching — это оптимизация на уровне API/платформы. Когда начало промпта (prefix) остаётся одинаковым между запросами, провайдер не пересчитывает его заново, а берёт сохранённые вычисления из кеша.</p>
+
+  <div class="nuance-card nc-blue">
+    <h4>Что такое prefix (префикс промпта)</h4>
+    <p><b>Prefix</b> — первая, «левая» часть всего, что уходит в модель как input: всё от самого начала до первого байта, который отличается между двумя запросами. Кеш срабатывает только при <b>полном совпадении</b> prefix (byte-for-byte). Всё после границы prefix называют <b>suffix</b> (суффикс): новый вопрос, свежие результаты tools, последние реплики чата — это не кешируется как «старый» блок, но и не ломает кеш, если лежит <em>после</em> стабильного начала.</p>
+  </div>
+  <h3 id="prefix-example" style="font-size:15px;margin:16px 0 8px">Пример: один prefix — два запроса</h3>
+  <div class="schema-box" style="font-size:12px;line-height:1.55;white-space:pre-wrap;background:#0f172a;color:#e2e8f0;border-radius:16px;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;overflow:auto;margin:10px 0">┌─ PREFIX (одинаковый → KV из кеша, ~10% цены) ─────────────────┐
+│ [system] Ты senior-разработчик, отвечай на русском              │
+│ [.cursor/rules] alwaysApply: не коммить секреты, минимальный diff │
+│ [AGENTS.md] Стек: Node 20, тесты: npm test                      │
+│ [tools] read_file, grep, run_terminal_cmd …                       │
+└─────────────────────────────────────────────────────────────────┘
+  SUFFIX запрос 1: User: «Почини падающий тест в auth.test.ts»
+  SUFFIX запрос 2: User: «Добавь JSDoc к export в utils.mjs»</div>
+
+  <div class="diagram">
+    <div class="cache-diagram">
+      <div class="cache-row">
+        <div class="cache-label">Запрос 1 (без кеша)</div>
+        <div class="cache-bar-wrap">
+          <div class="cache-bar bar-total" style="width:100%;max-width:480px">System prompt (2000 токенов) + User message (50 токенов)</div>
+          <span class="cost-badge" style="background:#fff1f2;border-color:#fca5a5;color:#dc2626">Full cost: 2050 токенов</span>
+        </div>
+      </div>
+      <div class="cache-row">
+        <div class="cache-label">Запрос 2 (prefix кеширован)</div>
+        <div class="cache-bar-wrap" style="gap:4px;flex-wrap:wrap">
+          <div class="cache-bar bar-cached" style="width:70%;max-width:340px">System prompt — из кеша (×0.1 цена)</div>
+          <div class="cache-bar bar-new" style="width:12%;max-width:60px">Новый message</div>
+          <span class="cost-badge" style="background:#f0fdf4;border-color:#86efac;color:#166534">Cost: ~50 + 200 токенов ≈ -90%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="callout"><b>Ключевая идея:</b> Платформа сохраняет вычисленные KV-state (Key-Value состояния) для prefix'а. При следующем запросе с тем же prefix — эти состояния берутся из кеша. Это быстрее (меньше latency) и дешевле (меньше compute).</div>
+</section>
+
+<!-- How it works -->
+<section class="section">
+  <h2>Как это работает технически</h2>
+  <div class="grid two">
+    <div class="card bg-blue">
+      <h3>KV-Cache (Key-Value Cache)</h3>
+      <p>LLM при обработке токенов вычисляет Key и Value матрицы для attention механизма. Эти вычисления можно сохранить для неизменной части промпта.</p>
+      <ul>
+        <li>System prompt + AGENTS.md + Rules = стабильный prefix</li>
+        <li>KV-state для этого prefix кешируется на сервере</li>
+        <li>Следующий запрос с тем же prefix → берётся из кеша</li>
+        <li>Только новые токены (user message, tool results) обрабатываются полностью</li>
+      </ul>
+    </div>
+    <div class="card bg-green">
+      <h3>Что кешируется у Anthropic (Claude)</h3>
+      <ul>
+        <li>Минимум 1024 токена для кеширования (Claude 3)</li>
+        <li>Можно явно разметить <code>cache_control: {type: "ephemeral"}</code></li>
+        <li>TTL кеша: ~5 минут для ephemeral</li>
+        <li>Цена cached tokens: ~10% от full price</li>
+        <li>Cache hit → экономия до 90% на prefix</li>
+        <li>Cache miss → полная цена, но кеш создаётся</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="margin-top:20px">Что должно быть стабильным (в начале промпта) для кеша</h3>
+  <div class="flow">
+    <div class="flowStep">
+      <div class="flowNum">1</div>
+      <div><h4>System prompt (самый стабильный)</h4><p>Роль агента, safety rules, базовые инструкции. Меняется редко → отличный кандидат для кеша.</p></div>
+    </div>
+    <div class="flowStep">
+      <div class="flowNum">2</div>
+      <div><h4>AGENTS.md / проектный контекст</h4><p>Стек технологий, workflow, команды тестов. Меняется редко в течение сессии → хорошо кешируется.</p></div>
+    </div>
+    <div class="flowStep">
+      <div class="flowNum">3</div>
+      <div><h4>RAG-документы / большие справочники</h4><p>Если добавить их в начало один раз и они не меняются — следующие запросы дешевле.</p></div>
+    </div>
+    <div class="flowStep">
+      <div class="flowNum">4</div>
+      <div><h4>User messages / Tool results (последние)</h4><p>Всегда новые — не кешируются. Но за счёт кеша prefix'а, стоимость только этих токенов.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- Cache invalidation -->
+<section class="section">
+  <h2>Инвалидация кеша — главная ловушка</h2>
+  <div class="callout warn"><b>Важно:</b> Кеш работает ТОЛЬКО если prefix совпадает byte-for-byte. Любое изменение в начале промпта = инвалидация всего кеша после этой точки.</div>
+  <div class="grid two">
+    <div class="card danger">
+      <h3>Что ломает кеш</h3>
+      <ul>
+        <li>Изменение порядка tool definitions</li>
+        <li>Добавление timestamp в system prompt</li>
+        <li>Изменение любого токена в начале</li>
+        <li>Разные system prompts в разных сессиях</li>
+        <li>Динамический контент в начале (дата, случайное)</li>
+        <li>Истечение TTL (~5 минут для ephemeral)</li>
+      </ul>
+    </div>
+    <div class="card good">
+      <h3>Что сохраняет кеш</h3>
+      <ul>
+        <li>Одинаковый system prompt во всех запросах</li>
+        <li>Стабильный порядок tools</li>
+        <li>Документы/RAG в начале (перед user messages)</li>
+        <li>Быстрые последующие запросы (в TTL)</li>
+        <li>Нет динамики в prefix'е</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="margin-top:16px">Пример: правильный порядок для максимального кеша</h3>
+  <div class="grid two">
+    <div class="card bg-red">
+      <h3>Плохо — кеш сломан</h3>
+      <pre class="code">System: You are a Java developer.
+Current time: 14:32:01 ← меняется!
+AGENTS.md: ...
+---
+User: Fix the bug</pre>
+      <p style="color:#dc2626;font-weight:800">Timestamp в prefix'е → каждый запрос = full cost</p>
+    </div>
+    <div class="card bg-green">
+      <h3>Хорошо — кеш работает</h3>
+      <pre class="code">System: You are a Java developer.
+AGENTS.md: [стабильный контент]
+RAG Docs: [стабильные документы]
+--- ← граница кеша
+User: Fix the bug (14:32:01 ← здесь OK)</pre>
+      <p style="color:#166534;font-weight:800">Prefix стабилен → cached. Время только в user message.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Prompt cache vs Memory -->
+<section class="section">
+  <h2>Prompt Caching vs Memory Bank vs RAG — не путать!</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Механизм</th><th>Что это</th><th>Где живёт</th><th>Цель</th><th>Инвалидация</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>Prompt Caching</b></td>
+        <td>Кеш вычислений KV-state для одинакового prefix'а</td>
+        <td>Сервер провайдера (Anthropic, OpenAI)</td>
+        <td>Экономия токенов и latency</td>
+        <td>Изменение prefix, истечение TTL</td>
+      </tr>
+      <tr>
+        <td><b>Memory Bank</b></td>
+        <td>Хранилище смысловой информации: решения, предпочтения, знания о проекте</td>
+        <td>Файл/DB в проекте или IDE</td>
+        <td>Continuity между сессиями</td>
+        <td>Явное обновление/удаление</td>
+      </tr>
+      <tr>
+        <td><b>RAG</b></td>
+        <td>Поиск и добавление релевантных документов в контекст</td>
+        <td>Vector DB + document store</td>
+        <td>Factual grounding из большой базы</td>
+        <td>Переиндексация документа</td>
+      </tr>
+      <tr>
+        <td><b>Checkpoint</b></td>
+        <td>Структурный снимок состояния задачи</td>
+        <td>Файл в чате или проекте</td>
+        <td>Handoff, продолжение работы</td>
+        <td>Ручное обновление</td>
+      </tr>
+    </tbody>
+  </table></div>
+  <div class="callout warn"><b>Assessment trap:</b> "Prompt caching — это как Memory?" — Нет! Это низкоуровневая инфраструктурная оптимизация. После истечения TTL кеш теряется. Модель ничего "не помнит" из кеша — это только saved computation.</div>
+</section>
+
+<!-- Practical impact -->
+<section class="section">
+  <h2>Практическая польза для разработчика</h2>
+  <div class="grid">
+    <div class="card bg-blue">
+      <h3>Когда важен prompt caching</h3>
+      <ul>
+        <li>Большой AGENTS.md / CLAUDE.md (экономия значительная)</li>
+        <li>Много RAG-документов в context</li>
+        <li>Iterative разработка в одной сессии</li>
+        <li>API-интеграции с повторными вызовами</li>
+        <li>Agentic loop: каждый шаг дешевле</li>
+      </ul>
+    </div>
+    <div class="card bg-green">
+      <h3>Как использовать на практике</h3>
+      <ul>
+        <li>Стабильный system prompt — не добавляй динамику</li>
+        <li>Документы/контекст — в начало, перед user messages</li>
+        <li>Не меняй порядок tool definitions между запросами</li>
+        <li>Используй claude.ai / Cursor — они управляют кешем автоматически</li>
+        <li>В API — явная разметка <code>cache_control</code></li>
+      </ul>
+    </div>
+    <div class="card bg-orange">
+      <h3>Числа (Claude 3.5 Sonnet)</h3>
+      <ul>
+        <li>Cache write: 125% от base price (один раз)</li>
+        <li>Cache read: 10% от base price (каждый раз)</li>
+        <li>Минимум для кеша: 1024 токена</li>
+        <li>TTL: ~5 минут (ephemeral)</li>
+        <li>Выгода: при 5+ повторных запросах = окупается</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Assessment -->
+
+<section class="section"><h2>Тонкости и нюансы Prompt Caching</h2>
+<div class="nuance-card nc-red"><h4>Любое изменение prefix сбрасывает кеш полностью</h4><p>Кеш работает по принципу byte-for-byte совпадения prefix'а. Добавил один символ в system prompt — весь кеш инвалидируется. Поэтому динамические данные (timestamp, session ID, случайные нonce) никогда не должны быть в system prompt. Только в user message — после стабильного prefix'а.</p></div>
+<div class="nuance-card nc-orange"><h4>TTL кеша — ~5 минут, не сессия</h4><p>Anthropic KV-cache живёт около 5 минут при активном использовании. После паузы — инвалидируется. Это означает: кеш работает при быстрых последовательных запросах (agentic workflow), но не между сессиями пользователя. Рассчитывать на кеш для "утренних" запросов — ошибка.</p></div>
+<div class="nuance-card nc-blue"><h4>Prompt caching ≠ Memory — принципиально разные вещи</h4><p>Caching = saved compute state (attention matrices). Пропали — ничего не помнит. Memory Bank = смысловое хранилище знаний (файл или БД). Кеш прозрачен для агента, он не знает кешировано ли. Memory — явный контекст который агент читает. Путать их на assessment — грубая ошибка.</p></div>
+<div class="nuance-card nc-purple"><h4>Структура промпта критична для попадания в кеш</h4><p>Для максимального кеша: [стабильный system prompt] → [AGENTS.md] → [RAG документы] → [user message с динамикой]. Нарушение порядка — потеря кеша. Если поменяешь порядок RAG документов между запросами — кеш промахнётся. Order matters для byte-for-byte matching.</p></div>
+<div class="nuance-card nc-green"><h4>Кеш работает на провайдере — не на клиенте</h4><p>KV-cache хранится на стороне Anthropic API (или другого провайдера). Cursor/Claude Code не управляют кешем напрямую — они оптимизируют структуру промпта. При смене провайдера или модели — кеш сбрасывается. Feature доступна на Anthropic Sonnet/Opus, не на всех моделях.</p></div>
+</section>
+
+<section class="section"><h2>Best practices — Делай / Не делай</h2>
+<div class="grid two">
+  <div class="card bg-green"><h3>✅ Делай</h3><ul>
+    <li>Размещай стабильный system prompt первым, динамику — в user message</li>
+    <li>Держи порядок RAG документов постоянным между запросами</li>
+    <li>Используй кеш для agentic workflows: повторные вызовы с одним system prompt</li>
+    <li>Проверяй через usage API: cached_input_tokens vs input_tokens</li>
+    <li>Объединяй AGENTS.md + Rules в один стабильный блок перед динамикой</li>
+  </ul></div>
+  <div class="card bg-red"><h3>❌ Не делай</h3><ul>
+    <li>Не добавляй timestamp, session ID или рандом в system prompt</li>
+    <li>Не меняй порядок tools или документов между похожими запросами</li>
+    <li>Не рассчитывай на кеш после длинных пауз (TTL ~5 минут)</li>
+    <li>Не путай caching экономию с Memory Bank — это разные механизмы</li>
+    <li>Не ожидай кеш на всех моделях — только Anthropic Sonnet/Opus и аналоги</li>
+  </ul></div>
+</div></section>
+<section class="section">
+<h2>Вопросы по уровням</h2>
+<div class="qlevel-group">Junior — 10 вопросов</div>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое prompt caching?</summary>
+<div class="inside">Prompt caching — инфраструктурная оптимизация LLM провайдера: если несколько запросов начинаются с одинакового текста (prefix), провайдер вычисляет attention один раз и сохраняет промежуточное KV-состояние. При последующих запросах с тем же prefix берёт из кеша, а не пересчитывает. Результат: cached токены стоят ~10% от обычной цены, latency первого token значительно снижается. Это прозрачная оптимизация — программист не меняет код, только структурирует prompt определённым образом.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое cache prefix?</summary>
+<div class="inside">Cache prefix — начальная часть prompt, которая остаётся одинаковой между запросами. Чем длиннее стабильный prefix — тем больше токенов кешируется. Типичный prefix: system prompt + Rules + AGENTS.md + инструменты. Всё это не меняется между запросами одной сессии. Динамическая часть (user message, conversation history) идёт ПОСЛЕ стабильного prefix — так кеш работает эффективно. Правило: стабильное → в начало prompt; динамическое → в конец.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Как работает кеш в LLM на техническом уровне?</summary>
+<div class="inside">LLM обрабатывает каждый токен через attention механизм, создавая Key-Value (KV) матрицы для каждого слоя. При prompt caching провайдер сохраняет эти KV матрицы для prefix токенов. При следующем запросе с тем же prefix — KV берётся из кеша, вычисляются только новые токены. Это byte-for-byte сравнение: любое изменение в prefix инвалидирует кеш. Провайдер (Anthropic, OpenAI) управляет кешем на своей стороне — разработчик не имеет прямого контроля.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое cache hit и cache miss?</summary>
+<div class="inside">Cache hit — запрос начался с точно такого же prefix как предыдущий → провайдер использует сохранённые KV матрицы, prefix токены не пересчитываются. Дешевле и быстрее. Cache miss — prefix изменился (даже на 1 символ) → полный пересчёт, кеш не используется. Разница в цене: у Anthropic кешированные токены ~10% стоимости обычных. При cache hit: первый output token (TTFT) значительно быстрее. Мониторить: API response включает cache_creation_input_tokens и cache_read_input_tokens.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Зачем нужно prompt caching — какова практическая польза?</summary>
+<div class="inside">Три главных выгоды: (1) Cost reduction — если system prompt 10 000 токенов и кешируется в 90% запросов → экономия ~90% стоимости prefix токенов. При большом масштабе это тысячи долларов в месяц. (2) Latency reduction — time-to-first-token (TTFT) снижается в 2–5x для длинных prefix. Пользователь видит ответ быстрее. (3) Longer system prompts — при высоком cache hit rate можно позволить себе более детальные Rules/AGENTS.md без пропорционального роста стоимости. Пример: 100K токенов system prompt с кешем = почти бесплатный prefix.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое cached tokens?</summary>
+<div class="inside">Cached tokens — токены из prefix которые уже вычислены и сохранены в кеше провайдера. В API response возвращается статистика: prompt_tokens (всего), cached_tokens (из кеша), new_tokens (пересчитаны заново). Cached tokens стоят значительно дешевле (Anthropic: ~10% цены input tokens). Важно понимать: cached tokens всё равно считаются в рамках context window limit — кеш экономит вычисления и деньги, но не место в context.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Как кеш снижает стоимость запросов?</summary>
+<div class="inside">Экономия происходит потому что провайдер не пересчитывает attention для cached tokens. Пример: system prompt = 8000 токенов. При цене $3/1M input tokens без кеша: 8000 × $3/1M = $0.024 за запрос только на prefix. С кешем (90% hit rate): 8000 × $0.3/1M = $0.0024 — в 10 раз дешевле. При 1000 запросов в день: $24 vs $2.4. Реальная экономия зависит от hit rate и размера prefix. Инструмент для расчёта: Anthropic Calculator на их сайте.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое stable prefix и почему он критичен?</summary>
+<div class="inside">Stable prefix — часть prompt которая не меняется между запросами. Кеш работает только если prefix идентичен byte-for-byte. Если prefix меняется в каждом запросе — кеш не работает никогда. Что должно быть в stable prefix: system prompt, Rules, AGENTS.md содержимое, tool descriptions, few-shot examples. Что НЕ должно быть в prefix: timestamp, user name (если меняется), любые динамические данные. Архитектурный принцип: static/slow-changing context → в начало; dynamic context → в конец.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Когда кеш сбрасывается?</summary>
+<div class="inside">Кеш инвалидируется при: (1) Любом изменении prefix — даже один символ → full miss. (2) Истечении TTL — Anthropic: ~5 минут неиспользования. (3) Обновлении модели — новая версия Claude имеет пустой кеш. (4) Смене API ключа / организации. Практически: если добавить timestamp в system prompt → кеш никогда не hit (новый timestamp каждую секунду). Если добавить user_name в начало system prompt (меняется для разных пользователей) → кеш не работает при multi-user сценарии.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Кто управляет кешем — разработчик или платформа?</summary>
+<div class="inside">Платформа (провайдер) управляет кешем автоматически. Разработчик не имеет прямого контроля: нельзя принудительно заполнить кеш, нельзя явно очистить, нельзя задать TTL. Разработчик управляет косвенно: через структуру prompt (stable prefix в начале) и через cache_control флаги (у Anthropic: явная пометка breakpoints). В Cursor и Claude Code кеш работает автоматически за кулисами — при длинных разговорах с одинаковым system prompt. Можно проверить эффективность: смотреть cache_read_input_tokens в API usage.</div></details>
+<div class="qlevel-group">Middle — 10 вопросов</div>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как структурировать prompt для максимального cache hit rate?</summary>
+<div class="inside">Правило: стабильное → начало, динамическое → конец. Идеальный порядок: [<a href="prompting.html#system-instructions">System instructions</a>] → [Rules / AGENTS.md] → [Tool descriptions] → [Few-shot examples] → [Retrieved context (RAG)] → [Conversation history] → [Current user message]. Каждый слой менее стабильный чем предыдущий. Conversation history меняется с каждым turn, но всё что перед ней кешируется. Ошибка: system prompt в начале, потом дата/время — это ломает весь кеш для всего что после.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Почему добавление timestamp или даты в начало system prompt ломает кеш?</summary>
+<div class="inside">Кеш требует byte-for-byte совпадения prefix. Timestamp меняется каждую секунду → prefix никогда не совпадает → 100% cache miss. Даже если в system prompt написать 'Today is Monday, July 1, 2026' — завтра это изменится и кеш сбросится. Решение: убери временные данные из system prompt (и вообще из prefix). Если нужна дата → добавляй в user message (после stable prefix). Если нужен current context (текущая задача, имя пользователя) — тоже в user message, не в system prompt.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как Rules и AGENTS.md влияют на кеш и где их лучше размещать?</summary>
+<div class="inside">Rules и AGENTS.md — отличный кандидат для кеша: они меняются редко (только при обновлении конфигурации). Если включить их в system prompt или его начало — они кешируются и не пересчитываются каждый запрос. Placement: rules → сразу после базовых system instructions. При смене Rules (commit в .cursor/rules/) кеш сбросится для всех новых запросов — это нормально. Бонус: можно позволить длинные детальные Rules без пропорционального роста cost, потому что кеш покрывает их стоимость.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как различать stable и dynamic части prompt при проектировании системы?</summary>
+<div class="inside">Классификация: Static (никогда не меняется) — core instructions, persona, output format rules → в начало. Slow-changing (меняется при deploy/обновлении) — Rules, AGENTS.md, tool descriptions → после static. Session-stable (меняется раз в сессию) — user context, project name → после slow-changing. Turn-dynamic (меняется каждый turn) — conversation history, retrieved RAG chunks → после session. Request-dynamic (меняется для каждого request) — текущий user message, timestamp → в самый конец. Тест: если это поле может быть разным для двух запросов к одному агенту → оно dynamic, должно быть в конце.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как работает кеширование в multi-turn диалоге?</summary>
+<div class="inside">В multi-turn диалоге: system prompt (stable prefix) + все предыдущие messages (growing history). После каждого turn conversation history растёт. Что кешируется: stable prefix (system prompt, rules) — всегда при hit. Growing history: провайдер может кешировать checkpoint в истории (обычно последний turn где был cache write). Практика: Anthropic кеширует до N breakpoints в conversation. При длинном диалоге кешируется начало истории, новые turns не кешированы. Важно: RAG chunks которые вставляются между turns — если одинаковые → тоже могут кешироваться.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Что такое cache TTL и как он влияет на стратегию использования?</summary>
+<div class="inside">TTL (Time to Live) — время хранения кеша без использования. У Anthropic: ~5 минут. Если пользователь не делал запросов 5+ минут → кеш истёк → следующий запрос будет cache miss (полный пересчёт). Это влияет на UX: если пользователь долго думает перед следующим сообщением → latency выше при первом ответе после паузы. Стратегии: (1) Warm-up запрос — пустой/minimal запрос перед началом сессии для заполнения кеша. (2) Keep-alive pattern — periodic minimal запрос для поддержания кеша активным (только если оправдано cost). В production: учитывай TTL в SLA для latency.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как связаны кеш и context window?</summary>
+<div class="inside">Кеш не расширяет context window — он только экономит вычисления. Cached tokens всё равно занимают место в context window limit (например, 200K у Claude). Кеш экономит деньги и latency, но не увеличивает 'память' модели. Связь: при очень длинном context window (>100K токенов) — кеш критически важен для экономии, иначе каждый запрос очень дорог. Большие Rules/AGENTS.md (10-50K токенов) имеет смысл держать постоянно в prompt только при высоком cache hit rate — иначе дорого.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как измерить эффективность кеша в своей системе?</summary>
+<div class="inside">Метрики для measurement: (1) Cache hit rate = cache_read_tokens / (cache_read_tokens + cache_creation_tokens) × 100%. Цель: >80%. (2) Cost savings = (обычная цена prefix) - (actual cost с кешем). (3) TTFT improvement = avg time-to-first-token без кеша vs с кешем. (4) Cache miss patterns — при каких условиях происходят misses? Инструменты: API usage logs с cache statistics, custom dashboards. Anthropic API возвращает cache_creation_input_tokens (при заполнении кеша) и cache_read_input_tokens (при hit) — логируй оба поля для мониторинга.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Какие anti-patterns кеширования нужно избегать?</summary>
+<div class="inside">Anti-patterns: (1) Dynamic data в prefix — timestamp, random ID, per-request data в system prompt. (2) User-specific prefix — если prefix содержит username/email → каждый user имеет свой кеш, hit rate = 1/N users. (3) Частые Rules updates — если Rules обновляются каждый deploy → кеш сбрасывается при каждом deploy. (4) Неупорядоченный контент — если порядок tools/rules меняется между запросами → byte mismatch → miss. (5) Ignore caching в design — не думать о кеше при проектировании prompt структуры → упустить 80% экономии. Rule: review prompt structure для caching при каждом изменении system prompt.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как использовать кеш для few-shot примеров?</summary>
+<div class="inside">Few-shot examples — отличный кандидат для кеша: они одинаковые для всех запросов. Если поместить examples в system prompt (до conversation history) → они кешируются. При большом числе few-shot примеров (20-50 examples) это может быть 5-20K токенов → значительная экономия. Правило размещения: static instructions → rules → few-shot examples → dynamic context → user message. Если few-shot примеры меняются в зависимости от задачи (dynamic selection) → они dynamic → в конец prompt. Dynamic few-shot = меньше cache savings, но лучшее quality.</div></details>
+<div class="qlevel-group">Senior — 5 вопросов</div>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как проектировать prompt архитектуру для максимального cache hit rate в production системе?</summary>
+<div class="inside">Production prompt architecture для кеширования: (1) Layered prompt structure — явные слои от самого стабильного к самому динамичному. Задокументировать слои в ADR. (2) Single source of truth для system prompt — не строить system prompt из разных частей в разных местах кода → нестабильный prefix. (3) Version-controlled prompt — system prompt в git, изменения через PR. При merge → кеш сбросится (запланировано), не внезапно. (4) A/B testing aware — при A/B тестировании prompt вариантов: разные пользователи → разные prefixes → раздельные кеши (снижает общий hit rate). (5) Prompt registry — централизованное место для всех prompts, версионирование, cache hit monitoring. (6) Warming strategy — при deploy новой версии prompt → warm-up запросы для заполнения кеша перед peak traffic.</div></details>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как диагностировать деградацию кеша — cache hit rate упал с 85% до 30%?</summary>
+<div class="inside">Диагностика: (1) Проверь логи недавних изменений в system prompt — что изменилось? Даже небольшое изменение ломает весь кеш. (2) Проверь динамические поля — не добавилось ли что-то новое в prefix (timestamp, user context). (3) Посмотри на cache_creation_input_tokens → если вдруг выросли → кеш переписывается чаще. (4) Проверь размер prefix — если prefix вырос, возможно TTL теперь истекает до следующего запроса при low traffic. (5) Деплой? — новая версия модели сбрасывает все кеши, hit rate будет 0% пока не заполнится. (6) Traffic pattern change — если пользователи стали делать паузы >5 минут → больше TTL expiry → больше misses. Инструмент: correlation между deploy events и cache hit rate timeline.</div></details>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как использовать кеш в high-throughput системах с тысячами запросов в секунду?</summary>
+<div class="inside">High-throughput caching considerations: (1) Shared cache — одинаковый system prompt для всех запросов даёт глобальный cache hit: первый запрос заполняет кеш, все последующие используют. (2) Concurrent fills — если много запросов пришло одновременно до заполнения кеша → все cache miss. Провайдер обычно coalesces — один fill, остальные ждут или тоже miss. (3) Rate limits — при cache miss full prompt обрабатывается → выше token throughput → может нарушить rate limits провайдера. Планируй capacity с учётом worst-case (0% hit rate). (4) Cost spikes — после deploy (полный miss) → cost spike. Smooth через gradual rollout. (5) Latency SLA — cache miss может 2–5x увеличить latency → иметь circuit breaker и user-facing degraded mode.</div></details>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Что такое cache warming и как реализовать для production?</summary>
+<div class="inside">Cache warming — заранее заполнить кеш перед началом traffic. Зачем: после deploy или TTL expiry первые запросы будут cache miss с высокой latency и стоимостью. Реализация: (1) Post-deploy hook — после успешного deploy запустить warm-up script: N запросов с production system prompt к провайдеру. Каждый запрос триггерит cache fill. (2) Synthetic requests — dummy user messages которые не влияют на production, только для прогрева кеша. (3) Shadow traffic replay — replay реальных запросов из прошлого для прогрева. (4) Canary-based warming — new version сначала получает 1% traffic, кеш наполняется → потом 100%. Мониторинг: cache hit rate должен достигнуть >70% в течение 5 минут после warm-up.</div></details>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как кеш ведёт себя при обновлении модели и как минимизировать disruption?</summary>
+<div class="inside">При обновлении модели (например, claude-3-5-sonnet-20241022 → новая версия) кеш сбрасывается полностью — KV матрицы несовместимы между версиями модели. Disruption: первые N минут после перехода на новую модель → 100% cache miss → рост cost и latency. Стратегии минимизации: (1) Gradual model rollout — сначала 5% запросов на новую модель. Кеш новой модели наполняется при малом traffic. (2) Blue-green deployment — держать обе версии активными, переключать трафик постепенно. (3) Off-peak timing — обновлять модель в ночное время (низкий traffic = меньший impact. (4) Cache warming script — сразу после смены версии. (5) Cost budget — зарезервировать бюджет для post-migration period с низким hit rate.</div></details>
+<div class="qlevel-group">Lead — 5 вопросов</div>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Как использовать кеш как cost optimization инструмент — что отслеживать и на что влиять?</summary>
+<div class="inside">Cost optimization через кеш: (1) Baseline — измерь текущую стоимость: prompt tokens per request × price. (2) Cache hit rate target — установить SLO: hit rate ≥ 80% для steady state. (3) Savings tracking — dashboard: ежедневная экономия от кеша vs baseline. (4) Prompt discipline — review process для изменений system prompt: любое изменение → cache invalidation → оценить cost impact. (5) Prefix length optimization — длиннее stable prefix = больше кешированных токенов = больше экономии. Поощрять перемещать контент в stable prefix. (6) TTL awareness — если hit rate низкий из-за TTL (sparse traffic) → либо accept, либо periodic warm-up запросы. ROI: при 10K requests/day с 8K-token system prompt → кеш экономит ~90% prefix cost. Числа должны быть видны на финансовом дашборде AI costs.</div></details>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Как выстроить мониторинг cache efficiency в команде?</summary>
+<div class="inside">Monitoring framework: (1) Metrics — cache_hit_rate, cache_read_tokens, cache_creation_tokens, cost_per_request (cached vs uncached), TTFT percentiles. (2) Dashboard — real-time: hit rate за последний час; trend: hit rate по дням/неделям; cost breakdown: cached vs uncached cost. (3) Alerts — если hit rate падает ниже threshold (например, <60%) → alert команде. (4) Deployment correlation — overlay deploy events на hit rate timeline. (5) Weekly report — cache efficiency summary с recommendations. Инструменты: Grafana + Prometheus, или DataDog, или custom в Metabase. Responsibility: assigned owner for cache monitoring, reviews metrics weekly.</div></details>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Как ввести кеш-friendly prompt engineering guidelines в стандарты команды?</summary>
+<div class="inside">Guidelines для команды: (1) Prompt Structure Rule — обязательный порядок: [static system] → [rules] → [tools] → [few-shot] → [dynamic context] → [user message]. Проверяется в PR review. (2) No dynamic data in prefix — запрет: timestamps, user IDs, per-request random data в system prompt. Linter rule если возможно. (3) Prompt change impact assessment — при изменении system prompt → оценить cache hit rate impact, добавить в PR description. (4) Документация — каждый prompt файл содержит комментарий: 'Stable prefix ends here — everything below is dynamic'. (5) Cache hit rate как team metric — в sprint review: посмотреть cache efficiency, обсудить деградации. Обучение: провести 30-мин workshop по prompt caching для новых engineers.</div></details>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Как спланировать кеш-бюджет в AI проекте?</summary>
+<div class="inside">Cache budgeting: (1) Model costs → разбить на: prefix cost (без кеша), suffix cost, output cost. (2) Forecast cache savings — при планируемом hit rate 80% prefix cost снижается в 10x → adjusted budget. (3) Worst-case planning — всегда держать бюджет для периодов 0% hit rate (после deploy, model update, low traffic). Резерв: 20% от total prompt cost. (4) Scale projections — при росте DAU hit rate обычно улучшается (одинаковый prefix у всех пользователей) → учесть в unit economics. (5) Experiment cost — A/B тесты с разными prompts → разные кеши → снижение hit rate на период → учесть. Правило: AI cost budget = (base prompt cost × (1 - hit_rate × 0.9)) + output cost.</div></details>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Как управлять кешем при rolling deployment новых версий Rules?</summary>
+<div class="inside">Rolling deployment и кеш: при обновлении Rules в .cursor/rules/ или AGENTS.md старый кеш инвалидируется — следующие запросы будут cache miss пока новый кеш не наполнится. Управление: (1) Batch Rules updates — не обновлять Rules часто по одному изменению. Аккумулировать изменения, один deployment. (2) Off-peak releases — деплоить обновления Rules в моменты низкого трафика. (3) Preview impact — перед деплоем посчитать размер стабильного prefix после изменения (больше prefix = дольше warm-up). (4) Cache warm-up post-deploy — скрипт отправки нескольких dummy запросов после деплоя. (5) Feature flags для Rules — если новые Rules нужны только части пользователей → conditional inclusion без инвалидации всего кеша. Policy: major Rules changes → notify team 24h ahead, schedule off-peak deploy.</div></details>
+<div class="qlevel-group">Architect — 5 вопросов</div>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как проектировать кеш архитектуру в production AI системе с множественными провайдерами?</summary>
+<div class="inside">Multi-provider cache architecture: (1) Provider abstraction layer — унифицированный интерфейс над разными LLM провайдерами. Cache semantics могут различаться (Anthropic vs OpenAI cache TTL, breakpoints). (2) Prompt normalization — стандартный формат prompt независимо от провайдера. Cache key = hash(normalized_prompt). (3) Provider-side vs application-side — провайдер-side кеш (автоматический) + application-side кеш (explicit, longer TTL). (4) Semantic caching — application-side: если два запроса семантически эквивалентны → возвращать cached response без вызова LLM (осторожно: может давать stale ответы). (5) Multi-tier caching — L1: in-memory (ms, small), L2: Redis (seconds, medium), L3: provider cache (minutes, large). (6) Invalidation strategy — при смене системного контекста → broadcast invalidation по всем уровням кеша.</div></details>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как проектировать кеш совместно с CDN паттерном для AI сервисов?</summary>
+<div class="inside">CDN + AI cache pattern: (1) Edge caching — для детерминированных запросов (один и тот же question → один и тот же answer) можно кешировать ответы на edge. TTL: короткий для factual, длинный для static. (2) Cache key design — key = hash(model + system_prompt_version + user_message). Нельзя включать user_id (нарушение privacy). (3) Stale-while-revalidate — отдать cached ответ немедленно, в фоне обновить через LLM. (4) Cache bypass для personalized — запросы с personal context не кешируются на edge. (5) Geographic distribution — разные edge locations могут иметь разные caches (eventual consistency). (6) Privacy considerations — cached AI responses не должны содержать PII. Audit: что кешируется на edge, retention policy.</div></details>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как обеспечить кеш isolation между разными tenants в multi-tenant AI системе?</summary>
+<div class="inside">Tenant cache isolation: (1) Namespace isolation — каждый tenant имеет свой cache namespace. Cross-tenant sharing ТОЛЬКО для global static prefix (общий system prompt). (2) Shared vs private prefix — общий system prompt для всех tenants → shared cache (maximum efficiency). Tenant-specific context → tenant-isolated cache. (3) Cache poisoning prevention — tenant A не может влиять на кеш tenant B. Изоляция на уровне cache key (hash включает tenant_id). (4) Cost attribution — track cache savings per tenant для billing. (5) Tenant-specific TTL — enterprise tenants могут иметь longer TTL (более высокая активность = кеш живёт дольше). (6) Audit — каждый cache hit логируется с tenant_id. Compliance: доказать что данные tenant A никогда не попали к tenant B через кеш.</div></details>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как учитывать кеш как нефункциональное требование при проектировании AI системы?</summary>
+<div class="inside">NFR для кеширования: (1) Availability — система должна работать при cache backend failure (graceful degradation: cache miss = higher cost/latency, но не отказ). (2) Performance SLO — cache hit: TTFT < 500ms; cache miss: TTFT < 2s. Specify в SLA. (3) Cost SLO — target cache hit rate ≥ 80% для steady state. Exceeding budget при miss-heavy scenarios → alert. (4) Consistency — cached response должен быть валиден: проверять что cached ответы не устарели при Rules update. (5) Security NFR — никаких cross-tenant cache leaks, PII не кешируется. (6) Observability NFR — cache hit rate, latency, cost должны быть measurable и monitored. Architectural decision record (ADR): документировать cache strategy как explicit design decision с rationale и trade-offs.</div></details>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как учитывать кеш при rolling deployment в zero-downtime окружении?</summary>
+<div class="inside">Zero-downtime deployment с кешем: (1) Blue-green с cache warm-up — green environment получает traffic только после warm-up (hit rate > threshold). Blue держится как fallback. (2) Canary + cache segregation — canary (1% traffic) использует новую версию prompt → отдельный кеш namespace. При полном rollout → merge или flush + refill основного кеша. (3) Version tagging — cache key включает prompt_version. При rollout: старый трафик → cache v1, новый → cache v2 (постепенный переход). (4) Rollback strategy — если rollback к предыдущей версии → старый кеш мог ещё быть активен (TTL). Ускоренный rollback. (5) Cache invalidation broadcast — при rollback → explicit invalidation нового кеша, возврат к старому. (6) Metric gates — automated rollout gated on cache hit rate metric: если < 60% после N минут → auto pause rollout.</div></details>
+</section>
+
+<div class="pageFooter"><div class="nextPrev">
+  <a href="prompting.html">← Prompt Engineering</a>
+  <a href="model-variance.html">Почему модель ≠ модель →</a>
+</div></div>
+</main></div><script src="../assets/app.js"></script></body></html>

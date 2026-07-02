@@ -1,0 +1,6 @@
+node_modules/
+agent_context_academy/node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+verify_out.txt

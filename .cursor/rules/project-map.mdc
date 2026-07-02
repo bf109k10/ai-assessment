@@ -1,0 +1,20 @@
+---
+description: Карта репозитория oral-ai-assessment — не сканировать проект с нуля
+alwaysApply: true
+---
+
+# Карта проекта
+
+**Продукт:** `agent_context_academy/` — статический учебный сайт (HTML/CSS/JS, без сборки). Вход: `pages/home.html`.
+
+**Перед обходом файлов** прочитай корневой `AGENTS.md` (дерево, чеклисты, что не трогать).
+
+| Путь | Назначение |
+|------|------------|
+| `agent_context_academy/pages/*.html` | Тематические страницы + nav sidebar |
+| `agent_context_academy/assets/` | `style.css`, `app.js` (PAGES), графы |
+| `.cursor/rules/html-code-blocks.mdc` | Шаблон страниц, nav order, topic-card, 25 Q&A |
+| `.cursor/rules/academy-sync.mdc` | Sync home / roadmap (таблица + **VP_PHASES** + NODES) / app.js при новых страницах |
+| `*.html` в корне репо | Standalone, **не** синхронизировать с nav академии |
+
+**Язык контента:** русский. **Дифф:** только затронутые файлы; README в корне — GitLab-заглушка.

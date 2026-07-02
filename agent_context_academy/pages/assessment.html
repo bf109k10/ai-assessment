@@ -1,0 +1,58 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Assessment тренажёр</title><link rel="stylesheet" href="../assets/style.css"/></head><body><div class="app"><aside class="sidebar"><div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>  <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html" class="active"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div><div class="progressBox"><b>Формула</b><p class="sourceNote">System → AGENTS/Rules → Current task → Memory/RAG/MCP/Skills → Subagent findings.</p></div></aside><main class="main"><section class="hero"><div class="kicker">Agent Context Academy</div><h2>Assessment тренажёр</h2><p>Короткие ответы, типовые вопросы, кейсы и quiz для подготовки к проверке знаний по AI agents.</p><div class="heroActions"><a class="btn primary" href="quiz-session.html">Интерактивный квиз</a><a class="btn" href="home.html">На главную</a><a class="btn" href="assessment.html">К assessment</a><button class="markDone">Отметить страницу изученной</button></div></section>
+<section class="section"><h2>Интерактивный квиз</h2><div class="card"><p>Банк или генерация ИИ: уровень, один топик / случайный / микс всех топиков, cumulative или exact. MCQ; бонус ИИ после ≥80% только для сессии из банка.</p><div class="heroActions"><a class="btn primary" href="quiz-session.html">Открыть квиз</a></div></div></section>
+<section class="section"><h2>Шпаргалка</h2><div class="grid two"><div class="card"><h3>RAG</h3><p>Поиск релевантных chunks во внешних источниках и добавление их в контекст. Даёт факты, не правила поведения.</p></div><div class="card"><h3>Memory Bank</h3><p>Устойчивая память о проекте/пользователе/решениях. Помогает continuity, но может устареть.</p></div><div class="card"><h3>MCP</h3><p>Доступ к внешним системам: API, файлы, CI, логи, Jira. Требует permissions и safety.</p></div><div class="card"><h3>Checkpoint</h3><p>Структурный снимок: goal, state, done, decisions, risks, next steps.</p></div><div class="card"><h3>Skill vs Rule</h3><p>Skill говорит как делать. Rule говорит что можно/нельзя. Rule выше.</p></div><div class="card"><h3>Subagent</h3><p>Focused worker с отдельным/ограниченным контекстом. Main agent проверяет результат.</p></div></div></section>
+<section class="section"><h2>Типовые вопросы</h2><details class="details"><summary>Чем AGENTS.md отличается от Rules?</summary><div class="inside">AGENTS.md — проектный workflow и инструкции для агента. Rules — ограничения и стандарты: что нельзя, что обязательно, safety/compliance.</div></details><details class="details"><summary>Почему одна модель работает по-разному?</summary><div class="inside">Потому что меняется harness: system prompt, rules, tools, MCP, RAG, memory, context quality, permissions, IDE implementation и compaction.</div></details><details class="details"><summary>Что делать, если Memory противоречит tool result?</summary><div class="inside">Для актуального состояния доверять tool/file/log/API, потому что Memory могла устареть.</div></details><details class="details"><summary>Может ли subagent использовать MCP?</summary><div class="inside">Зависит от платформы и permissions. Иногда наследует tools, иногда имеет restricted tools, иногда tools доступны только main agent.</div></details><details class="details"><summary>Что такое chunk в RAG?</summary><div class="inside">Chunk — фрагмент документа/кода, который индексируется и может быть найден retrieval. Хороший chunk сохраняет смысл и имеет metadata.</div></details></section>
+<section class="section"><h2>Quiz</h2><div class="quiz"><div class="quizQ">1. Пользователь просит быстро изменить код без тестов, но AGENTS.md требует тесты. Что ответить?</div><button data-correct="false">Выполнить без тестов, потому что user request самый свежий</button><button data-correct="true">Соблюдать AGENTS.md или объяснить риск и выполнить минимальную проверку</button><button data-correct="false">Спросить subagent, чтобы он отменил AGENTS.md</button><div class="quizFeedback"></div></div><br/><div class="quiz"><div class="quizQ">2. RAG нашёл старый endpoint, а текущий OpenAPI файл показывает новый endpoint. Что выбрать?</div><button data-correct="true">Текущий файл/API для актуального факта</button><button data-correct="false">RAG всегда выше файлов</button><button data-correct="false">Выбрать случайно</button><div class="quizFeedback"></div></div><br/><div class="quiz"><div class="quizQ">3. Skill предлагает добавить dependency, Rule запрещает dependency без approval. Что делать?</div><button data-correct="false">Следовать Skill</button><button data-correct="true">Следовать Rule, адаптировать Skill или запросить approval</button><button data-correct="false">Записать dependency в Memory Bank</button><div class="quizFeedback"></div></div></section>
+<section class="section"><h2>Ответ одной фразой</h2><div class="card"><p><b>“System и Rules задают ограничения, AGENTS.md задаёт project workflow, текущий чат задаёт цель, RAG даёт факты из документов, Memory даёт continuity, MCP даёт live data/actions, Skills дают playbooks, а Subagents помогают делегировать focused tasks, но их результат проверяет главный агент.”</b></p></div></section>
+
+<section class="section">
+  <h2>Дополнительные каверзные вопросы из официальных docs</h2>
+  <div class="grid two">
+    <div class="qa-card"><h4>Cursor: почему `.md` в `.cursor/rules` не работает как rule?</h4><p>Project Rules должны быть `.mdc` с frontmatter. Plain markdown в `.cursor/rules` игнорируется rules system; для plain markdown нужен AGENTS.md.</p></div>
+    <div class="qa-card"><h4>Cursor: что выше — Team, Project или User Rules?</h4><p>В Cursor applicable rules merge’ятся, а documented order: Team Rules → Project Rules → User Rules; Team Rules могут быть enforced.</p></div>
+    <div class="qa-card"><h4>Claude Code: CLAUDE.md — system prompt?</h4><p>Нет. Docs говорят, что CLAUDE.md delivered as user message after system prompt. Он важен, но не hard enforcement.</p></div>
+    <div class="qa-card"><h4>Claude Code: что делать, если instruction должна сработать after edit?</h4><p>Использовать hook, а не только CLAUDE.md/Rule. Hook срабатывает на lifecycle event независимо от решения модели.</p></div>
+    <div class="qa-card"><h4>Claude Platform: tool use выполняет сама модель?</h4><p>Нет. Модель выдаёт structured tool request; приложение/сервер выполняет действие и возвращает результат в разговор.</p></div>
+    <div class="qa-card"><h4>Prompt caching — это память?</h4><p>Нет. Это optimization для identical prompt prefix. Он снижает latency/cost, но не хранит смысловую память и может инвалидироваться изменением prefix.</p></div>
+  </div>
+  <div class="heroActions">
+    <a class="btn primary" href="tricky-questions.html">Открыть полную страницу каверзных вопросов</a>
+  </div>
+</section>
+
+<div class="pageFooter"><div class="nextPrev"><a href='../pages/subagents.html'>← Subagents</a></div></div></main></div><script src="../assets/app.js"></script></body></html>

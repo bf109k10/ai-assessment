@@ -1,0 +1,844 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Memory Bank</title><link rel="stylesheet" href="../assets/style.css"/>
+<style>
+.schema-box{background:#0f172a;color:#e2e8f0;border-radius:16px;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.65;overflow:auto;margin:10px 0;white-space:pre-wrap}
+.schema-box--pre{white-space:pre;overflow-x:auto;word-break:normal}
+.context-flow{margin:10px 0}
+.context-flow-steps{font-size:14px;color:#334155;line-height:1.7;margin:0 0 12px;padding-left:0;list-style:none}
+.context-flow-steps li{margin:6px 0}
+.context-flow-steps .cf-arrow{color:#6366f1;font-weight:700;margin-right:6px}
+.context-stack{border:2px solid #475569;border-radius:12px;overflow:hidden;margin:12px 0;max-width:100%;background:#0f172a}
+.ctx-layer{padding:10px 14px;border-bottom:1px solid #334155;font-size:13px;color:#e2e8f0;background:#1e293b;font-family:ui-monospace,Menlo,Consolas,monospace}
+.ctx-layer:last-child{border-bottom:none}
+.ctx-layer.ctx-highlight{background:#172554;box-shadow:inset 3px 0 0 #3b82f6}
+.ctx-layer small{color:#94a3b8;font-weight:400}
+.diff-split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.diff-split{grid-template-columns:1fr}}
+.req-yes{color:#dc2626;font-weight:900}
+.req-no{color:#64748b}
+.memory-type-card{background:#1e293b;border-radius:12px;padding:20px;margin-bottom:16px;border-left:4px solid #6366f1}
+.memory-type-card.mt-session{border-left-color:#3b82f6}
+.memory-type-card.mt-project{border-left-color:#10b981}
+.memory-type-card.mt-user{border-left-color:#f59e0b}
+.memory-type-card.mt-agent{border-left-color:#8b5cf6}
+.memory-type-card.mt-checkpoint{border-left-color:#ef4444}
+.mt-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.mt-icon{font-size:28px}
+.mt-title{font-size:16px;font-weight:700;color:#f1f5f9}
+.mt-subtitle{font-size:12px;color:#94a3b8;margin-top:2px}
+.mt-body{font-size:13px;color:#cbd5e1;line-height:1.7}
+.mt-body strong{color:#f1f5f9}
+.mt-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.mt-tag{background:#334155;color:#94a3b8;font-size:11px;padding:3px 8px;border-radius:4px}
+.mt-tag.good{background:#064e3b;color:#6ee7b7}
+.mt-tag.bad{background:#450a0a;color:#fca5a5}
+.analogy-box{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:16px;margin-bottom:12px}
+.analogy-box .analogy-label{font-size:11px;color:#6366f1;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px}
+.analogy-box p{font-size:13px;color:#cbd5e1;margin:0;line-height:1.6}
+.zero-card{background:linear-gradient(135deg,#1e1b4b,#1e293b);border:1px solid #4338ca;border-radius:12px;padding:20px;margin-bottom:16px}
+.zero-card h3{color:#a5b4fc;margin-bottom:8px;font-size:15px}
+.zero-card p{color:#c7d2fe;font-size:13px;line-height:1.7;margin:0}
+.memory-layer{display:flex;align-items:stretch;gap:0;margin:16px 0;border-radius:10px;overflow:hidden}
+.ml-col{flex:1;padding:14px;font-size:12px;color:#e2e8f0;line-height:1.6}
+.ml-col:nth-child(1){background:#1e3a5f}
+.ml-col:nth-child(2){background:#14532d}
+.ml-col:nth-child(3){background:#4c1d95}
+.ml-col:nth-child(4){background:#7c2d12}
+.ml-col:nth-child(5){background:#1c1917}
+.ml-col b{display:block;font-size:13px;margin-bottom:6px}
+@media(max-width:700px){.memory-layer{flex-direction:column}}
+</style>
+</head><body><div class="app"><aside class="sidebar"><div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>
+  <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="memory.html" class="active"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div><div class="progressBox"><b>Формула</b><p class="sourceNote">System → AGENTS/Rules → Current task → Memory/RAG/MCP/Skills → Subagent findings.</p></div></aside>
+
+<main class="main">
+<section class="hero">
+  <div class="kicker">Agent Context Academy</div>
+  <h2>Memory Bank</h2>
+  <p>Долговременная память агента: 5 типов памяти, как они работают, что хранить, как не сломать. Объяснение с нуля — без предварительных знаний.</p>
+  <div class="heroActions">
+    <a class="btn primary" href="home.html">На главную</a>
+    <a class="btn" href="assessment.html">К assessment</a>
+    <button class="markDone">Отметить страницу изученной</button>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ УРОВЕНЬ 0 -->
+<section class="section">
+  <h2>С нуля: почему AI-агент забывает всё после разговора</h2>
+  <p class="sectionIntro">Прежде чем говорить о Memory Bank — нужно понять <strong>главную проблему</strong>: LLM (языковая модель) не имеет встроенной памяти между сессиями.</p>
+
+  <div class="zero-card">
+    <h3>Аналогия: агент — как человек с амнезией</h3>
+    <p>Представь коллегу-разработчика, который <strong>каждое утро просыпается без воспоминаний</strong> о прошлых днях. Каждый день ты должен заново объяснять ему: какой у вас стек, какие команды запускать, какие решения уже приняты. Продуктивности ноль.</p>
+    <p style="margin-top:8px">Именно так работает LLM-агент без Memory Bank. Каждый новый чат — <strong>чистый лист</strong>. Агент не помнит ни твоих предпочтений, ни архитектурных решений, ни того, что Redis вы отвергли два месяца назад.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card bg-blue">
+      <h3>Что такое "контекстное окно"</h3>
+      <p>LLM работает с <strong>context window</strong> — это всё, что она "видит" прямо сейчас: твой вопрос + история чата + системный промпт. Когда чат закрывается — всё исчезает. Context window = кратковременная рабочая память.</p>
+      <ul>
+        <li>Типичный размер: 100k–200k токенов</li>
+        <li>1 токен ≈ 0.75 слова</li>
+        <li>После закрытия — полное забывание</li>
+      </ul>
+    </div>
+    <div class="card bg-green">
+      <h3>Что такое Memory Bank</h3>
+      <p>Memory Bank — <strong>внешний файл</strong> (обычно <code>memory.md</code>) с записанными знаниями о проекте. Агент читает его при каждом запросе и "знает" всё что там написано. Это искусственная долговременная память.</p>
+      <ul>
+        <li>Физически: markdown-файл в репозитории</li>
+        <li>Загружается в context window каждый раз</li>
+        <li>Сохраняется в git — не исчезает</li>
+      </ul>
+    </div>
+    <div class="card bg-orange">
+      <h3>Зачем это нужно</h3>
+      <p>Без Memory Bank агент каждую сессию работает как первоклассник: не знает стека, команд, принятых решений. С Memory Bank — как опытный тимлид: знает проект, историю решений, предпочтения команды.</p>
+      <ul>
+        <li>Не надо каждый раз всё объяснять</li>
+        <li>Агент не предлагает отвергнутые решения</li>
+        <li>Onboarding новых разработчиков быстрее</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="schema-box">
+БЕЗ Memory Bank:
+  Сессия 1: "Наш стек — Java 21, Maven, Spring Boot" → агент работает нормально
+  Сессия 2: (чистый лист) Агент предлагает npm install... Не знает про Maven
+  Сессия 3: Предлагает добавить Redis — который вы уже отвергли
+
+С Memory Bank (memory.md):
+  ## Stack
+  - Java 21, Maven, Spring Boot 3.2
+  - НЕ используем Redis (overhead для нашей нагрузки, Q1 2025)
+  - Build: mvn -pl billing test
+
+  Сессия 1, 2, 3, 100... Агент всегда знает стек и историю решений ✓</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ КАК ЭТО РАБОТАЕТ -->
+<section class="section">
+  <h2>Как Memory Bank попадает к агенту — механика</h2>
+
+  <div class="nuance-card nc-blue">
+    <h4>Простыми словами: агент читает файл как ты читаешь инструкцию</h4>
+    <p>Memory Bank не «встроен» в модель — это обычный текстовый файл. Он добавляется в context window в начале каждого запроса. Агент видит его как часть своего «системного промпта» и принимает как данность всё что там написано.</p>
+  </div>
+
+  <div class="context-flow">
+    <p style="font-size:14px;color:#334155;margin:0 0 8px"><b>Как агент получает Memory Bank</b></p>
+    <ul class="context-flow-steps">
+      <li><span class="cf-arrow">↓</span> Ты отправляешь вопрос</li>
+      <li><span class="cf-arrow">↓</span> Cursor / Claude Code читает: AGENTS.md → memory.md → rules → …</li>
+      <li><span class="cf-arrow">↓</span> Собирает <strong>context window</strong> (слои снизу вверх — как стопка):</li>
+    </ul>
+    <div class="context-stack" role="img" aria-label="Слои context window">
+      <div class="ctx-layer">System prompt <small>(роль агента)</small></div>
+      <div class="ctx-layer">AGENTS.md <small>(workflow, стек)</small></div>
+      <div class="ctx-layer ctx-highlight">memory.md <small>← Memory Bank</small></div>
+      <div class="ctx-layer">Rules / Skills</div>
+      <div class="ctx-layer">История чата</div>
+      <div class="ctx-layer ctx-highlight">Твой вопрос <small>← здесь</small></div>
+    </div>
+    <p style="font-size:13px;color:#64748b;margin:8px 0 0"><span class="cf-arrow">↓</span> LLM видит всё это как один большой текст и отвечает с учётом memory.md</p>
+  </div>
+
+  <div class="diff-split" style="margin-top:16px">
+    <div>
+      <h3 style="margin-bottom:10px">Cursor — как подключить</h3>
+      <div class="schema-box">// В AGENTS.md добавить ссылку:
+@docs/memory.md
+
+// Или через .cursorrules:
+// memory.md загружается автоматически
+// если упомянут в AGENTS.md
+
+// Также: Cursor Settings →
+// Features → Memory (встроенная)</div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:10px">Claude Code — как подключить</h3>
+      <div class="schema-box">// В CLAUDE.md добавить:
+@include docs/memory.md
+
+// Или явно в начале сессии:
+// "Прочитай @memory.md перед работой"
+
+// Claude.ai Projects:
+// Project Knowledge = встроенный Memory Bank
+// загружается автоматически</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ 5 ТИПОВ ПАМЯТИ -->
+<section class="section">
+  <h2>5 типов памяти агента — подробно</h2>
+  <p class="sectionIntro">У AI-агента есть несколько разных "слоёв" памяти. Они отличаются по <strong>сроку жизни</strong>, <strong>что хранят</strong> и <strong>как обновляются</strong>. Знать разницу критично — иначе будешь класть временные данные в постоянную память и наоборот.</p>
+
+  <div class="analogy-box">
+    <div class="analogy-label">Аналогия из жизни</div>
+    <p>Представь мозг человека: <strong>рабочая память</strong> (что ты делаешь прямо сейчас), <strong>кратковременная</strong> (разговор час назад), <strong>долговременная</strong> (навыки и факты на годы). У агента — то же самое, только реализовано через файлы и базы данных.</p>
+  </div>
+
+  <!-- TYPE 1: SESSION -->
+  <div class="memory-type-card mt-session">
+    <div class="mt-header">
+      <div class="mt-icon">💬</div>
+      <div>
+        <div class="mt-title">1. Session Memory — память текущего разговора</div>
+        <div class="mt-subtitle">Живёт: пока открыт чат &nbsp;|&nbsp; Управляется: автоматически</div>
+      </div>
+    </div>
+    <div class="mt-body">
+      <p><strong>Что это такое:</strong> История текущего диалога — всё что ты и агент написали в этом чате. Агент помнит что ты уточнял, какие файлы открывал, что уже обсуждалось.</p>
+      <p style="margin-top:8px"><strong>Аналогия:</strong> Твоя рабочая память прямо сейчас. Ты помнишь последние 10 минут разговора, но если прервёшься на день — детали уже не так чёткие.</p>
+      <p style="margin-top:8px"><strong>Проблема:</strong> Session memory <strong>исчезает</strong> при закрытии чата. Также при длинных диалогах она <strong>сжимается</strong> (compaction) — старые сообщения вытесняются новыми. То что было 50 сообщений назад — агент может уже "не помнить".</p>
+      <p style="margin-top:8px"><strong>Практика:</strong> Если ты уточнил важное в начале длинного чата — напомни снова в середине, или зафиксируй в Memory Bank.</p>
+    </div>
+    <div class="mt-tags">
+      <span class="mt-tag">Срок: текущая сессия</span>
+      <span class="mt-tag good">Автоматически</span>
+      <span class="mt-tag bad">Исчезает при закрытии</span>
+      <span class="mt-tag bad">Сжимается при длинном чате</span>
+    </div>
+  </div>
+
+  <!-- TYPE 2: PROJECT -->
+  <div class="memory-type-card mt-project">
+    <div class="mt-header">
+      <div class="mt-icon">📁</div>
+      <div>
+        <div class="mt-title">2. Project Memory — знания о проекте</div>
+        <div class="mt-subtitle">Живёт: весь срок проекта (месяцы/годы) &nbsp;|&nbsp; Хранится: memory.md в репо</div>
+      </div>
+    </div>
+    <div class="mt-body">
+      <p><strong>Что это такое:</strong> Главный тип памяти. Файл в репозитории с накопленными знаниями: стек, команды, архитектурные решения, конвенции команды, gotchas.</p>
+      <p style="margin-top:8px"><strong>Аналогия:</strong> Корпоративная wiki, которую разработчики реально читают — потому что она компактная (≤100 строк) и всегда актуальная.</p>
+      <p style="margin-top:8px"><strong>Что записывать:</strong></p>
+      <ul style="margin:6px 0 0 16px;font-size:13px;line-height:1.8">
+        <li>Технологический стек с версиями: <code>Java 21, Maven, Spring Boot 3.2</code></li>
+        <li>Команды сборки/тестов: <code>mvn -pl billing test</code></li>
+        <li>Архитектурные решения с обоснованием: <em>"Redis отвергнут — overhead для нашей нагрузки"</em></li>
+        <li>Конвенции команды: PR формат, naming conventions</li>
+        <li>Gotchas: нюансы которые всегда забывают</li>
+        <li>Негативные решения: <em>"не используем X потому что..."</em></li>
+      </ul>
+      <p style="margin-top:8px"><strong>Критический риск:</strong> <strong>Устаревание.</strong> Если команда перешла с Maven на Gradle, а memory.md не обновили — агент будет давать неверные команды с абсолютной уверенностью. Это хуже чем незнание — это уверенная ложь.</p>
+    </div>
+    <div class="mt-tags">
+      <span class="mt-tag">Срок: месяцы / годы</span>
+      <span class="mt-tag good">Версионируется в git</span>
+      <span class="mt-tag good">Передаётся между разработчиками</span>
+      <span class="mt-tag bad">Устаревает без обновления</span>
+    </div>
+  </div>
+
+  <!-- TYPE 3: USER -->
+  <div class="memory-type-card mt-user">
+    <div class="mt-header">
+      <div class="mt-icon">👤</div>
+      <div>
+        <div class="mt-title">3. User Memory — предпочтения пользователя</div>
+        <div class="mt-subtitle">Живёт: постоянно &nbsp;|&nbsp; Хранится: ~/.claude/CLAUDE.md или Cursor Settings</div>
+      </div>
+    </div>
+    <div class="mt-body">
+      <p><strong>Что это такое:</strong> Персональные предпочтения конкретного разработчика: язык ответов, стиль объяснений, уровень детализации, форматирование.</p>
+      <p style="margin-top:8px"><strong>Аналогия:</strong> Личные настройки в IDE — тема, размер шрифта, горячие клавиши. Это твоё, а не командное.</p>
+      <p style="margin-top:8px"><strong>Примеры записей:</strong></p>
+      <ul style="margin:6px 0 0 16px;font-size:13px;line-height:1.8">
+        <li><em>"Отвечай на русском, технически точно"</em></li>
+        <li><em>"Объясняй через аналогии — я лучше понимаю"</em></li>
+        <li><em>"В коде всегда добавляй error handling"</em></li>
+        <li><em>"Я предпочитаю короткие ответы без лишних вступлений"</em></li>
+        <li><em>"При review кода — сначала критика, потом похвала"</em></li>
+      </ul>
+      <p style="margin-top:8px"><strong>Важно:</strong> User memory <strong>не должна попадать в командный memory.md</strong>. Твои личные предпочтения не должны влиять на то как агент работает у других разработчиков. Хранится в личном файле, не в репо.</p>
+    </div>
+    <div class="mt-tags">
+      <span class="mt-tag">Срок: постоянно</span>
+      <span class="mt-tag">Личный файл</span>
+      <span class="mt-tag good">Не влияет на других</span>
+      <span class="mt-tag bad">Не класть в командный memory.md</span>
+    </div>
+  </div>
+
+  <!-- TYPE 4: AGENT -->
+  <div class="memory-type-card mt-agent">
+    <div class="mt-header">
+      <div class="mt-icon">🤖</div>
+      <div>
+        <div class="mt-title">4. Agent Memory — опыт subagent-а</div>
+        <div class="mt-subtitle">Живёт: в рамках задачи &nbsp;|&nbsp; Хранится: в отчёте subagent-а</div>
+      </div>
+    </div>
+    <div class="mt-body">
+      <p><strong>Что это такое:</strong> Знания которые накапливает специализированный агент (subagent) в процессе работы над задачей. Например: security-agent нашёл типовые уязвимости в кодовой базе — это его "опыт".</p>
+      <p style="margin-top:8px"><strong>Аналогия:</strong> Подрядчик который изучил твой проект и написал отчёт о типовых проблемах. Его знания — ценны для следующего подрядчика в той же области.</p>
+      <p style="margin-top:8px"><strong>Паттерн использования:</strong></p>
+      <ul style="margin:6px 0 0 16px;font-size:13px;line-height:1.8">
+        <li>Subagent завершает задачу и передаёт findings главному агенту</li>
+        <li>Главный агент решает: что достаточно важно для Project Memory</li>
+        <li>Ценные паттерны → memory.md; временные результаты → не сохраняются</li>
+      </ul>
+      <p style="margin-top:8px"><strong>Риск:</strong> <strong>Bias / Staleness.</strong> Если subagent сделал неверный вывод, он может "научить" Project Memory неправильному. Всегда нужен human review перед записью в постоянную память.</p>
+    </div>
+    <div class="mt-tags">
+      <span class="mt-tag">Срок: жизнь задачи</span>
+      <span class="mt-tag">Только для subagent-ов</span>
+      <span class="mt-tag bad">Риск bias при автозаписи</span>
+      <span class="mt-tag good">Human review перед сохранением</span>
+    </div>
+  </div>
+
+  <!-- TYPE 5: CHECKPOINT -->
+  <div class="memory-type-card mt-checkpoint">
+    <div class="mt-header">
+      <div class="mt-icon">📍</div>
+      <div>
+        <div class="mt-title">5. Checkpoint Memory — состояние текущей задачи</div>
+        <div class="mt-subtitle">Живёт: пока идёт задача &nbsp;|&nbsp; Хранится: checkpoint.md (временно)</div>
+      </div>
+    </div>
+    <div class="mt-body">
+      <p><strong>Что это такое:</strong> Снимок состояния конкретной задачи прямо сейчас: что уже сделано, какие решения приняты в процессе, что осталось, какие риски. Нужен при длинных задачах или при передаче между агентами.</p>
+      <p style="margin-top:8px"><strong>Аналогия:</strong> Стикер на мониторе: "Остановился на строке 47, нужно ещё добавить тест на edge case с null". Временная заметка для себя.</p>
+      <p style="margin-top:8px"><strong>Типичная структура:</strong></p>
+      <div class="schema-box" style="margin-top:6px;font-size:12px">## Checkpoint: рефакторинг billing модуля
+Status: в процессе (75%)
+
+Done:
+- Разделил BillingService на BillingService + PaymentProcessor
+- Обновил все тесты для BillingService
+
+Decisions made:
+- Используем Builder pattern для PaymentRequest
+- Старый API оставляем для обратной совместимости
+
+Next:
+- Обновить тесты PaymentProcessor
+- PR + review
+
+Risks:
+- Billing интеграционные тесты могут сломаться — проверить</div>
+      <p style="margin-top:8px"><strong>Ключевое отличие от Project Memory:</strong> Checkpoint <strong>удаляется после завершения задачи</strong>. Если ты засоришь memory.md старыми checkpoint-ами — он превратится в мусорную кучу.</p>
+    </div>
+    <div class="mt-tags">
+      <span class="mt-tag">Срок: до завершения задачи</span>
+      <span class="mt-tag bad">Удаляется после done</span>
+      <span class="mt-tag good">Нужен для длинных задач</span>
+      <span class="mt-tag bad">НЕ смешивать с Project Memory</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ СРАВНИТЕЛЬНАЯ ТАБЛИЦА ТИПОВ -->
+<section class="section">
+  <h2>Сравнение всех типов памяти — шпаргалка</h2>
+
+  <div class="memory-layer">
+    <div class="ml-col">
+      <b>💬 Session</b>
+      Текущий диалог<br><br>
+      <em>Срок:</em> открытый чат<br>
+      <em>Файл:</em> нет (в памяти)<br>
+      <em>Кто управляет:</em> авто<br>
+      <em>Риск:</em> исчезает, сжимается
+    </div>
+    <div class="ml-col">
+      <b>📁 Project</b>
+      Знания о проекте<br><br>
+      <em>Срок:</em> месяцы / годы<br>
+      <em>Файл:</em> memory.md<br>
+      <em>Кто управляет:</em> команда<br>
+      <em>Риск:</em> устаревает
+    </div>
+    <div class="ml-col">
+      <b>👤 User</b>
+      Предпочтения<br><br>
+      <em>Срок:</em> постоянно<br>
+      <em>Файл:</em> ~/.claude/CLAUDE.md<br>
+      <em>Кто управляет:</em> лично<br>
+      <em>Риск:</em> конфликт с командой
+    </div>
+    <div class="ml-col">
+      <b>🤖 Agent</b>
+      Опыт subagent<br><br>
+      <em>Срок:</em> задача<br>
+      <em>Файл:</em> отчёт агента<br>
+      <em>Кто управляет:</em> агент + review<br>
+      <em>Риск:</em> bias, неточность
+    </div>
+    <div class="ml-col">
+      <b>📍 Checkpoint</b>
+      Состояние задачи<br><br>
+      <em>Срок:</em> до done<br>
+      <em>Файл:</em> checkpoint.md<br>
+      <em>Кто управляет:</em> агент<br>
+      <em>Риск:</em> забыть удалить
+    </div>
+  </div>
+
+  <div class="tableWrap" style="margin-top:16px"><table>
+    <thead><tr><th>Тип</th><th>Главный вопрос</th><th>Пример записи</th><th>Когда нужен</th><th>Ключевой риск</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Session</strong></td><td>Что мы обсуждали сейчас?</td><td>«Ты уточнил использовать Builder»</td><td>Всегда, автоматически</td><td>Исчезает / сжимается</td></tr>
+      <tr><td><strong>Project</strong></td><td>Что мы знаем о проекте?</td><td><code>- Java 21, не используем Redis</code></td><td>Любой проект с агентом</td><td>Устаревает незаметно</td></tr>
+      <tr><td><strong>User</strong></td><td>Как этот человек хочет общаться?</td><td><code>- Отвечай кратко, на русском</code></td><td>Личная настройка агента</td><td>Конфликт с командными стандартами</td></tr>
+      <tr><td><strong>Agent</strong></td><td>Что узнал subagent?</td><td>«В billing типичная ошибка — timezone»</td><td>Multi-agent workflow</td><td>Неверный вывод попадает в memory</td></tr>
+      <tr><td><strong>Checkpoint</strong></td><td>Где мы остановились?</td><td><code>Done: A, B. Next: C. Risk: D</code></td><td>Длинные задачи, handoff</td><td>Засоряет Project Memory если не удалить</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ ТРИ СЛОЯ ЗНАНИЙ -->
+<section class="section">
+  <h2>Как они отличаются: документация, Memory Bank и AGENTS.md</h2>
+  <p class="sectionIntro">В репозитории часто смешивают три разных слоя. Разделение помогает не захламлять README и не дублировать одно и то же в трёх местах: люди читают docs, агент — AGENTS.md + Memory Bank.</p>
+
+  <div class="tableWrap"><table>
+    <thead><tr><th>Слой</th><th>Для кого</th><th>Что хранит</th><th>Как часто меняется</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Документация</strong><br><small><code>docs/</code>, README, ADR-файлы</small></td>
+        <td>Люди + иногда AI (по запросу / RAG)</td>
+        <td>Архитектура, API, бизнес-логика, onboarding, развёрнутые решения</td>
+        <td>Средне — по мере фич и релизов</td>
+      </tr>
+      <tr>
+        <td><strong>Memory Bank</strong><br><small><code>memory.md</code> или <code>memory-bank/</code></small></td>
+        <td>AI + команда (краткая выжимка)</td>
+        <td>Текущий прогресс, active context, решения, что уже сделано, open issues</td>
+        <td><strong>Часто</strong> — особенно <code>activeContext</code> / <code>progress</code></td>
+      </tr>
+      <tr>
+        <td><strong>AGENTS.md</strong><br><small>в Claude Code — <code>CLAUDE.md</code></small></td>
+        <td>AI-агент</td>
+        <td>Как агенту работать: команды, workflow, куда смотреть, что нельзя делать, ссылки на memory</td>
+        <td>Редко / средне — при смене процесса или стека</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout" style="margin-top:12px">
+    <b>Правило переноса:</b> длинный текст и диаграммы → документация; устойчивые факты для каждого запроса агента → Memory Bank; каркас поведения и автозагрузка файлов → AGENTS.md. Подробная раскладка по файлам в папке <code>memory-bank/</code> — на странице <a href="memory-structure.html#memory-bank-files">Структура Memory</a>.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ AGENTS vs MEMORY -->
+<section class="section">
+  <h2>Memory Bank vs AGENTS.md — когда что выбирать</h2>
+  <p class="sectionIntro">Оба файла попадают в context window при каждом запросе. Путаница между ними — главная причина дублей и устаревших команд. <strong>AGENTS.md</strong> (в Claude Code — <strong>CLAUDE.md</strong>) = «как работать здесь»; <strong>memory.md</strong> = «что мы накопили о проекте».</p>
+
+  <div class="tableWrap"><table>
+    <thead><tr><th>Ситуация или тип контента</th><th>AGENTS.md / CLAUDE.md</th><th>Memory Bank (memory.md)</th></tr></thead>
+    <tbody>
+      <tr><td>Роль агента, язык ответа команды, общий workflow (Plan → Code → Review)</td><td class="req-yes">✓</td><td class="req-no">—</td></tr>
+      <tr><td>Definition of Done, процесс PR/review, ссылки на Rules / Skills / RAG</td><td class="req-yes">✓</td><td class="req-no">—</td></tr>
+      <tr><td>Стек и команды сборки <em>в одном каноническом месте</em> (коротко, для старта)</td><td class="req-yes">✓</td><td class="req-no">—</td></tr>
+      <tr><td>Строка подключения: <code>@docs/memory.md</code> / <code>@include</code></td><td class="req-yes">✓</td><td class="req-no">—</td></tr>
+      <tr><td>ADR с датой, обоснованием и «почему отвергли X»</td><td class="req-no">—</td><td class="req-yes">✓</td></tr>
+      <tr><td>Gotchas и баги, которые «все забывают» (timezone, thread-safety, env vars)</td><td class="req-no">—</td><td class="req-yes">✓</td></tr>
+      <tr><td>Эволюция решений: «раньше Maven, с Q3 перешли на Gradle»</td><td class="req-no">—</td><td class="req-yes">✓</td></tr>
+      <tr><td>Project glossary, доменные термины команды</td><td class="req-no">—</td><td class="req-yes">✓</td></tr>
+      <tr><td>Результаты исследований и выводы после спринтов</td><td class="req-no">—</td><td class="req-yes">✓</td></tr>
+      <tr><td>Запреты и MUST («никогда не коммить секреты»)</td><td class="req-no">→ Rules</td><td class="req-no">—</td></tr>
+      <tr><td>Онбординг человека (README, архитектура для людей)</td><td class="req-no">→ README / docs</td><td class="req-no">краткая выжимка ✓</td></tr>
+      <tr><td>Маленький pet-проект, один разработчик</td><td colspan="2">Можно один файл; при росте — разделить: AGENTS = каркас, memory = факты</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="grid two" style="margin-top:16px">
+    <div class="card bg-blue">
+      <h3>Быстрый тест</h3>
+      <ul>
+        <li><em>«Это инструкция агенту как вести себя в репо?»</em> → AGENTS.md</li>
+        <li><em>«Это факт/решение, которое появилось в работе?»</em> → memory.md</li>
+        <li><em>«Один и тот же факт уже есть в AGENTS?»</em> → не дублировать, обновлять один источник</li>
+      </ul>
+    </div>
+    <div class="card bg-orange">
+      <h3>Типичная связка</h3>
+      <p style="font-size:13px;margin:0 0 8px">AGENTS.md остаётся компактным (≈100–150 строк): Role, Stack, Build, Workflow, References.</p>
+      <p style="font-size:13px;margin:0">В References: <code>@docs/memory.md</code> — детальные ADR, gotchas и история решений живут в Memory Bank.</p>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top:12px">
+    <b>Ещё похожие слои:</b> жёсткая политика → <a href="rules.html">Rules</a>; пошаговый сценарий → <a href="skills.html">Skills</a>; матрица AGENTS / Rules / Skills → <a href="agents-rules-skills.html">AGENTS / Rules / Skills</a>; детали файлов memory → <a href="memory-structure.html">Структура Memory</a>; формат AGENTS → <a href="agents-md.html">AGENTS.md</a>.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ ЧТО ХРАНИТЬ -->
+<section class="section">
+  <h2>Что хранить, что не хранить — критерии</h2>
+  <div class="grid two">
+    <div class="card bg-green">
+      <h3>✅ Хранить в memory.md</h3>
+      <ul>
+        <li><strong>Устойчивые факты</strong> — живут ≥ 3 месяца</li>
+        <li>Tech stack с версиями: <code>Java 21, Maven 3.9</code></li>
+        <li>Точные команды: <code>mvn -pl billing test</code></li>
+        <li>Архитектурные решения <strong>с обоснованием</strong></li>
+        <li>Негативные решения: <em>"не используем X потому что..."</em></li>
+        <li>Конвенции: PR формат, naming, coding style</li>
+        <li>Gotchas: нюансы которые всегда забывают</li>
+        <li>Project glossary: что значат специфические термины</li>
+      </ul>
+    </div>
+    <div class="card bg-red">
+      <h3>❌ Не хранить в memory.md</h3>
+      <ul>
+        <li><strong>Секреты, токены, пароли</strong> — никогда и ни при каких условиях</li>
+        <li>Временные статусы: <em>"CI сейчас сломан"</em></li>
+        <li>Данные которые меняются часто (метрики, статусы PR)</li>
+        <li>Сырые логи и stack traces</li>
+        <li>То что лучше проверять live через MCP</li>
+        <li>Дубли того что уже есть в AGENTS.md / README</li>
+        <li>Checkpoint-данные текущей задачи</li>
+        <li>Личные предпочтения одного разработчика</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="nuance-card nc-orange" style="margin-top:16px">
+    <h4>Правило «3 месяца»</h4>
+    <p>Спроси себя: <em>«Этот факт будет актуален через 3 месяца?»</em> Если нет — не кладёт в memory.md. Если да — кладёт. Этот простой фильтр исключает 80% лишнего.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ ПРИМЕР ХОРОШЕГО MEMORY.MD -->
+<section class="section">
+  <h2>Пример хорошего memory.md — шаблон</h2>
+  <p class="sectionIntro">Рабочий шаблон с объяснением каждой секции:</p>
+  <div class="schema-box"># Project Memory — [Название проекта]
+# Last updated: 2025-09-15 | Owner: @team-lead
+
+## Stack & Environment
+- Java 21, Maven 3.9, Spring Boot 3.2
+- PostgreSQL 15 (не используем ORM — raw JDBC в DAO слое, ADR-003)
+- CI: GitLab CI, runners на ubuntu-22.04
+- Prod: AWS ECS Fargate, staging на ECS с t3.medium
+
+## Build & Test
+- Полный билд: mvn clean install
+- Тесты billing-модуля: mvn -pl billing test
+- Интеграционные: mvn -pl integration-tests test -P it
+- Деплой на staging: ./scripts/deploy-staging.sh [version]
+
+## Architecture Decisions
+- НЕ используем Redis — overhead для нашей нагрузки (ADR-001, Q1 2025)
+- НЕ используем GraphQL — команда не знает, REST достаточно (ADR-002)
+- PaymentService — отдельный микросервис, не монолит (ADR-005, Q3 2024)
+- Всё через Builder pattern для request объектов — immutability
+
+## Team Conventions
+- PR: Problem → Fix → Tests → Risk (обязательные секции)
+- API breaking changes → architecture review обязателен
+- Тесты обязательны для любого public метода
+- Коммиты: feat/fix/chore + scope, напр. feat(billing): add invoice export
+
+## Known Gotchas
+- Timezone в billing: всегда UTC, конвертация только на UI (баг #234)
+- BillingService.calculateTax() не thread-safe — не вызывать параллельно
+- Тест PaymentIntegrationTest требует Docker (testcontainers) — без Docker упадёт
+- Переменная PAYMENT_GATEWAY_URL обязательна в .env.local (нет дефолта)</div>
+
+  <div class="callout" style="margin-top:12px"><b>Размер:</b> целевой — ≤ 100 строк, ≤ 500-800 слов. Всё что больше — разбей на секции или вынеси в RAG corpus. Длинный memory.md = агент читает хуже (lost in the middle).</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ PIPELINE -->
+<section class="section">
+  <h2>Memory pipeline — жизненный цикл знания</h2>
+  <div class="flow">
+    <div class="flowStep">
+      <div class="flowNum">1</div>
+      <div><h4>Capture — поймать факт</h4><p>Обнаружил важный факт: новое решение, новый gotcha, изменение стека. Зафиксируй сразу — не откладывай.</p></div>
+    </div>
+    <div class="flowStep">
+      <div class="flowNum">2</div>
+      <div><h4>Curate — сжать и очистить</h4><p>Не пиши длинные объяснения — одна строка с сутью. Убери шум. Сформулируй так, чтобы агент понял без дополнительного контекста.</p></div>
+    </div>
+    <div class="flowStep">
+      <div class="flowNum">3</div>
+      <div><h4>Retrieve — получить когда нужно</h4><p>Memory Bank загружается в context автоматически. Но если он большой — самое важное должно быть вверху (горячая зона attention LLM).</p></div>
+    </div>
+    <div class="flowStep">
+      <div class="flowNum">4</div>
+      <div><h4>Validate — проверить актуальность</h4><p>Если факт мог измениться — проверь через файл/MCP/RAG перед использованием. Агент должен знать что проверять, а не слепо доверять memory.</p></div>
+    </div>
+    <div class="flowStep">
+      <div class="flowNum">5</div>
+      <div><h4>Invalidate / Update — обновить устаревшее</h4><p>Стек изменился? Обнови memory.md. Решение отменили? Замени запись. Удалённая запись не накапливается — история изменений есть в git.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ MEMORY VS RAG VS CHECKPOINT -->
+<section class="section">
+  <h2>Memory Bank vs RAG vs Checkpoint — когда что использовать</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Механизм</th><th>Главный вопрос</th><th>Объём</th><th>Обновление</th><th>Когда нужен</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Memory Bank</strong></td>
+        <td>Что мы уже знаем/решили?</td>
+        <td>≤100 строк</td>
+        <td>Вручную при изменениях</td>
+        <td>Постоянные факты, решения, соглашения</td>
+      </tr>
+      <tr>
+        <td><strong>RAG</strong></td>
+        <td>Что написано в источниках?</td>
+        <td>Без ограничений</td>
+        <td>Автоматически при обновлении источников</td>
+        <td>Большие документы, API specs, wiki</td>
+      </tr>
+      <tr>
+        <td><strong>Checkpoint</strong></td>
+        <td>Где мы остановились?</td>
+        <td>1-2 страницы</td>
+        <td>Постоянно в ходе задачи</td>
+        <td>Длинные задачи, handoff между агентами</td>
+      </tr>
+      <tr>
+        <td><strong>Summary</strong></td>
+        <td>Что было в длинном диалоге?</td>
+        <td>Авто-сжатие</td>
+        <td>Автоматически при compaction</td>
+        <td>Сжатие истории чата</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="analogy-box" style="margin-top:14px">
+    <div class="analogy-label">Аналогия: библиотека</div>
+    <p><strong>Memory Bank</strong> — закладки на самых важных страницах. <strong>RAG</strong> — вся библиотека с поиском. <strong>Checkpoint</strong> — стикер «читаю сейчас, страница 47». Ни один не заменяет другой.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ ТОНКОСТИ -->
+<section class="section">
+  <h2>Тонкости и нюансы — неочевидные ловушки</h2>
+
+  <div class="nuance-card nc-red">
+    <h4>Главный риск: Memory устаревает, а агент этого не знает</h4>
+    <p>Memory Bank записывает факты на момент записи. Если команда перешла с Maven на Gradle, но memory.md не обновили — агент будет давать неверные команды <strong>с абсолютной уверенностью</strong>. Он не сомневается — он просто "знает" что написано. Это хуже чем незнание — уверенная ложь может дорого обойтись. Решение: обновлять memory.md при любом изменении технологического стека, команд или архитектурных решений. Добавить "Last updated" в заголовок.</p>
+  </div>
+
+  <div class="nuance-card nc-orange">
+    <h4>Memory ≠ RAG: не смешивай назначение</h4>
+    <p>Memory Bank — устойчивые кураторные факты: "мы не используем X", "команда тестов такая-то". RAG — актуальное содержимое больших документов. Класть в memory.md весь текст README — ошибка: создаёт дублирование и засоряет context лишним. В memory — только те знания которые нужны агенту без поиска. Большие документы → RAG corpus.</p>
+  </div>
+
+  <div class="nuance-card nc-blue">
+    <h4>Lost in the middle: длинный memory.md работает хуже</h4>
+    <p>LLM лучше "видит" начало и конец контекста, чем середину (эффект "lost in the middle"). Если memory.md занимает 5000+ токенов — факты в середине файла могут игнорироваться. Решение: держи memory.md компактным (≤ 500-800 слов), организуй по секциям. Самое важное — вверху файла. Остальное — в отдельные файлы с @include или в RAG.</p>
+  </div>
+
+  <div class="nuance-card nc-purple">
+    <h4>Checkpoint ≠ Memory — разные жизненные циклы</h4>
+    <p>Memory Bank — долговременные знания о проекте, обновляются редко. Checkpoint — снимок состояния текущей задачи, создаётся и обновляется внутри задачи, удаляется после завершения. Путать их — значит засорять memory.md временными данными. Через 3 месяца будешь читать: "Done: пункт A из задачи #123" — и не понимать зачем это здесь.</p>
+  </div>
+
+  <div class="nuance-card nc-green">
+    <h4>Агент может записать неверный факт в memory</h4>
+    <p>Если агент сам управляет memory.md через Write tool — он может записать неверный или устаревший факт с полной уверенностью: "проблема с модулем X решена" — хотя решение не проверено. Или записать предположение как факт. Стратегия: <strong>Human-in-the-loop</strong> для изменений в memory. Агент предлагает → человек review'ит → только потом merge в memory.md.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ BEST PRACTICES -->
+<section class="section">
+  <h2>Best practices — Делай / Не делай</h2>
+  <div class="grid two">
+    <div class="card bg-green">
+      <h3>✅ Делай</h3>
+      <ul>
+        <li>Организуй memory.md по секциям: Stack, Build, Decisions, Conventions, Gotchas</li>
+        <li>Самое критичное — в самом начале файла (горячая зона attention)</li>
+        <li>Обновляй при изменениях: новая версия, новый инструмент, смена архитектуры</li>
+        <li>Добавляй дату к решениям: <em>"отвергнут Redis (Q1 2025)"</em></li>
+        <li>Включай негативные решения: <em>"решили не использовать X потому что..."</em></li>
+        <li>Версионируй memory.md в git — история изменений = история решений</li>
+        <li>Держи размер ≤ 100 строк — принудительная дисциплина компактности</li>
+        <li>Human review перед записью агентом</li>
+      </ul>
+    </div>
+    <div class="card bg-red">
+      <h3>❌ Не делай</h3>
+      <ul>
+        <li>Не храни секреты, токены, пароли — <strong>никогда</strong></li>
+        <li>Не дублируй то что уже есть в AGENTS.md / README</li>
+        <li>Не записывай временные статусы: <em>"сейчас ветка feature/X в review"</em></li>
+        <li>Не позволяй агенту бесконтрольно писать в memory без review</li>
+        <li>Не делай memory.md больше 1000 строк — разбей или используй RAG</li>
+        <li>Не смешивай checkpoint и project memory</li>
+        <li>Не класть личные предпочтения в командный memory.md</li>
+        <li>Не забывать обновлять при смене стека — устаревший memory = ловушка</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ Q&A -->
+<section class="section">
+  <h2>Вопросы по уровням</h2>
+
+  <div class="qlevel-group">Junior — 10 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое Memory Bank и зачем он нужен?</summary>
+  <div class="inside">Memory Bank — файл (обычно memory.md) с явно структурированными, долговременными знаниями о проекте: стек, команды сборки, архитектурные решения, конвенции команды. Он нужен чтобы агент не начинал каждую сессию с нуля — между сессиями LLM не помнит ничего, и без Memory Bank всё забывается. Memory Bank — мост между сессиями: "что мы знаем и решили" сохраняется в файле и читается при следующем запросе.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Почему LLM-агент "забывает" всё после закрытия чата?</summary>
+  <div class="inside">LLM работает с context window — текущим "рабочим полем" в котором умещается весь разговор. Когда чат закрывается — context window исчезает. Модель не хранит историю сессий нигде — нет встроенной долговременной памяти. Это фундаментальное ограничение архитектуры трансформеров: они stateless между сессиями. Именно поэтому Memory Bank — внешний файл — нужен как искусственная замена долговременной памяти.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Сколько типов памяти у AI-агента?</summary>
+  <div class="inside">5 типов: (1) Session memory — история текущего диалога, исчезает при закрытии; (2) Project memory — знания о проекте в memory.md, живёт месяцами; (3) User memory — личные предпочтения пользователя, постоянно; (4) Agent memory — опыт subagent-а, в рамках задачи; (5) Checkpoint memory — состояние текущей задачи, временно. Главный для работы с проектом — Project memory.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Чем Session Memory отличается от Project Memory?</summary>
+  <div class="inside">Session Memory — то что было в текущем чате прямо сейчас. Исчезает при закрытии чата. Сжимается при длинных диалогах. Project Memory — файл memory.md в репозитории. Существует постоянно, читается в каждой новой сессии, версионируется в git. Session = "что говорили сейчас"; Project Memory = "что знаем всегда". Session memory нельзя контролировать, Project Memory — создаётся и обновляется командой вручную.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Где физически хранится memory.md?</summary>
+  <div class="inside">Обычно: markdown-файл в корне проекта — memory.md или docs/memory.md. В Cursor: файл добавляется через @mention в AGENTS.md для автозагрузки. В Claude Code: через @include в CLAUDE.md. Файл версионируется в git как часть проекта — не личный, командный. Некоторые платформы имеют встроенную Memory: Claude.ai Projects (Project Knowledge), Cursor Settings → Features → Memory.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что записывать в memory.md?</summary>
+  <div class="inside">Устойчивые факты (живут ≥3 месяцев): tech stack + версии, команды сборки/тестов/деплоя, архитектурные решения с обоснованием ("используем JPA, не raw SQL, потому что..."), project glossary, team conventions (PR format, naming), gotchas (нюансы которые всегда забывают), негативные решения ("не используем Redis потому что..."). Не записывать: секреты, временные статусы, данные которые меняются часто.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое Checkpoint Memory и когда он нужен?</summary>
+  <div class="inside">Checkpoint Memory — временный файл (checkpoint.md) со снимком состояния текущей задачи: что уже сделано, какие решения приняты по ходу, что осталось, риски. Нужен при длинных многоступенчатых задачах или при передаче задачи между агентами. Ключевое: Checkpoint удаляется после завершения задачи. Это не Project Memory — это временная заметка "где мы сейчас".</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Чем User Memory отличается от Project Memory?</summary>
+  <div class="inside">User Memory — личные предпочтения конкретного пользователя: язык ответов, стиль объяснений, уровень детализации. Хранится в личном файле (например ~/.claude/CLAUDE.md), не в репозитории. Project Memory — командные знания о проекте в memory.md в репо. User Memory = "как Петя хочет чтобы агент с ним общался"; Project Memory = "что знаем об этом проекте". Смешивать нельзя: личные предпочтения не должны влиять на работу агента с другими членами команды.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Какой оптимальный размер memory.md?</summary>
+  <div class="inside">Целевой размер: ≤ 100 строк, ≤ 500-800 слов. Обоснование: (1) Memory Bank читается целиком при каждом запросе — большой файл = большой token overhead; (2) LLM плохо "видит" середину длинного контекста (lost in the middle) — факты в середине 500-строчного memory.md могут игнорироваться; (3) Большой memory.md = признак неправильного использования (туда попало то что должно быть в RAG). При превышении — разбить на секции или вынести в отдельные файлы.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Как создать memory.md для нового проекта?</summary>
+  <div class="inside">Минимальные шаги: (1) Создать файл docs/memory.md или memory.md в корне репо; (2) Добавить секции: ## Stack, ## Build & Test, ## Architecture Decisions, ## Team Conventions, ## Known Gotchas; (3) Заполнить актуальными фактами — конкретно, не абстрактно; (4) Добавить ссылку в AGENTS.md или CLAUDE.md для автозагрузки. Начать с малого — 10-20 строк — и дополнять по ходу работы. Плохой заполненный memory.md лучше хорошего пустого.</div></details>
+
+  <div class="qlevel-group">Middle — 10 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Что писать в Memory Bank, а что в AGENTS.md?</summary>
+  <div class="inside">AGENTS.md — стабильный конфигурационный контекст: кто агент, workflow, стек, команды, DoD. Обновляется редко. Memory Bank — накапливаемые знания о проекте: конкретные ADR с датами, найденные gotchas, результаты исследований, эволюция решений. AGENTS.md = "как работать"; Memory Bank = "что знаем о проекте". В маленьких проектах их можно объединить. Если AGENTS.md растёт — декомпозировать: постоянный контекст оставить, накопленные знания → Memory Bank.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как структурировать эффективный memory.md?</summary>
+  <div class="inside">Эффективная структура: (1) Заголовок с датой "Last updated" и owner; (2) ## Stack & Environment — технологии, версии; (3) ## Build & Test — точные команды; (4) ## Architecture Decisions — ADR с обоснованием и датой; (5) ## Team Conventions — PR format, naming; (6) ## Known Gotchas — нюансы которые всегда забывают. Критически важное — вверху (горячая зона attention). Каждая секция — конкретные факты, не абстракции. Одна строка = один факт.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как обновлять Memory Bank в процессе работы?</summary>
+  <div class="inside">Триггеры обновления: принятый ADR, изменение стека или команд, обнаруженный gotcha, изменение конвенций. Три подхода: (1) Manual — разработчик обновляет при значимых изменениях; (2) Agent-assisted — агент предлагает обновление по результатам сессии, человек review'ит и approve'ит; (3) Automated — CI hook при изменении pom.xml/Makefile обновляет Build секцию и создаёт PR. Минимум: добавить в PR checklist "обнови Memory Bank если изменились архитектурные факты".</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> В чём разница между Memory Bank и RAG — когда что применять?</summary>
+  <div class="inside">Memory Bank — явные, кураторные, структурированные факты. Читается целиком. Для устойчивых знаний (решения, команды, ≤100 строк). RAG — семантический поиск по корпусу документов, возвращает релевантные chunks. Для больших объёмов (API specs, архитектурные документы, wiki). Правило: небольшой набор стабильных фактов → Memory Bank. Большие документы с поиском по содержимому → RAG. Комбинация: Memory Bank хранит ключевые выводы, RAG — полный контекст.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда делать Checkpoint вместо записи в Memory Bank?</summary>
+  <div class="inside">Checkpoint — снимок состояния конкретной текущей задачи: что сделано, решения по ходу задачи, следующие шаги, риски. Lifetime: до завершения задачи — потом удаляется. Memory Bank — долговременные знания о проекте, lifetime: месяцы/годы. Правило: статус задачи, промежуточные результаты, "где остановились" → Checkpoint. Принятые ADR, найденные gotchas, изменения стека, важные выводы после завершения → Memory Bank. Смешивание засоряет memory.md временными данными.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Какие anti-patterns при использовании Memory Bank?</summary>
+  <div class="inside">Главные anti-patterns: (1) God Memory Bank — 1000+ строк всего подряд → lost in the middle; (2) Volatile state в Memory — "сейчас CI сломан" → устаревает за часы; (3) Секреты в Memory — никогда; (4) Автообновление без human review — агент может записать неверный факт с уверенностью; (5) Дублирование AGENTS.md — один факт в двух местах рассинхронизируется; (6) Checkpoint данные в Project Memory — временное в постоянном.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как организовать Memory Bank для командной разработки?</summary>
+  <div class="inside">Командный Memory Bank: (1) Хранить в git — version history = история архитектурных решений; (2) Изменения через PR с review; (3) Назначить Memory Bank owner — ответственный за актуальность; (4) Чётко разграничить: общекомандные знания в memory.md, личные предпочтения — в личном ~/.claude/CLAUDE.md; (5) Sprint review — проверять актуальность раз в спринт. Командный Memory Bank = shared understanding, не личный блокнот.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как сжимать Memory Bank чтобы экономить токены?</summary>
+  <div class="inside">Стратегии сжатия: (1) Один факт — одна строка (максимальная информационная плотность); (2) Детальные ADR → ссылки на docs/adr/ файлы, в Memory Bank только суть; (3) Большая документация → RAG corpus, Memory Bank хранит только ключевые выводы; (4) Удалять устаревшие факты — для истории есть git; (5) Целевой размер: ≤100 строк. Длинный Memory Bank — технический долг.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как хранить архитектурные решения в memory.md?</summary>
+  <div class="inside">ADR в Memory Bank: записывать не только WHAT но и WHY с датой — "не используем Redis для кэша, т.к. операционный overhead не оправдан для нашей нагрузки (Q1 2025)". Это позволяет агенту понять когда причина устарела. Структура: краткое решение + обоснование + дата + ссылка на детальный ADR файл. При изменении решения — обновить запись с датой. Негативные решения ("не используем X") — особенно ценны: агент не будет предлагать то что уже отвергнуто.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как автоматически обновлять Memory Bank через Hooks?</summary>
+  <div class="inside">Автоматизация через Hooks: (1) PostToolUse Hook — после завершения значимой задачи агент предлагает обновление Memory Bank; (2) CI webhook — при изменении pom.xml/package.json запускает скрипт который обновляет секцию Build в Memory Bank и создаёт PR; (3) Pre-commit hook — проверяет что если изменился стек, Memory Bank тоже обновлён. Риск: агент может записать неверное. Оптимум: автоматизировать триггер, но требовать human review перед merge.</div></details>
+
+  <div class="qlevel-group">Senior — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как спроектировать архитектуру Memory Bank для сложного проекта?</summary>
+  <div class="inside">Архитектура для сложного проекта: (1) Federated Memory — несколько файлов по доменам (billing-memory.md, auth-memory.md, infra-memory.md); главный memory.md с @include ссылками; (2) Memory hierarchy — глобальный (organization conventions) + project (конкретный проект) + module (специфика модуля); (3) Versioned ADR — отдельные docs/adr/ файлы, в Memory только сводка с ссылками; (4) Separation по volatility — стабильные факты в одном файле, более изменчивые в другом. Каждый файл: ≤100 строк.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> В чём разница между Memory Bank и external state store?</summary>
+  <div class="inside">Memory Bank — документ для чтения агентом; human-curated знания; обновляется вручную; не масштабируется на большие объёмы; нет built-in querying. External state store (Redis, PostgreSQL, векторная DB) — программный storage; обновляется автоматически; масштабируется; поддерживает сложные запросы; доступен через MCP tools. Memory Bank оптимален для небольшого набора постоянных знаний. External state store + MCP = для динамических, часто меняющихся данных (CI статус, метрики, live configuration).</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как выстроить compression strategy для Memory Bank?</summary>
+  <div class="inside">Стратегия сжатия: (1) Information density — каждая строка несёт максимум информации; (2) Hierarchical summary — детальные документы в RAG corpus, Memory Bank хранит только выводы и ссылки; (3) Time-based cleanup — факты старше X лет — на удаление или архив; (4) Deduplication — Memory и AGENTS.md не должны содержать одно и то же; (5) Progressive disclosure — в Memory Bank сводка, агент запрашивает детальный файл по необходимости. Метрика: information per token.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как диагностировать и починить устаревший Memory Bank?</summary>
+  <div class="inside">Диагностика: (1) Сравнить факты Memory Bank с live sources — версии в pom.xml, команды в Makefile; (2) Попросить агента проверить Memory Bank против текущих файлов проекта; (3) CI check — скрипт сравнивает версию Java/Node в pom.xml с тем что в memory.md. Починить: (1) "Memory audit" — агент проходит по каждой записи и проверяет актуальность; (2) Обновить с датами; (3) Удалить неактуальные; (4) Добавить "Last validated: DATE" в заголовок.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как использовать Memory Bank в multi-agent workflow?</summary>
+  <div class="inside">Multi-agent паттерны: (1) Shared read-only Memory — все агенты читают один memory.md, только main agent пишет → предотвращает concurrent write conflicts; (2) Federated Memory — каждый специализированный агент имеет свой memory файл; main agent читает все; (3) Memory handoff — при завершении subagent task, findings передаются main agent который решает что записать в проектную Memory; (4) Memory as context injection — main agent передаёт релевантную часть Memory как context для subagent. Last write wins — главная опасность concurrent writes.</div></details>
+
+  <div class="qlevel-group">Lead — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как организовать командный Memory Bank с governance?</summary>
+  <div class="inside">Командный governance: (1) Храни Memory Bank в git с обязательным review через PR; (2) Назначь Memory Bank owner — отвечает за актуальность, review PR, quarterly audit; (3) CODEOWNERS для memory.md — автоматически запрашивает review у ответственного; (4) Определи что попадает в командный Memory Bank vs личный (~/.claude/CLAUDE.md); (5) Sprint review — слот для проверки актуальности; (6) Definition of Done для ADR: "запись в Memory Bank". Governance делает Memory Bank живым инструментом, а не устаревающим артефактом.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как выстроить процесс обновления Memory Bank в команде?</summary>
+  <div class="inside">Процесс обновления: (1) Триггеры — явно определить события: принятый ADR, смена стека, изменение команд; (2) PR checklist — "обнови Memory Bank если изменились архитектурные факты"; (3) Post-incident review — если агент ошибся из-за устаревшей memory → обновить как часть post-mortem; (4) Automated checks — CI проверяет версии в memory.md против pom.xml/package.json; (5) Quarterly "memory spring cleaning". Стабильный процесс важнее разовой хорошей записи.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как распределить ownership Memory Bank?</summary>
+  <div class="inside">Модели ownership: (1) Single owner — tech lead отвечает за все обновления; минус: bottleneck; (2) Domain ownership — каждый модуль имеет своего owner для своего memory файла; (3) Collective ownership — любой разработчик может предложить изменение через PR, review от tech lead. Рекомендация: collective ownership с mandatory review для существенных изменений. CODEOWNERS с per-section responsibility. Главное: нет бесхозных строк — у каждой записи есть ответственный за актуальность.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как использовать Memory Bank для onboarding новых разработчиков?</summary>
+  <div class="inside">Onboarding через Memory Bank: (1) Ссылка на memory.md в README как "прочитай это первым"; (2) Секции "Architecture Overview" и "Common Pitfalls" — самое нужное новичку; (3) Первая задача нового разработчика — проверить Memory Bank и добавить вопросы которые возникли; (4) AI-assisted onboarding — агент с Memory Bank отвечает на вопросы нового разработчика в контексте проекта; (5) После первого месяца — новый разработчик обновляет Memory Bank своими открытиями. Memory Bank улучшается от каждого нового взгляда.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как использовать Memory Bank как живую документацию проекта?</summary>
+  <div class="inside">Memory Bank как knowledge base: (1) Делает знание явным — неявные знания ("у нас баг с timezone в billing") записываются и доступны всем; (2) Снижает key-person dependency — знание не умирает когда Петя уходит; (3) Живая документация — обновляется вместе с проектом, в отличие от Wiki которая устаревает; (4) AI-enhanced — агент использует Memory Bank для ответов в контексте проекта; (5) Onboarding — новый разработчик + агент с Memory Bank = быстрый ввод в проект. Ограничение: Memory Bank не заменяет детальную документацию — только фиксирует ключевые выводы.</div></details>
+
+  <div class="qlevel-group">Architect — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как Memory Bank вписывается в архитектуру AI-first разработки?</summary>
+  <div class="inside">AI-first архитектура — разработка где AI-агент является первоклассным участником команды. Memory Bank — его persistence layer: агент работает эффективно только с актуальным контекстом. В AI-first архитектуре Memory Bank становится частью project infrastructure наравне с CI/CD. Роль: context continuity (агент "помнит" проект), knowledge sharing (вся команда + агент на одной волне), decision traceability (ADR с датами). Без Memory Bank AI-first разработка деградирует: агент = умный, но amnesiatic assistant.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как спроектировать persistence layer для AI agents?</summary>
+  <div class="inside">Persistence layer: (1) Hot memory — Memory Bank файл, читается при каждом запросе; ≤100 строк; (2) Warm memory — RAG corpus; большие документы через semantic search; (3) Cold memory — архив ADR, historical context; доступен через explicit @mention; (4) Live data — MCP tools для актуального состояния системы. Агент: Hot → Warm → Cold → Live. Архитектура позволяет масштабировать knowledge base без деградации производительности.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> В чём разница между Memory Bank и Knowledge Graph?</summary>
+  <div class="inside">Memory Bank — flat markdown файл; простота; нет relationships; не масштабируется на тысячи записей. Knowledge Graph — structured graph database (Neo4j, RDF); explicit relationships; semantic querying; автоматическое inference; масштабируется; требует MCP интеграции. Memory Bank оптимален для small-medium projects с сотнями фактов. Knowledge Graph — для enterprise с тысячами взаимосвязанных знаний. Комбинация: Memory Bank как high-level index, Knowledge Graph как queryable backend через MCP.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как комбинировать Memory Bank и RAG в dual memory system?</summary>
+  <div class="inside">Dual memory system: Memory Bank (explicit/curated) + RAG (implicit/retrieved). Архитектура: (1) Memory Bank — всегда в context; устойчивые факты, решения, конвенции; (2) RAG corpus — большие документы; поиск по запросу; (3) Memory Bank содержит ссылки и ключевые выводы из RAG документов; RAG обеспечивает детали. Паттерн: агент сначала проверяет Memory Bank ("что мы знаем?"), затем при необходимости RAG ("что в документации?"). Ни один не заменяет другой: Memory Bank даёт структуру и decisions; RAG — актуальный content.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как спроектировать масштабируемую архитектуру агентной памяти?</summary>
+  <div class="inside">Масштабируемая архитектура: (1) Layered memory с разными TTL — hot (session, часы), warm (project, месяцы), cold (organization, годы); (2) Domain partitioning — memory по доменам, каждый с отдельным owner; (3) Automated maintenance — CI pipeline для validation и cleanup; hooks для триггеров обновления; (4) Memory as code — хранится в git, имеет schema, тестируется CI; (5) Federated multi-agent memory — главный агент координирует, специализированные агенты обновляют свои домены. Метрика здоровья: information freshness score.</div></details>
+
+</section>
+
+<div class="pageFooter"><div class="nextPrev"><a href="agents-rules-skills.html">← AGENTS / Rules / Skills</a><a href="memory-structure.html">Структура Memory →</a></div></div>
+</main></div><script src="../assets/app.js"></script></body></html>

@@ -1,0 +1,812 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Learning Roadmap · AI граф зависимостей</title><link rel="stylesheet" href="../assets/style.css"/>
+<style>
+.roadmap-wrap{position:relative;border:1px solid var(--line);border-radius:22px;background:#fff;padding:4px}
+.roadmap-viewport{overflow:auto;max-height:min(72vh,560px);border-radius:18px;background:#f8fafc}
+.roadmap-inner{transform-origin:0 0;display:block;padding:8px}
+.roadmap-scale{transform-origin:0 0;display:inline-block}
+.roadmap-svg{display:block}
+.roadmap-zoom{position:absolute;top:12px;right:12px;z-index:5;display:flex;align-items:center;gap:4px;padding:4px;border-radius:14px;background:#fff;border:1px solid var(--line);box-shadow:0 4px 14px rgba(15,23,42,.08)}
+.roadmap-zoom button{width:36px;height:36px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;color:#0f172a;font-size:18px;font-weight:800;line-height:1;cursor:pointer;transition:.12s}
+.roadmap-zoom button:hover{background:#0f172a;color:#fff;border-color:#0f172a}
+.roadmap-zoom .zoom-label{min-width:44px;text-align:center;font-size:12px;font-weight:900;color:#475569;user-select:none}
+.roadmap-zoom .zoom-icon{font-size:15px;line-height:36px}
+.roadmap-wrap:fullscreen{background:#fff;padding:14px;border-radius:0;display:flex;flex-direction:column}
+.roadmap-wrap:fullscreen .roadmap-viewport{flex:1;max-height:none;height:calc(100vh - 56px)}
+.node-group{cursor:pointer}
+.filter-pill{display:inline-flex;border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:7px 15px;font-size:13px;font-weight:900;color:#475569;cursor:pointer;margin:0 5px 8px 0;transition:.12s;border:1px solid var(--line)}
+.filter-pill.active,.filter-pill:hover{background:#0f172a;color:#fff;border-color:#0f172a}
+.roadmap-modal{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+.roadmap-modal[hidden]{display:none!important}
+.roadmap-modal-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.42);backdrop-filter:blur(3px)}
+.roadmap-modal-dialog{position:relative;z-index:1;width:min(580px,calc(100vw - 40px));max-height:min(88vh,720px);overflow:auto;border-radius:22px;background:linear-gradient(180deg,#fff,#f8fbff);border:1px solid #93c5fd;box-shadow:0 28px 80px rgba(15,23,42,.22);padding:20px 22px 18px}
+.roadmap-modal-close{position:absolute;top:14px;right:14px;width:36px;height:36px;border:1px solid #e2e8f0;border-radius:12px;background:#fff;color:#475569;font-size:22px;line-height:1;cursor:pointer;font-weight:400;z-index:2}
+.roadmap-modal-close:hover{background:#0f172a;color:#fff;border-color:#0f172a}
+.detail-panel{border:none;border-radius:0;background:transparent;padding:0;min-height:0;padding-right:28px}
+.roadmap-details-top{display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid #e2e8f0;margin-bottom:12px}
+.roadmap-details-icon{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;font-size:28px;background:#fff;border:2px solid currentColor;flex-shrink:0}
+.roadmap-details-top h2{margin:0;font-size:22px;line-height:1.15;letter-spacing:-.02em;color:#0f172a}
+.roadmap-details-sub{margin-top:4px;font-size:13px;color:#64748b;font-weight:800}
+.roadmap-details-section{margin-top:14px}
+.roadmap-details-section h3{margin:0 0 7px;font-size:15px;color:#0f172a;font-weight:900}
+.roadmap-details-section p{margin:0;color:#334155;line-height:1.45;font-size:14px}
+.roadmap-case-card{border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;background:#fff;margin-top:8px;color:#334155;font-size:14px;line-height:1.4;text-align:left;width:100%;cursor:pointer;font-family:inherit;transition:.12s}
+.roadmap-case-card:hover{border-color:#93c5fd;background:#f8fbff}
+.roadmap-case-card b{color:#0f172a}
+.roadmap-case-card.out b{color:#1d4ed8}
+.roadmap-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.roadmap-chip{border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800}
+.roadmap-modal-hint{margin-top:14px;padding-top:10px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;line-height:1.45}
+.legend-strip{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px}
+.legend-item{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:7px 12px;background:#fff;font-size:13px;font-weight:900}
+.legend-dot{width:14px;height:14px;border-radius:4px;flex-shrink:0}
+
+/* Visual Path */
+.vp-phases{display:flex;flex-direction:column;gap:0}
+.vp-phase{border-radius:16px;overflow:hidden;margin-bottom:16px}
+.vp-phase-header{display:flex;align-items:center;gap:10px;padding:12px 18px;font-weight:900;font-size:14px;letter-spacing:.01em}
+.vp-phase-header .ph-num{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:900;flex-shrink:0}
+.vp-phase-body{display:flex;flex-wrap:wrap;gap:8px;padding:14px 16px 16px;align-items:center}
+.vp-node{display:inline-flex;align-items:center;gap:6px;border-radius:10px;padding:8px 13px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:.15s;border:1.5px solid transparent;line-height:1.2}
+.vp-node:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(15,23,42,.12)}
+.vp-node .vn-num{font-size:11px;font-weight:900;opacity:.7;min-width:16px}
+.vp-connector{color:#94a3b8;font-size:18px;font-weight:300;user-select:none;padding:0 2px;flex-shrink:0}
+
+.vp-phase-a0 .vp-phase-header{background:#dbeafe;color:#1e40af}
+.vp-phase-a0 .ph-num{background:#1e40af;color:#fff}
+.vp-phase-a0 .vp-phase-body{background:#eff6ff}
+.vp-phase-a0 .vp-node{background:#fff;color:#1e40af;border-color:#93c5fd}
+.vp-phase-a0 .vp-node:hover{background:#dbeafe;border-color:#3b82f6}
+
+.vp-phase-a1 .vp-phase-header{background:#bbf7d0;color:#166534}
+.vp-phase-a1 .ph-num{background:#166534;color:#fff}
+.vp-phase-a1 .vp-phase-body{background:#f0fdf4}
+.vp-phase-a1 .vp-node{background:#fff;color:#166534;border-color:#86efac}
+.vp-phase-a1 .vp-node:hover{background:#dcfce7;border-color:#22c55e}
+
+.vp-phase-a2 .vp-phase-header{background:#fef08a;color:#713f12}
+.vp-phase-a2 .ph-num{background:#92400e;color:#fff}
+.vp-phase-a2 .vp-phase-body{background:#fefce8}
+.vp-phase-a2 .vp-node{background:#fff;color:#92400e;border-color:#fcd34d}
+.vp-phase-a2 .vp-node:hover{background:#fef9c3;border-color:#f59e0b}
+
+.vp-phase-a3 .vp-phase-header{background:#e9d5ff;color:#4c1d95}
+.vp-phase-a3 .ph-num{background:#4c1d95;color:#fff}
+.vp-phase-a3 .vp-phase-body{background:#f5f3ff}
+.vp-phase-a3 .vp-node{background:#fff;color:#4c1d95;border-color:#c4b5fd}
+.vp-phase-a3 .vp-node:hover{background:#ede9fe;border-color:#7c3aed}
+
+.vp-phase-arrow{display:flex;justify-content:center;margin:-4px 0;font-size:22px;color:#94a3b8;line-height:1}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>
+    <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html" class="active"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div>
+  <div class="progressBox"><b>Формула</b><p class="sourceNote">System → AGENTS/Rules → Current task → Memory/RAG/MCP/Skills → Subagent findings.</p></div>
+</aside>
+
+<main class="main">
+  <section class="hero">
+    <div class="kicker">Agent Context Academy</div>
+    <h2>Learning Roadmap · Граф зависимостей</h2>
+    <p>22 темы, 4 уровня, 23 стрелки. Кликни на тему — как на схеме «Контекст агента»: всплывающая карточка с описанием, зависимостями и тегами.</p>
+    <div class="heroActions">
+      <a class="btn primary" href="home.html">На главную</a>
+      <a class="btn" href="assessment.html">К assessment</a>
+      <button class="markDone">Отметить страницу изученной</button>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Фильтр по уровню</h2>
+    <div id="filters">
+      <button class="filter-pill active" data-level="all">Все уровни</button>
+      <button class="filter-pill" data-level="a0">A0 · Основы LLM</button>
+      <button class="filter-pill" data-level="a1a2">A1–A2 · IDE + Retrieval</button>
+      <button class="filter-pill" data-level="a3">A3 · Workflow + MCP</button>
+      <button class="filter-pill" data-level="a4">A4 · Agentic</button>
+    </div>
+    <div class="legend-strip" id="legend"></div>
+  </section>
+
+  <section class="section">
+      <div class="roadmap-wrap" id="roadmapWrap">
+        <div class="roadmap-zoom" id="roadmapZoom" aria-label="Масштаб графа">
+          <button type="button" id="zoomOut" title="Уменьшить (−)">−</button>
+          <span class="zoom-label" id="zoomLabel">100%</span>
+          <button type="button" id="zoomIn" title="Увеличить (+)">+</button>
+          <button type="button" id="zoomReset" title="Сбросить масштаб"><span class="zoom-icon" aria-hidden="true">🔍</span></button>
+          <button type="button" id="zoomFullscreen" title="На весь экран" aria-label="На весь экран">⛶</button>
+        </div>
+        <div class="roadmap-viewport" id="roadmapViewport">
+          <div class="roadmap-inner" id="roadmapInner"></div>
+        </div>
+      </div>
+  </section>
+
+  <div class="roadmap-modal" id="detailModal" hidden aria-hidden="true">
+    <div class="roadmap-modal-backdrop" id="detailBackdrop" aria-hidden="true"></div>
+    <div class="roadmap-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle">
+      <button type="button" class="roadmap-modal-close" id="detailClose" aria-label="Закрыть">×</button>
+      <div class="detail-panel" id="detailPanel"></div>
+    </div>
+  </div>
+
+  <section class="section">
+    <h2>Визуальный путь обучения</h2>
+    <p class="sectionIntro">Темы разбиты по фазам — каждая фаза строится на предыдущей. Кликай по теме — или прокрути до таблицы с объяснениями.</p>
+    <div id="visualPath"></div>
+  </section>
+
+  <section class="section">
+    <h2>Рекомендуемая последовательность</h2>
+    <p class="sectionIntro">26 шагов от фундамента к продвинутым темам — с объяснением почему каждая тема стоит на своём месте.</p>
+    <div class="tableWrap"><table>
+      <thead><tr><th>#</th><th>Тема</th><th>Уровень</th><th>Почему сначала</th><th>Страница</th></tr></thead>
+      <tbody>
+        <tr style="background:#eff6ff"><td colspan="5" style="font-weight:900;color:#1e40af;padding:8px 12px">⚡ Фаза 1 — Основы LLM (A0)</td></tr>
+        <tr><td>1</td><td>Prompt Engineering — Zero/Few-shot, CoT, RCTFQ</td><td>A0</td><td>Основа взаимодействия с любой LLM — всё строится на этом</td><td><a href="prompting.html">→ Prompting</a></td></tr>
+        <tr><td>2</td><td>Context Engineering — управление окном</td><td>A0</td><td>Понять, что реально попадает в контекст LLM и как им управлять</td><td><a href="context-engineering.html">→ Context Eng.</a></td></tr>
+        <tr><td>3</td><td>Context Window &amp; слои агента</td><td>A0</td><td>Слои и приоритеты — без этого не понять, почему агент игнорирует инструкции</td><td><a href="context.html">→ Контекст</a></td></tr>
+        <tr><td>4</td><td>Agent Loop — Think → Tool → Observe</td><td>A0</td><td>Механика цикла изнутри — почему агент «зависает» и теряет инструкции</td><td><a href="agent-loop.html">→ Agent Loop</a></td></tr>
+        <tr><td>5</td><td>Explore → Plan → Code — процесс работы с агентом</td><td>A0</td><td>После цикла — как вести задачу: контекст, план, код с проверкой</td><td><a href="workflow.html">→ Explore → Plan → Code</a></td></tr>
+        <tr><td>6</td><td>Почему модель ≠ модель (Temperature, Harness)</td><td>A0</td><td>Без этого будут неправильные ожидания от AI-ответов</td><td><a href="model-variance.html">→ Варианс</a></td></tr>
+        <tr style="background:#f0fdf4"><td colspan="5" style="font-weight:900;color:#166534;padding:8px 12px">🔧 Фаза 2 — Конфигурация агента (A1)</td></tr>
+        <tr><td>7</td><td>AGENTS.md / CLAUDE.md — Project Instructions</td><td>A1</td><td>Как настраивается агент в репозитории — каскад инструкций</td><td><a href="agents-md.html">→ AGENTS.md</a></td></tr>
+        <tr><td>8</td><td>Rules (.cursor/rules/) — 4 типа, alwaysApply</td><td>A1</td><td>Политика агента — жёстче AGENTS.md, не обойти из чата</td><td><a href="rules.html">→ Rules</a></td></tr>
+        <tr><td>9</td><td>Hooks — PreToolUse / PostToolUse</td><td>A1–A2</td><td>Системное принуждение на уровне shell — жёстче Rules</td><td><a href="hooks.html">→ Hooks</a></td></tr>
+        <tr><td>10</td><td>Permissions — режимы и правила разрешений</td><td>A1–A2</td><td>Контроль что агент может делать без подтверждения</td><td><a href="permissions.html">→ Permissions</a></td></tr>
+        <tr><td>11</td><td>Skills / SKILL.md — playbooks агента</td><td>A1–A2</td><td>Переиспользуемые сценарии — агент по проверенному playbook</td><td><a href="skills.html">→ Skills</a></td></tr>
+        <tr><td>12</td><td>Commands — slash-команды</td><td>A1–A2</td><td>Явный вызов типового сценария одной командой</td><td><a href="commands.html">→ Commands</a></td></tr>
+        <tr><td>13</td><td>Agent Package Manager</td><td>A2</td><td>Как управлять пакетами skills и rules в команде</td><td><a href="agent-packages.html">→ Packages</a></td></tr>
+        <tr style="background:#f0fdf4"><td colspan="5" style="font-weight:900;color:#166534;padding:8px 12px">🧠 Фаза 3 — Память и знания (A1–A2)</td></tr>
+        <tr><td>14</td><td>Memory Bank — типы, lifecycle, форматы</td><td>A1</td><td>Долговременная память между сессиями — агент не переспрашивает</td><td><a href="memory.html">→ Memory</a></td></tr>
+        <tr><td>15</td><td>Структура Memory — файлы и форматы</td><td>A1–A2</td><td>Как именно организовать memory files в проекте</td><td><a href="memory-structure.html">→ Memory Structure</a></td></tr>
+        <tr><td>16</td><td>RAG — chunking, embeddings, reranking</td><td>A1–A2</td><td>Как AI работает с knowledge bases — не по памяти модели</td><td><a href="rag.html">→ RAG</a></td></tr>
+        <tr><td>17</td><td>MCP Protocol — Tools, Resources, Prompts</td><td>A1–A2</td><td>Стандарт tool integration — один протокол для всех источников</td><td><a href="mcp.html">→ MCP</a></td></tr>
+        <tr><td>18</td><td>Prompt Caching — KV-cache, prefix, TTL</td><td>A1–A2</td><td>Оптимизация: Cache vs Memory — не путать</td><td><a href="caching.html">→ Caching</a></td></tr>
+        <tr><td>19</td><td>Checkpoint / Summary — compaction recovery</td><td>A1–A2</td><td>Continuity при длинных задачах — не терять прогресс</td><td><a href="checkpoints.html">→ Checkpoint</a></td></tr>
+        <tr style="background:#fefce8"><td colspan="5" style="font-weight:900;color:#92400e;padding:8px 12px">🤖 Фаза 4 — Агентные системы (A2–A4)</td></tr>
+        <tr><td>20</td><td>Subagents — делегирование, permissions</td><td>A2–A3</td><td>Оркестрация: делегировать без раздутия главного контекста</td><td><a href="subagents.html">→ Subagents</a></td></tr>
+        <tr><td>21</td><td>Построение агентских систем — декомпозиция, параллель/pipeline</td><td>A3–A4</td><td>Как из subagents собрать рабочую систему: дерево зависимостей, распределение файлов</td><td><a href="agentic-systems.html">→ Агентские системы</a></td></tr>
+        <tr><td>22</td><td>Конфликты контекста — приоритеты слоёв</td><td>A2–A3</td><td>Hooks > Rules > AGENTS > Memory > chat — кто побеждает</td><td><a href="conflicts.html">→ Конфликты</a></td></tr>
+        <tr><td>23</td><td>Какой инструмент когда — Memory vs AGENTS.md vs Rules vs Skills</td><td>A2–A3</td><td>Best practices: что куда класть, таблицы сравнения всех пяти инструментов</td><td><a href="tool-choice.html">→ Инструменты</a></td></tr>
+        <tr><td>24</td><td>Каверзные вопросы assessor'а</td><td>A3</td><td>Неочевидные кейсы из Cursor/Claude docs — подготовка к собеседованию</td><td><a href="tricky-questions.html">→ Каверзные</a></td></tr>
+        <tr><td>25</td><td>AGENTS / Rules / Skills — обзор и сравнение</td><td>A3</td><td>Сводный обзор всех механизмов инструктирования агента</td><td><a href="agents-rules-skills.html">→ Обзор</a></td></tr>
+        <tr><td>26</td><td>Assessment тренажёр</td><td>A3–A4</td><td>Финальная проверка всех знаний</td><td><a href="assessment.html">→ Assessment</a></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <div class="pageFooter"><div class="nextPrev">
+    <a href="overall.html">← Общая схема</a>
+    <a href="prompting.html">Prompt Engineering →</a>
+  </div></div>
+</main>
+</div>
+
+<script src="../assets/app.js"></script>
+<script>
+const NW = 142, NH = 52, GAP = 14;
+
+function splitLabel(label) {
+  if (label.length <= 17) return [label];
+  const words = label.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    const mid = Math.ceil(words.length / 2);
+    return [words.slice(0, mid).join(' '), words.slice(mid).join(' ')];
+  }
+  const mid = Math.floor(label.length / 2);
+  let br = label.lastIndexOf('/', mid);
+  if (br < 6) br = label.lastIndexOf(' ', mid);
+  if (br < 6) br = mid;
+  return [label.slice(0, br).trim(), label.slice(br).replace(/^\s*/, '')];
+}
+
+function nodeWidth(label) {
+  const lines = splitLabel(label);
+  const longest = Math.max(...lines.map(l => l.length));
+  return Math.max(NW, Math.min(172, Math.ceil(longest * 7.2) + 28));
+}
+
+const LC = {
+  a0:   { fill:'#eff6ff', stroke:'#93c5fd', text:'#1e40af', band:'#dbeafe55', label:'A0 · Основы LLM' },
+  a1a2: { fill:'#f0fdf4', stroke:'#86efac', text:'#166534', band:'#dcfce755', label:'A1–A2 · IDE + Retrieval' },
+  a3:   { fill:'#fefce8', stroke:'#fcd34d', text:'#92400e', band:'#fef9c355', label:'A3 · Workflow + MCP' },
+  a4:   { fill:'#f5f3ff', stroke:'#c4b5fd', text:'#4c1d95', band:'#ede9fe55', label:'A4 · Agentic' },
+};
+
+const NODES = [
+  {id:'llm',          label:'LLM & Temperature',    level:'a0',   rank:0, cat:'LLM Basics', why:'Чтобы предсказать поведение модели и выбрать температуру под задачу.', desc:'Как работает LLM, температура: 0=детерминированный, 1+=творческий. Для агентов — низкая температура для предсказуемости tool calls.'},
+  {id:'prompt',       label:'Prompt Engineering',   level:'a0',   rank:0, cat:'LLM Basics', why:'Чтобы получать нужный результат от LLM без лишних итераций.', desc:'Zero-shot, Few-shot, CoT (Think step by step), Role prompting, Structured output, Negative constraints. R-C-T-F-Q = Role-Context-Task-Format-Quality.'},
+  {id:'ctx-window',   label:'Context Window',       level:'a0',   rank:0, cat:'Context',    why:'Чтобы понимать, что реально попадает в контекст и что урезать первым.', desc:'Слои окна: system instructions (platform + prefix), Rules, AGENTS.md, чат, RAG, tools, Memory. Lost in the middle — важное в начало или конец.'},
+  {id:'hallucination',label:'Hallucination',        level:'a0',   rank:0, cat:'LLM Basics', why:'Чтобы не доверять уверенному, но неверному ответу без проверки.', desc:'Уверенный неверный ответ. Верифицировать через код/тесты/source of truth. Снижают: RAG (grounding), tool-use, structured output.'},
+  {id:'cursor-modes', label:'Cursor Ask vs Agent',  level:'a0',   rank:0, cat:'IDE',        why:'Чтобы не запускать правки в Agent mode до одобрения плана.', desc:'Ask/Plan mode = research, planning (read-only). Agent mode = реализация только после approval плана. Research first, then implementation.'},
+  {id:'agent-loop',   label:'Agent Loop',           level:'a0',   rank:0, cat:'Agentic',    why:'Чтобы понять механику цикла агента и не удивляться «зависаниям» и потере инструкций.', desc:'Think → Tool → Observe — повторяющийся цикл. Turns, ToolUse, ToolResult, контекст растёт. Три фазы: Gather, Act, Verify. Остановка по условию или лимиту turns.'},
+
+  {id:'embeddings',   label:'Embeddings & Vector DB',level:'a1a2',rank:1, cat:'Retrieval',  why:'Чтобы находить смысловые совпадения, а не только точные слова.', desc:'Текст → числовой вектор (768–3072 dims). Похожие по смыслу тексты = близкие векторы. Cosine similarity для поиска. FAISS, Pinecone, pgvector.'},
+  {id:'rag',          label:'RAG',                  level:'a1a2', rank:1, cat:'Retrieval',  why:'Чтобы агент отвечал по актуальным фактам из источников, а не по памяти.', desc:'Retrieve-Augment-Generate: query→embed→Vector DB→top-K chunks→context→LLM. Chunking стратегии: fixed-size+overlap, semantic, code-aware.'},
+  {id:'memory',       label:'Memory Bank',          level:'a1a2', rank:1, cat:'Context',    why:'Чтобы агент помнил решения проекта между сессиями и не переспрашивал.', desc:'Устойчивый контекст проекта: решения, архитектура, глоссарий. Не RAG! Memory = что уже решили в проекте. RAG = ищет внешнее.'},
+  {id:'agents-md',    label:'AGENTS.md / CLAUDE.md',level:'a1a2', rank:1, cat:'Config',     why:'Чтобы агент знал workflow, стек и запреты конкретного репозитория.', desc:'Cursor→AGENTS.md, Claude Code→CLAUDE.md (+~/.claude/CLAUDE.md глобальный), Cline→.clinerules/. Роль, workflow, stack, запреты, Definition of Done.'},
+  {id:'rules',        label:'Rules (.mdc)',          level:'a1a2', rank:1, cat:'Config',     why:'Чтобы задать жёсткие ограничения, которые нельзя обойти из чата.', desc:'Always-apply (каждый чат) · Auto-attach (по паттерну файлов) · Conditional (@). .mdc в .cursor/rules/. Выше Skill/AGENTS.md при конфликте.'},
+  {id:'cursorignore', label:'.cursorignore',         level:'a1a2', rank:1, cat:'Config',     why:'Чтобы убрать шум (node_modules, secrets) из контекста и получить точнее ответ.', desc:'Исключает файлы из AI-контекста (синтаксис .gitignore, НО другой файл!). node_modules, dist, generated JSON, secrets. Меньше шума = лучше ответ.'},
+
+  {id:'hooks',        label:'Hooks (Pre/PostToolUse)',level:'a3',  rank:2, cat:'Config',     why:'Чтобы принудительно блокировать опасные tool calls до/после выполнения.', desc:'Shell-скрипты принуждения. PreToolUse — блокирует до вызова tool. PostToolUse — после. Жёстче Rules, нельзя обойти из чата. hooks.json в .cursor/.'},
+  {id:'commands',     label:'Commands (.cursor/commands)',level:'a3',rank:2,cat:'Config',   why:'Чтобы явно запускать типовой сценарий одной командой, а не описывать заново.', desc:'Slash-команды для типовых задач. Cursor: /имя в чате. Claude Code: /project:имя. Хранятся в .cursor/commands/*.md. Вызываются явно, не автоматически.'},
+  {id:'mcp',          label:'MCP Protocol',         level:'a3',   rank:2, cat:'MCP',        why:'Чтобы агент единообразно подключался к внешним API, БД и файлам.', desc:'Anthropic 2024. Три примитива: Resources (данные), Prompts (шаблоны), Tools (функции). tool_use→MCP server→tool_result. Один стандарт для всех.'},
+  {id:'mcp-sec',      label:'MCP Security',         level:'a3',   rank:2, cat:'MCP',        why:'Чтобы не утекли токены и агент не выполнял опасные действия без прав.', desc:'Реальные токены только локально (~/.cursor/mcp.json). В Git — только плейсхолдеры <TOKEN>. Read-only по умолчанию. Allowlist подход.'},
+  {id:'int-mcps',     label:'Internal MCPs',        level:'a3',   rank:2, cat:'MCP',        why:'Чтобы одним запросом связать Jira, логи и тест-планы для расследования.', desc:'jira-mcp (задачи), graylog-mcp (логи), atp-mcp (тест-планы). Cross-MCP: x-request-id из Jira → поиск логов в Graylog → AI investigation.'},
+  {id:'react',        label:'ReAct Pattern',        level:'a3',   rank:2, cat:'Patterns',   why:'Чтобы агент рассуждал и действовал циклично, проверяя каждый шаг.', desc:'Reason + Act цикл: Thought (что делать) → Action (tool call с аргументами) → Observation (результат tool). Повтор до финального ответа.'},
+  {id:'skills',       label:'Skills / SKILL.md',    level:'a3',   rank:2, cat:'Config',     why:'Чтобы агент выполнял задачу по проверенному playbook, а не придумывал заново.', desc:'YAML frontmatter: name (строчные+дефисы, max 64) + description (от 3-го лица, max 1024). Тело ≤500 строк. Прогрессивное раскрытие: SKILL.md → reference files.'},
+  {id:'hitl',         label:'Human-in-the-Loop',    level:'a3',   rank:2, cat:'Workflow',   why:'Чтобы необратимые операции подтверждал человек, а не только тесты.', desc:'Approval gates при необратимых операциях: delete, deploy, финансы. Тесты ≠ gates! Gates = человеческий контроль ключевых решений.'},
+  {id:'workflow-7',   label:'7-Stage Workflow',     level:'a3',   rank:2, cat:'Workflow',   why:'Чтобы не пропускать этапы: сначала research и approval, потом реализация.', desc:'Research→Plan→Approval→Implementation→Validation→Review→Documentation. Нельзя пропускать! Research first, Agent mode только после approval.'},
+  {id:'workflow',     label:'Explore → Plan → Code', level:'a0',   rank:0, cat:'Workflow',   href:'workflow.html', why:'Чтобы после Agent Loop вести задачу предсказуемо: контекст, план, код с проверкой.', desc:'Explore→Plan→Code (внутри Code — verify и commit). TDD-вариант, HITL. Параллель и fan-out/fan-in — углубление после Subagents. Cursor и Claude Code.'},
+
+  {id:'agent-card',   label:'Agent Card (9 полей)', level:'a4',   rank:3, cat:'Agentic',    why:'Чтобы заранее зафиксировать, что агенту можно и что запрещено делать.', desc:'Name, Purpose, Inputs, Outputs, Allowed tools, Forbidden actions, Approval gates, Quality checks, Risks. Forbidden actions — ОБЯЗАТЕЛЬНО!'},
+  {id:'subagents',    label:'Subagents',            level:'a4',   rank:3, cat:'Agentic',    why:'Чтобы делегировать часть задачи и не раздувать контекст главного агента.', desc:'Read-only по умолчанию. Возвращают findings → главный агент объединяет и проверяет на Rules/AGENTS.md. Не автономный edit файлов!'},
+  {id:'agentic-systems', label:'Агентские системы', level:'a4',   rank:3, cat:'Agentic',    why:'Чтобы из отдельных subagents собрать рабочую систему под конкретную задачу.', desc:'Декомпозиция → дерево зависимостей → параллель/pipeline → распределение файлов → агрегация + verification. Параллельные воркеры на непересекающихся файлах. Иерархия max 2 уровня.'},
+  {id:'permissions',  label:'Permissions',          level:'a1a2', rank:1, cat:'Config',     why:'Чтобы контролировать что агент может делать без подтверждения — от read-only до полной автономии.', desc:'6 режимов: default/acceptEdits/plan/auto/dontAsk/bypass. allow/deny/ask правила в settings.json. Deny всегда выигрывает. Managed settings нельзя переопределить снизу.'},
+  {id:'approval-gates',label:'Approval Gates',     level:'a4',   rank:3, cat:'Agentic',    why:'Чтобы прод-действия и необратимые операции проходили через человека.', desc:'Plan подтверждение, API changes, prod actions, irreversible ops. Gate = человек. Тесты автоматика — они не заменяют gates!'},
+  {id:'wf-types',     label:'Workflow Types',       level:'a4',   rank:3, cat:'Agentic',    why:'Чтобы выбрать правильную структуру workflow — линейную, параллельную или DAG.', desc:'Linear, Branching, Parallel, Loop, DAG. Параллельные workstreams → нужны subagents. DAG = Directed Acyclic Graph зависимостей шагов.'},
+  {id:'tool-choice',  label:'Какой инструмент когда', level:'a1a2', rank:1, cat:'Config',    why:'Чтобы сразу знать куда класть каждый тип контента: Memory vs AGENTS.md vs Rules vs Skills.', desc:'Memory = факты о проекте (ADR, Gotchas). AGENTS.md = workflow и роль. Rules = ограничения и конвенции. Skills = пошаговые процедуры. Hooks = OS-level enforcement.'},
+];
+
+const EDGES = [
+  {from:'llm',         to:'hallucination'},
+  {from:'llm',         to:'prompt'},
+  {from:'ctx-window',  to:'agent-loop'},
+  {from:'agent-loop',  to:'rag'},
+  {from:'agent-loop',  to:'hooks'},
+  {from:'agent-loop',  to:'subagents'},
+  {from:'agent-loop',  to:'permissions'},
+  {from:'hooks',       to:'permissions'},
+  {from:'embeddings',  to:'rag'},
+  {from:'rag',         to:'memory'},
+  {from:'cursor-modes',to:'agents-md'},
+  {from:'agents-md',   to:'tool-choice'},
+  {from:'memory',      to:'tool-choice'},
+  {from:'rules',       to:'tool-choice'},
+  {from:'skills',      to:'tool-choice'},
+  {from:'agents-md',   to:'rules'},
+  {from:'rules',       to:'hooks'},
+  {from:'rules',       to:'skills'},
+  {from:'rules',       to:'commands'},
+  {from:'rules',       to:'cursorignore'},
+  {from:'agents-md',   to:'skills'},
+  {from:'agents-md',   to:'commands'},
+  {from:'skills',      to:'commands'},
+  {from:'hooks',       to:'hitl'},
+  {from:'prompt',      to:'react'},
+  {from:'rag',         to:'mcp'},
+  {from:'react',       to:'mcp'},
+  {from:'mcp',         to:'mcp-sec'},
+  {from:'mcp-sec',     to:'int-mcps'},
+  {from:'mcp',         to:'hitl'},
+  {from:'hitl',        to:'workflow-7'},
+  {from:'react',       to:'workflow-7'},
+  {from:'agent-loop',  to:'workflow'},
+  {from:'workflow',    to:'cursor-modes'},
+  {from:'workflow',    to:'subagents'},
+  {from:'workflow',    to:'wf-types'},
+  {from:'workflow-7',  to:'agent-card'},
+  {from:'hitl',        to:'approval-gates'},
+  {from:'agent-card',  to:'subagents'},
+  {from:'agent-card',  to:'approval-gates'},
+  {from:'agent-card',  to:'wf-types'},
+  {from:'subagents',   to:'agentic-systems'},
+  {from:'wf-types',    to:'agentic-systems'},
+];
+
+// ── Layout ──────────────────────────────────────────────────────────
+function computeX(nodes, svgW, gap) {
+  const order = new Map(NODES.map((n, i) => [n.id, i]));
+  nodes.forEach(n => { n.w = nodeWidth(n.label); });
+  const byRank = {};
+  nodes.forEach(n => {
+    if (!byRank[n.rank]) byRank[n.rank] = [];
+    byRank[n.rank].push(n);
+  });
+  Object.keys(byRank).sort((a, b) => +a - +b).forEach(rank => {
+    const row = byRank[rank].sort((a, b) => (order.get(a.id) || 0) - (order.get(b.id) || 0));
+    const totalW = row.reduce((sum, n, i) => sum + n.w + (i ? gap : 0), 0);
+    let sx = Math.max(ROW_GUTTER, (svgW - totalW) / 2);
+    row.forEach(n => {
+      n.x = sx;
+      sx += n.w + gap;
+    });
+  });
+}
+
+function rowTotalWidth(nodes, gap) {
+  return nodes.reduce((sum, n, i) => sum + nodeWidth(n.label) + (i ? gap : 0), 0);
+}
+
+const RANK_Y = [44, 176, 308, 440];
+const ROW_GUTTER = 184;
+
+function rowLabelParts(label) {
+  const i = label.indexOf(' · ');
+  if (i === -1) return { line1: label, line2: '' };
+  return { line1: label.slice(0, i), line2: label.slice(i + 3) };
+}
+
+// ── SVG Build ───────────────────────────────────────────────────────
+let selectedId = null;
+let levelFilter = 'all';
+
+function buildSVG(nodes, edges) {
+  const gap = GAP;
+  const byRank = {};
+  nodes.forEach(n => {
+    if (!byRank[n.rank]) byRank[n.rank] = [];
+    byRank[n.rank].push(n);
+  });
+  const maxRowW = Math.max(...Object.values(byRank).map(row => rowTotalWidth(row, gap)));
+  const maxCount = Math.max(...Object.values(byRank).map(row => row.length));
+  const svgW = Math.max(1060, maxRowW + 32, maxCount * NW + (maxCount - 1) * gap + 32);
+  const svgH = 538;
+  computeX(nodes, svgW, gap);
+  const nm = {};
+  nodes.forEach(n => { n.y = RANK_Y[n.rank]; nm[n.id] = n; });
+
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('width', svgW);
+  svg.setAttribute('height', svgH);
+  svg.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`);
+  lastSvgW = svgW;
+  lastSvgH = svgH;
+
+  // defs
+  const defs = document.createElementNS(ns, 'defs');
+  ['def','hi'].forEach(k => {
+    const m = document.createElementNS(ns, 'marker');
+    m.setAttribute('id','arr-'+k);
+    m.setAttribute('markerWidth','8');
+    m.setAttribute('markerHeight','8');
+    m.setAttribute('refX','7');
+    m.setAttribute('refY','3');
+    m.setAttribute('orient','auto');
+    const p = document.createElementNS(ns, 'path');
+    p.setAttribute('d','M0,0 L0,6 L8,3 z');
+    p.setAttribute('fill', k==='hi' ? '#2563eb' : '#94a3b8');
+    m.appendChild(p); defs.appendChild(m);
+  });
+  svg.appendChild(defs);
+
+  // rank bands
+  const ranks = [...new Set(nodes.map(n=>n.rank))];
+  ranks.forEach(r => {
+    const lvl = nodes.find(n=>n.rank===r).level;
+    const c = LC[lvl];
+    const rect = document.createElementNS(ns,'rect');
+    rect.setAttribute('x', ROW_GUTTER - 12); rect.setAttribute('y',RANK_Y[r]-18);
+    rect.setAttribute('width',svgW - ROW_GUTTER + 4); rect.setAttribute('height',NH+36);
+    rect.setAttribute('rx',14); rect.setAttribute('fill',c.band);
+    svg.appendChild(rect);
+    const parts = rowLabelParts(c.label);
+    const lblBg = document.createElementNS(ns,'rect');
+    lblBg.setAttribute('x', 10);
+    lblBg.setAttribute('y', RANK_Y[r] - 2);
+    lblBg.setAttribute('width', ROW_GUTTER - 22);
+    lblBg.setAttribute('height', NH + 4);
+    lblBg.setAttribute('rx', 8);
+    lblBg.setAttribute('fill', '#ffffff');
+    lblBg.setAttribute('fill-opacity', '0.72');
+    svg.appendChild(lblBg);
+    const lbl = document.createElementNS(ns,'text');
+    lbl.setAttribute('x', 16);
+    lbl.setAttribute('font-size', '9.5');
+    lbl.setAttribute('font-weight', '800');
+    lbl.setAttribute('font-family', 'Inter,Arial,sans-serif');
+    lbl.setAttribute('fill', c.text);
+    const cy = RANK_Y[r] + NH / 2 + (parts.line2 ? -2 : 4);
+    const l1 = document.createElementNS(ns, 'tspan');
+    l1.setAttribute('x', 16);
+    l1.setAttribute('y', cy);
+    l1.textContent = parts.line1;
+    lbl.appendChild(l1);
+    if (parts.line2) {
+      const l2 = document.createElementNS(ns, 'tspan');
+      l2.setAttribute('x', 16);
+      l2.setAttribute('dy', '11');
+      l2.setAttribute('font-size', '8.5');
+      l2.setAttribute('font-weight', '700');
+      l2.setAttribute('opacity', '0.85');
+      l2.textContent = parts.line2;
+      lbl.appendChild(l2);
+    }
+    svg.appendChild(lbl);
+  });
+
+  // edges
+  edges.forEach(e => {
+    const s = nm[e.from], t = nm[e.to];
+    if (!s || !t) return;
+    const x1 = s.x + s.w / 2, y1 = s.y + NH, x2 = t.x + t.w / 2, y2 = t.y, my = (y1 + y2) / 2;
+    const isRel = selectedId && (e.from===selectedId || e.to===selectedId);
+    const isDim = selectedId && !isRel;
+    const path = document.createElementNS(ns,'path');
+    path.setAttribute('d',`M${x1} ${y1} C${x1} ${my},${x2} ${my},${x2} ${y2}`);
+    path.setAttribute('fill','none');
+    path.setAttribute('stroke', isRel ? '#2563eb' : '#94a3b8');
+    path.setAttribute('stroke-width', isRel ? '2.2' : '1.5');
+    path.setAttribute('stroke-opacity', isDim ? '0.08' : (isRel ? '1' : '0.5'));
+    path.setAttribute('marker-end', isRel ? 'url(#arr-hi)' : 'url(#arr-def)');
+    svg.appendChild(path);
+  });
+
+  // nodes
+  nodes.forEach(n => {
+    const c = LC[n.level];
+    const isSel = n.id === selectedId;
+    const isRel = selectedId && EDGES.some(e=>(e.from===selectedId&&e.to===n.id)||(e.to===selectedId&&e.from===n.id));
+    const isDim = selectedId && !isSel && !isRel;
+
+    const g = document.createElementNS(ns,'g');
+    g.setAttribute('data-id',n.id);
+    g.setAttribute('opacity', isDim ? '0.18' : '1');
+    g.style.cursor='pointer';
+
+    const w = n.w || NW;
+    const rect = document.createElementNS(ns,'rect');
+    rect.setAttribute('x',n.x); rect.setAttribute('y',n.y);
+    rect.setAttribute('width',w); rect.setAttribute('height',NH);
+    rect.setAttribute('rx',9);
+    rect.setAttribute('fill', isSel ? '#1e40af' : c.fill);
+    rect.setAttribute('stroke', isSel ? '#1e40af' : (isRel ? '#2563eb' : c.stroke));
+    rect.setAttribute('stroke-width', (isSel||isRel) ? '2' : '1');
+    g.appendChild(rect);
+
+    // main text
+    const txt = document.createElementNS(ns,'text');
+    txt.setAttribute('text-anchor','middle');
+    txt.setAttribute('font-family','Inter,Arial,sans-serif');
+    txt.setAttribute('fill', isSel ? '#ffffff' : c.text);
+    txt.setAttribute('font-weight','700');
+    const cx = n.x + w / 2;
+    const lines = splitLabel(n.label);
+    if (lines.length > 1) {
+      txt.setAttribute('font-size','10');
+      const s1 = document.createElementNS(ns,'tspan');
+      s1.setAttribute('x',cx); s1.setAttribute('y',n.y+NH/2-8); s1.textContent=lines[0];
+      const s2 = document.createElementNS(ns,'tspan');
+      s2.setAttribute('x',cx); s2.setAttribute('dy','12'); s2.textContent=lines[1];
+      txt.appendChild(s1); txt.appendChild(s2);
+    } else {
+      txt.setAttribute('font-size','11.5');
+      txt.setAttribute('x',cx); txt.setAttribute('y',n.y+NH/2+1);
+      txt.textContent=n.label;
+    }
+    g.appendChild(txt);
+
+    // category
+    const cat = document.createElementNS(ns,'text');
+    cat.setAttribute('x',cx); cat.setAttribute('y',n.y+NH-7);
+    cat.setAttribute('text-anchor','middle');
+    cat.setAttribute('font-size','9');
+    cat.setAttribute('font-family','Inter,Arial,sans-serif');
+    cat.setAttribute('fill', isSel ? '#93c5fd' : '#64748b');
+    cat.textContent=n.cat;
+    g.appendChild(cat);
+
+    g.addEventListener('click', () => {
+      const next = selectedId === n.id ? null : n.id;
+      selectedId = next;
+      render();
+      if (next) openDetailModal(NODES.find(x => x.id === next));
+      else closeDetailModal();
+    });
+    svg.appendChild(g);
+  });
+
+  return svg;
+}
+
+let graphZoom = 1;
+let lastSvgW = 1060, lastSvgH = 522;
+const ZOOM_MIN = 0.55, ZOOM_MAX = 1.85, ZOOM_STEP = 0.12;
+
+function applyGraphZoom() {
+  const inner = document.getElementById('roadmapInner');
+  const scaleEl = inner?.querySelector('.roadmap-scale');
+  const label = document.getElementById('zoomLabel');
+  if (!inner || !scaleEl) return;
+  const w = lastSvgW, h = lastSvgH;
+  scaleEl.style.transform = `scale(${graphZoom})`;
+  inner.style.width = Math.ceil(w * graphZoom) + 'px';
+  inner.style.height = Math.ceil(h * graphZoom) + 'px';
+  if (label) label.textContent = Math.round(graphZoom * 100) + '%';
+}
+
+function setGraphZoom(z) {
+  graphZoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(z * 100) / 100));
+  applyGraphZoom();
+}
+
+function initGraphFullscreen() {
+  const wrap = document.getElementById('roadmapWrap');
+  const btn = document.getElementById('zoomFullscreen');
+  if (!wrap || !btn) return;
+  const sync = () => {
+    const on = document.fullscreenElement === wrap;
+    btn.title = on ? 'Выйти из полного экрана (Esc)' : 'На весь экран';
+    btn.setAttribute('aria-label', btn.title);
+    btn.textContent = on ? '⤓' : '⛶';
+  };
+  btn.addEventListener('click', () => {
+    if (document.fullscreenElement === wrap) document.exitFullscreen().catch(() => {});
+    else wrap.requestFullscreen().catch(() => {});
+  });
+  document.addEventListener('fullscreenchange', sync);
+  sync();
+}
+
+function initGraphZoom() {
+  graphZoom = 1;
+  document.getElementById('zoomIn')?.addEventListener('click', () => setGraphZoom(graphZoom + ZOOM_STEP));
+  document.getElementById('zoomOut')?.addEventListener('click', () => setGraphZoom(graphZoom - ZOOM_STEP));
+  document.getElementById('zoomReset')?.addEventListener('click', () => setGraphZoom(1));
+  const vp = document.getElementById('roadmapViewport');
+  vp?.addEventListener('wheel', e => {
+    if (!e.altKey) return;
+    e.preventDefault();
+    setGraphZoom(graphZoom + (e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP));
+  }, { passive: false });
+}
+
+function render() {
+  const inner = document.getElementById('roadmapInner');
+  inner.innerHTML='';
+  const vis = levelFilter==='all' ? NODES : NODES.filter(n=>n.level===levelFilter);
+  const visIds = new Set(vis.map(n=>n.id));
+  const visEdges = EDGES.filter(e=>visIds.has(e.from)&&visIds.has(e.to));
+  const svg = buildSVG(vis, visEdges);
+  svg.classList.add('roadmap-svg');
+  const scale = document.createElement('div');
+  scale.className = 'roadmap-scale';
+  scale.appendChild(svg);
+  inner.appendChild(scale);
+  applyGraphZoom();
+}
+
+function closeDetailModal() {
+  selectedId = null;
+  const modal = document.getElementById('detailModal');
+  modal.hidden = true;
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  render();
+}
+
+const CAT_ICON = {
+  'LLM Basics':'🌡️','Context':'🧩','IDE':'🖱️','Retrieval':'🔎','Config':'🔒',
+  'MCP':'🛠','Patterns':'🔄','Workflow':'📋','Agentic':'👥'
+};
+
+function openDetailModal(node) {
+  const modal = document.getElementById('detailModal');
+  const panel = document.getElementById('detailPanel');
+  const c = LC[node.level];
+  const icon = CAT_ICON[node.cat] || '📌';
+  const inc = EDGES.filter(e => e.to === node.id).map(e => NODES.find(n => n.id === e.from)).filter(Boolean);
+  const out = EDGES.filter(e => e.from === node.id).map(e => NODES.find(n => n.id === e.to)).filter(Boolean);
+  const incHtml = inc.length ? `
+    <div class="roadmap-details-section">
+      <h3>Требует знания</h3>
+      ${inc.map(n => `<button type="button" class="roadmap-case-card" data-goto="${n.id}"><b>← ${n.label}</b><br><span style="font-size:12px;color:#64748b">${n.cat} · ${LC[n.level].label}</span></button>`).join('')}
+    </div>` : '';
+  const outHtml = out.length ? `
+    <div class="roadmap-details-section">
+      <h3>Открывает путь к</h3>
+      ${out.map(n => `<button type="button" class="roadmap-case-card out" data-goto="${n.id}"><b>→ ${n.label}</b><br><span style="font-size:12px;color:#64748b">${n.cat} · ${LC[n.level].label}</span></button>`).join('')}
+    </div>` : '';
+  panel.innerHTML = `
+    <div class="roadmap-details-top">
+      <div class="roadmap-details-icon" style="color:${c.text};border-color:${c.stroke}">${icon}</div>
+      <div>
+        <h2 id="detailModalTitle">${node.label}</h2>
+        <div class="roadmap-details-sub">${c.label} · ${node.cat}</div>
+      </div>
+    </div>
+    <div class="roadmap-details-section">
+      <h3>Для чего это</h3>
+      <p>${node.why}</p>
+    </div>
+    <div class="roadmap-details-section">
+      <h3>Описание</h3>
+      <p>${node.desc}</p>
+    </div>
+    ${node.href ? `<div class="roadmap-details-section"><a class="btn primary" href="${node.href}">Открыть страницу →</a></div>` : ''}
+    ${incHtml}
+    ${outHtml}
+    <div class="roadmap-chips">
+      <span class="roadmap-chip">${c.label}</span>
+      <span class="roadmap-chip">${node.cat}</span>
+      <span class="roadmap-chip">граф зависимостей</span>
+    </div>
+    <p class="roadmap-modal-hint">Esc или фон — закрыть. Клик по связанной теме ниже — перейти к ней на графе.</p>`;
+  modal.hidden = false;
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('detailClose')?.focus();
+}
+
+function updateDetail(node) {
+  if (!node) closeDetailModal();
+  else openDetailModal(node);
+}
+
+function initDetailModal() {
+  document.getElementById('detailBackdrop')?.addEventListener('click', closeDetailModal);
+  document.getElementById('detailClose')?.addEventListener('click', closeDetailModal);
+  document.getElementById('detailPanel')?.addEventListener('click', e => {
+    const btn = e.target.closest('[data-goto]');
+    if (!btn) return;
+    e.stopPropagation();
+    const id = btn.dataset.goto;
+    const next = NODES.find(n => n.id === id);
+    if (!next) return;
+    selectedId = id;
+    render();
+    openDetailModal(next);
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !document.getElementById('detailModal')?.hidden) closeDetailModal();
+  });
+}
+
+// filters
+document.getElementById('filters').addEventListener('click', e=>{
+  const btn=e.target.closest('.filter-pill');
+  if (!btn) return;
+  levelFilter=btn.dataset.level;
+  selectedId=null;
+  document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+  closeDetailModal();
+});
+
+// legend
+(function(){
+  const leg=document.getElementById('legend');
+  Object.entries(LC).forEach(([k,c])=>{
+    const d=document.createElement('div');
+    d.className='legend-item';
+    d.innerHTML=`<div class="legend-dot" style="background:${c.fill};border:1.5px solid ${c.stroke}"></div><span>${c.label} · ${NODES.filter(n=>n.level===k).length} тем</span>`;
+    leg.appendChild(d);
+  });
+})();
+
+// ── Visual Path ────────────────────────────────────────────────────
+const VP_PHASES = [
+  {
+    id:'a0', label:'Фаза 1 — Основы LLM', num:'1',
+    steps:[
+      {n:1, label:'Prompt Engineering', href:'prompting.html'},
+      {n:2, label:'Context Engineering', href:'context-engineering.html'},
+      {n:3, label:'Context Window', href:'context.html'},
+      {n:4, label:'Agent Loop', href:'agent-loop.html'},
+      {n:5, label:'Explore → Plan → Code', href:'workflow.html'},
+      {n:6, label:'Варианс модели', href:'model-variance.html'},
+    ]
+  },
+  {
+    id:'a1', label:'Фаза 2 — Конфигурация агента', num:'2',
+    steps:[
+      {n:7, label:'AGENTS.md', href:'agents-md.html'},
+      {n:8, label:'Rules', href:'rules.html'},
+      {n:9, label:'Hooks', href:'hooks.html'},
+      {n:10, label:'Skills', href:'skills.html'},
+      {n:11, label:'Commands', href:'commands.html'},
+      {n:12, label:'Agent Packages', href:'agent-packages.html'},
+    ]
+  },
+  {
+    id:'a2', label:'Фаза 3 — Память и знания', num:'3',
+    steps:[
+      {n:13, label:'Memory Bank', href:'memory.html'},
+      {n:14, label:'Memory Structure', href:'memory-structure.html'},
+      {n:15, label:'RAG', href:'rag.html'},
+      {n:16, label:'MCP Protocol', href:'mcp.html'},
+      {n:17, label:'Caching', href:'caching.html'},
+      {n:18, label:'Checkpoint', href:'checkpoints.html'},
+    ]
+  },
+  {
+    id:'a3', label:'Фаза 4 — Агентные системы', num:'4',
+    steps:[
+      {n:19, label:'Subagents', href:'subagents.html'},
+      {n:20, label:'Построение агентских систем', href:'agentic-systems.html'},
+      {n:21, label:'Permissions', href:'permissions.html'},
+      {n:22, label:'Конфликты', href:'conflicts.html'},
+      {n:23, label:'Какой инструмент когда', href:'tool-choice.html'},
+      {n:24, label:'Каверзные вопросы', href:'tricky-questions.html'},
+      {n:25, label:'AGENTS/Rules/Skills обзор', href:'agents-rules-skills.html'},
+      {n:26, label:'Assessment', href:'assessment.html'},
+    ]
+  },
+];
+
+(function buildVisualPath() {
+  const el = document.getElementById('visualPath');
+  if (!el) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'vp-phases';
+  VP_PHASES.forEach((phase, pi) => {
+    if (pi > 0) {
+      const arr = document.createElement('div');
+      arr.className = 'vp-phase-arrow';
+      arr.textContent = '↓';
+      wrap.appendChild(arr);
+    }
+    const ph = document.createElement('div');
+    ph.className = 'vp-phase vp-phase-' + phase.id;
+    const hdr = document.createElement('div');
+    hdr.className = 'vp-phase-header';
+    hdr.innerHTML = `<div class="ph-num">${phase.num}</div><span>${phase.label}</span>`;
+    ph.appendChild(hdr);
+    const body = document.createElement('div');
+    body.className = 'vp-phase-body';
+    phase.steps.forEach((s, si) => {
+      if (si > 0) {
+        const conn = document.createElement('span');
+        conn.className = 'vp-connector';
+        conn.textContent = '→';
+        body.appendChild(conn);
+      }
+      const a = document.createElement('a');
+      a.className = 'vp-node';
+      a.href = s.href;
+      a.innerHTML = `<span class="vn-num">${s.n}</span>${s.label}`;
+      body.appendChild(a);
+    });
+    ph.appendChild(body);
+    wrap.appendChild(ph);
+  });
+  el.appendChild(wrap);
+})();
+
+initGraphZoom();
+initGraphFullscreen();
+initDetailModal();
+render();
+</script>
+</body></html>

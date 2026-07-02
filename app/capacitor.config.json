@@ -1,0 +1,8 @@
+{
+  "appId": "com.academy.agentcontext",
+  "appName": "Agent Context Academy",
+  "webDir": "../agent_context_academy",
+  "server": {
+    "androidScheme": "https"
+  }
+}

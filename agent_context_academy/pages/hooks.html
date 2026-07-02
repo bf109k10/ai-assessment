@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Hooks — принуждение на уровне shell. Claude Code vs Cursor</title>
+  <link rel="stylesheet" href="../assets/style.css"/>
+  <style>
+    .schema-box{background:#0f172a;color:#e2e8f0;border-radius:16px;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.65;overflow:auto;margin:10px 0;white-space:pre-wrap}
+    .schema-box .h{color:#c084fc;font-weight:900}
+    .schema-box .c{color:#64748b}
+    .schema-box .k{color:#93c5fd}
+    .schema-box .v{color:#86efac}
+    .schema-box .s{color:#fcd34d}
+    .schema-box .r{color:#f87171}
+    .hook-type{border:1px solid var(--line);border-radius:18px;overflow:hidden;margin:10px 0;background:#fff}
+    .hook-head{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line)}
+    .hook-icon{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-size:18px}
+    .hook-head h4{margin:0;font-size:16px}
+    .hook-head p{margin:0;font-size:12px;color:#64748b}
+    .hook-body{padding:16px}
+    .timing-pill{display:inline-block;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:900;border:1px solid}
+    .tp-pre{background:#fff1f2;border-color:#fca5a5;color:#dc2626}
+    .tp-post{background:#eff6ff;border-color:#93c5fd;color:#1e40af}
+    .tp-stop{background:#fefce8;border-color:#fde68a;color:#92400e}
+    .nuance-card{border-left:4px solid;border-radius:0 14px 14px 0;padding:12px 16px;margin:8px 0;background:#fff;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+    .nc-red{border-left-color:#dc2626}
+    .nc-blue{border-left-color:#2563eb}
+    .nc-orange{border-left-color:#f97316}
+    .nc-green{border-left-color:#16a34a}
+    .nc-purple{border-left-color:#7c3aed}
+    .flow-hooks{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff}
+    .fh-step{padding:14px 10px;text-align:center;border-right:1px solid var(--line)}
+    .fh-step:last-child{border-right:none}
+    .fh-num{width:32px;height:32px;border-radius:999px;background:#0f172a;color:#fff;display:grid;place-items:center;font-weight:900;font-size:13px;margin:0 auto 8px}
+    .fh-step h4{font-size:12px;margin:0 0 4px;font-weight:900}
+    .fh-step p{font-size:11px;color:#64748b;margin:0;line-height:1.4}
+    code{background:#f1f5f9;padding:2px 5px;border-radius:5px;font-family:ui-monospace,Menlo,monospace;font-size:12px}
+    .diff-split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media(max-width:900px){.diff-split{grid-template-columns:1fr}.flow-hooks{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>
+    <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub active"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div>
+  <div class="progressBox"><b>Правило</b><p class="sourceNote">Hooks = enforcement. Выше Rules. Shell-скрипт может заблокировать действие агента до его выполнения.</p></div>
+</aside>
+
+<main class="main">
+<section class="hero">
+  <div class="kicker">Agent Context Academy · AGENTS / Rules / Skills</div>
+  <h2>Hooks — принуждение на уровне shell</h2>
+  <p>Hooks — shell-скрипты (или prompt-проверки), которые выполняются до или после действий агента. Жёстче Rules: hook может заблокировать tool call на системном уровне. Cursor: <code>.cursor/hooks.json</code>. Claude Code: <code>.claude/settings.json</code>.</p>
+  <div class="heroActions">
+    <a class="btn" href="rules.html">← Rules</a>
+    <a class="btn" href="agents-rules-skills.html">Обзор AGENTS</a>
+    <a class="btn" href="skills.html">Skills →</a>
+    <button class="markDone">Отметить страницу изученной</button>
+  </div>
+</section>
+
+<!-- ── Что такое Hooks ── -->
+<section class="section">
+  <h2>Что такое Hooks и зачем они нужны</h2>
+  <div class="grid">
+    <div class="card bg-red">
+      <h3>Hooks = enforcement</h3>
+      <p>Rules — инструкции агенту ("не делай X"). Агент может их проигнорировать при длинном контексте. Hooks — системный уровень: shell-скрипт выполняется до/после каждого tool call и может вернуть ненулевой exit code → действие блокируется.</p>
+    </div>
+    <div class="card bg-orange">
+      <h3>Cursor: hooks.json</h3>
+      <p>Проект: <code>.cursor/hooks.json</code> и скрипты в <code>.cursor/hooks/</code>. User: <code>~/.cursor/hooks.json</code>. События в camelCase (<code>preToolUse</code>, <code>beforeShellExecution</code>, <code>afterFileEdit</code>…). Блокировка через JSON <code>permission: "deny"</code> или exit code <code>2</code>; опция <code>failClosed</code>.</p>
+    </div>
+    <div class="card bg-purple">
+      <h3>Claude Code: settings.json</h3>
+      <p><code>.claude/settings.json</code> (project) или <code>~/.claude/settings.json</code> (user). События в PascalCase: <code>PreToolUse</code>, <code>PostToolUse</code>, <code>Stop</code>. Matcher на имя tool (<code>Bash</code>, <code>Write</code>). Блокировка — ненулевой exit code скрипта.</p>
+    </div>
+    <div class="card bg-green">
+      <h3>Когда применять</h3>
+      <ul>
+        <li>Секреты не должны попасть в commit — <b>никогда</b></li>
+        <li>Production DB нельзя изменять без approval</li>
+        <li>Все tool calls должны логироваться (compliance)</li>
+        <li>Внешние команды ограничены (security sandbox)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── Flow ── -->
+<section class="section">
+  <h2>Как работает Hook — flow выполнения</h2>
+  <div class="flow-hooks">
+    <div class="fh-step" style="background:#eff6ff">
+      <div class="fh-num">1</div>
+      <h4>Agent решает</h4>
+      <p>Агент хочет вызвать tool (Bash, Write, Read...)</p>
+    </div>
+    <div class="fh-step" style="background:#fff1f2">
+      <div class="fh-num">2</div>
+      <h4>PreToolUse hook</h4>
+      <p>Shell-скрипт запускается с инфо о вызове. Может заблокировать.</p>
+    </div>
+    <div class="fh-step" style="background:#f0fdf4">
+      <div class="fh-num">3</div>
+      <h4>Tool выполняется</h4>
+      <p>Только если hook вернул exit 0. Иначе — агент получает ошибку.</p>
+    </div>
+    <div class="fh-step" style="background:#fefce8">
+      <div class="fh-num">4</div>
+      <h4>PostToolUse hook</h4>
+      <p>Запускается после tool. Для аудита, логирования, проверки результата.</p>
+    </div>
+    <div class="fh-step" style="background:#f5f3ff">
+      <div class="fh-num">5</div>
+      <h4>Результат агенту</h4>
+      <p>Tool output + hook stdout добавляются в context агента.</p>
+    </div>
+  </div>
+  <div class="callout warn" style="margin-top:14px">
+    <b>Ключевой механизм:</b> hook возвращает ненулевой exit code → tool call отменяется. Агент видит ошибку и не может продолжить запрещённое действие — это и есть принуждение.
+  </div>
+</section>
+
+<!-- ── 3 типа Hooks ── -->
+<section class="section">
+  <h2>Типы Hooks</h2>
+
+  <div class="hook-type">
+    <div class="hook-head">
+      <div class="hook-icon" style="background:#fff1f2">🛑</div>
+      <div><h4>PreToolUse</h4><p>Запускается ДО выполнения tool call. Может заблокировать.</p></div>
+      <span class="timing-pill tp-pre">до выполнения</span>
+    </div>
+    <div class="hook-body">
+      <p><b>Применение:</b> проверка секретов перед git commit, валидация SQL перед запросом, требование approval перед destructive action.</p>
+      <p><b>Что получает скрипт:</b> JSON с tool name, tool input (аргументы), session info — через stdin или env переменные.</p>
+      <div class="schema-box"><span class="c"># scripts/check-secrets.sh</span>
+<span class="h">#!/bin/bash</span>
+<span class="c"># Читаем tool input из stdin (JSON)</span>
+INPUT=$(cat)
+COMMAND=$(echo "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('input',{}).get('command',''))")
+
+<span class="c"># Проверяем на паттерны секретов</span>
+if echo "$COMMAND" | grep -qiE "(password|secret|api_key|token)="; then
+  echo "BLOCKED: potential secret in command" >&2
+  exit 1  <span class="c"># ненулевой exit → tool блокируется</span>
+fi
+
+exit 0  <span class="c"># OK → tool выполняется</span></div>
+    </div>
+  </div>
+
+  <div class="hook-type">
+    <div class="hook-head">
+      <div class="hook-icon" style="background:#eff6ff">📋</div>
+      <div><h4>PostToolUse</h4><p>Запускается ПОСЛЕ выполнения tool call. Для аудита и логирования.</p></div>
+      <span class="timing-pill tp-post">после выполнения</span>
+    </div>
+    <div class="hook-body">
+      <p><b>Применение:</b> логировать все tool calls в audit log, проверять результат на нарушения, отправлять метрики.</p>
+      <p><b>Важно:</b> PostToolUse не может отменить уже выполненное действие, но может добавить информацию в context агента.</p>
+      <div class="schema-box"><span class="c"># scripts/audit-log.sh</span>
+<span class="h">#!/bin/bash</span>
+INPUT=$(cat)
+TOOL=$(echo "$INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('tool_name',''))")
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+echo "[$TIMESTAMP] tool=$TOOL" >> ~/.claude/audit.log
+exit 0</div>
+    </div>
+  </div>
+
+  <div class="hook-type">
+    <div class="hook-head">
+      <div class="hook-icon" style="background:#fefce8">🔔</div>
+      <div><h4>Stop</h4><p>Запускается когда агент завершает работу (перед остановкой).</p></div>
+      <span class="timing-pill tp-stop">при остановке</span>
+    </div>
+    <div class="hook-body">
+      <p><b>Применение:</b> отправить уведомление о завершении задачи, обновить статус в трекере, создать checkpoint.</p>
+      <div class="schema-box"><span class="c"># scripts/notify-done.sh</span>
+<span class="h">#!/bin/bash</span>
+INPUT=$(cat)
+<span class="c"># Можно отправить webhook, обновить Jira, создать файл checkpoint</span>
+echo "Task completed at $(date)" >> ~/agent-log.txt
+exit 0</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Конфигурация ── -->
+<section class="section">
+  <h2>Конфигурация Hooks — Cursor и Claude Code</h2>
+  <div class="platform-split">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor — <code>.cursor/hooks.json</code></div>
+      <div class="schema-box"><span class="c">// .cursor/hooks.json</span>
+{
+  <span class="k">"version"</span>: <span class="v">1</span>,
+  <span class="k">"hooks"</span>: {
+    <span class="k">"preToolUse"</span>: [
+      {
+        <span class="k">"matcher"</span>: <span class="s">"Shell"</span>,
+        <span class="k">"command"</span>: <span class="s">".cursor/hooks/check-secrets.sh"</span>,
+        <span class="k">"failClosed"</span>: <span class="v">true</span>
+      },
+      {
+        <span class="k">"matcher"</span>: <span class="s">"Write"</span>,
+        <span class="k">"command"</span>: <span class="s">".cursor/hooks/check-write-path.sh"</span>
+      }
+    ],
+    <span class="k">"postToolUse"</span>: [
+      {
+        <span class="k">"matcher"</span>: <span class="s">".*"</span>,
+        <span class="k">"command"</span>: <span class="s">".cursor/hooks/audit-log.sh"</span>
+      }
+    ]
+  }
+}</div>
+      <div class="tableWrap" style="margin-top:10px"><table style="font-size:12px">
+        <thead><tr><th>Поле</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>version</code></td><td>Обязательно <code>1</code></td></tr>
+          <tr><td><code>matcher</code></td><td>JS-regex: <code>Shell</code>, <code>Write</code>, <code>Read</code>, <code>Task</code>, <code>.*</code></td></tr>
+          <tr><td><code>command</code></td><td>Путь от корня проекта (project) или от <code>~/.cursor/</code> (user)</td></tr>
+          <tr><td><code>type</code></td><td><code>command</code> (дефолт) или <code>prompt</code> — LLM-проверка политики</td></tr>
+          <tr><td><code>failClosed</code></td><td>При падении/таймауте hook — блокировать действие</td></tr>
+        </tbody>
+      </table></div>
+      <div class="schema-box" style="margin-top:10px">my-project/
+├── .cursor/
+│   ├── hooks.json
+│   └── hooks/
+│       ├── check-secrets.sh
+│       ├── check-write-path.sh
+│       └── audit-log.sh
+└── AGENTS.md</div>
+      <p style="font-size:12px;margin-top:8px">📖 <a href="https://docs.cursor.com" target="_blank">Cursor Docs</a> · вкладка <b>Hooks</b> в настройках и output channel «Hooks» для отладки. Конфиг перечитывается при сохранении <code>hooks.json</code>.</p>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code — <code>.claude/settings.json</code></div>
+      <div class="schema-box"><span class="c">// .claude/settings.json</span>
+{
+  <span class="k">"hooks"</span>: {
+    <span class="k">"PreToolUse"</span>: [
+      {
+        <span class="k">"matcher"</span>: <span class="s">"Bash"</span>,
+        <span class="k">"hooks"</span>: [
+          {
+            <span class="k">"type"</span>: <span class="s">"command"</span>,
+            <span class="k">"command"</span>: <span class="s">"scripts/check-secrets.sh"</span>
+          }
+        ]
+      },
+      {
+        <span class="k">"matcher"</span>: <span class="s">"Write"</span>,
+        <span class="k">"hooks"</span>: [
+          {
+            <span class="k">"type"</span>: <span class="s">"command"</span>,
+            <span class="k">"command"</span>: <span class="s">"scripts/check-write-path.sh"</span>
+          }
+        ]
+      }
+    ],
+    <span class="k">"PostToolUse"</span>: [
+      {
+        <span class="k">"matcher"</span>: <span class="s">".*"</span>,
+        <span class="k">"hooks"</span>: [
+          {
+            <span class="k">"type"</span>: <span class="s">"command"</span>,
+            <span class="k">"command"</span>: <span class="s">"scripts/audit-log.sh"</span>
+          }
+        ]
+      }
+    ]
+  }
+}</div>
+      <div class="tableWrap" style="margin-top:10px"><table style="font-size:12px">
+        <thead><tr><th>Поле</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>matcher</code></td><td>Regex или имя tool: <code>Bash</code>, <code>Write</code>, <code>.*</code></td></tr>
+          <tr><td><code>hooks[]</code></td><td>Вложенный массив: <code>type</code> + <code>command</code></td></tr>
+          <tr><td><code>type</code></td><td>Сейчас <code>command</code> — shell</td></tr>
+        </tbody>
+      </table></div>
+      <div class="schema-box" style="margin-top:10px">my-project/
+├── .claude/
+│   ├── settings.json
+│   └── CLAUDE.md
+└── scripts/
+    ├── check-secrets.sh
+    ├── check-write.sh
+    └── audit-log.sh</div>
+      <p style="font-size:12px;margin-top:8px">📖 <a href="https://code.claude.com/docs/en/hooks" target="_blank">Claude Code — Hooks</a></p>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:14px">
+    <b>Права доступа:</b> скрипты должны быть исполняемыми (<code>chmod +x</code>). В Cursor command-hook может вернуть JSON <code>{"permission":"deny","agent_message":"…"}</code> вместо exit 1; exit <code>2</code> тоже блокирует. В Claude Code достаточно <code>exit 1</code> на PreToolUse.
+  </div>
+</section>
+
+<!-- ── Тонкости ── -->
+<section class="section">
+  <h2>Тонкости и нюансы</h2>
+
+  <div class="nuance-card nc-red">
+    <h4>Hooks vs Rules — в чём реальная разница</h4>
+    <p>Rules — текстовые инструкции агенту ("никогда не делай X"). В теории агент может их проигнорировать при слишком длинном context window (эффект "lost in the middle"). Hooks — системный уровень: скрипт выполняется в OS, агент физически не получает результат tool если hook вернул exit 1. Это настоящее enforcement, а не просьба.</p>
+  </div>
+
+  <div class="nuance-card nc-orange">
+    <h4>Cursor vs Claude Code — разный синтаксис, одна идея</h4>
+    <p>Имена событий: Cursor <code>preToolUse</code> / Claude <code>PreToolUse</code>. Имена shell-tool: Cursor <code>Shell</code> / Claude <code>Bash</code>. Cursor — плоский массив с <code>command</code> в записи; Claude — вложенный <code>hooks[]</code>. Cursor: matcher = <b>JavaScript</b> regex (не POSIX). Для только терминала в Cursor удобнее узкое событие <code>beforeShellExecution</code> вместо общего <code>preToolUse</code>.</p>
+  </div>
+
+  <div class="nuance-card nc-blue">
+    <h4>Что агент получает в stdin</h4>
+    <p>Hook скрипт получает JSON через stdin:</p>
+    <div class="schema-box" style="margin-top:8px">{
+  "tool_name": "Bash",
+  "tool_use_id": "toolu_abc123",
+  "input": {
+    "command": "git add . && git commit -m 'fix'"
+  },
+  "session_id": "session_xyz"
+}</div>
+  </div>
+
+  <div class="nuance-card nc-green">
+    <h4>Hook stdout попадает в context агента</h4>
+    <p>Всё что скрипт выводит в stdout — агент видит как дополнительный контекст. Это можно использовать: например, hook проверяет код и добавляет в context "найдено 3 предупреждения безопасности: [список]". stderr — только для системных логов, агент не видит.</p>
+  </div>
+
+  <div class="nuance-card nc-purple">
+    <h4>User vs project — где лежит конфиг</h4>
+    <p><b>Cursor:</b> project <code>.cursor/hooks.json</code> (в git) · user <code>~/.cursor/hooks.json</code> — пути к скриптам относительно корня проекта или <code>~/.cursor/</code> соответственно.<br>
+    <b>Claude Code:</b> project <code>.claude/settings.json</code> · user <code>~/.claude/settings.json</code>. Project перекрывает user при конфликте. Командные security-hooks версионируй в репозитории.</p>
+  </div>
+</section>
+
+<!-- ── Примеры реальных hooks ── -->
+<section class="section">
+  <h2>Примеры реальных hooks</h2>
+  <div class="grid two">
+    <div class="card">
+      <h3>Запрет опасных Bash команд</h3>
+      <div class="schema-box" style="font-size:12px"><span class="h">#!/bin/bash</span>
+INPUT=$(cat)
+CMD=$(echo "$INPUT" | python3 -c \
+  "import sys,json; print(json.load(sys.stdin)
+   .get('input',{}).get('command',''))")
+
+<span class="c"># Запрет на drop таблиц и force push</span>
+DANGEROUS="(DROP TABLE|DROP DATABASE|force-push|--force)"
+if echo "$CMD" | grep -qiE "$DANGEROUS"; then
+  echo "Blocked: dangerous command detected"
+  exit 1
+fi
+exit 0</div>
+    </div>
+    <div class="card">
+      <h3>Требование approval для write в prod</h3>
+      <div class="schema-box" style="font-size:12px"><span class="h">#!/bin/bash</span>
+INPUT=$(cat)
+PATH=$(echo "$INPUT" | python3 -c \
+  "import sys,json; print(json.load(sys.stdin)
+   .get('input',{}).get('path',''))")
+
+<span class="c"># Блокируем write в prod/configs</span>
+if echo "$PATH" | grep -q "production\|prod/"; then
+  echo "Blocked: write to production requires manual review"
+  exit 1
+fi
+exit 0</div>
+    </div>
+    <div class="card">
+      <h3>Полный audit log</h3>
+      <div class="schema-box" style="font-size:12px"><span class="h">#!/bin/bash</span>
+<span class="c"># PostToolUse — логируем ВСЕ tool calls</span>
+INPUT=$(cat)
+TOOL=$(echo "$INPUT" | python3 -c \
+  "import sys,json; print(json.load(sys.stdin)
+   .get('tool_name','unknown'))")
+TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+PROJECT=$(basename "$(pwd)")
+
+echo "$TS | $PROJECT | $TOOL" >> \
+  ~/.claude/tools-audit.log
+exit 0</div>
+    </div>
+    <div class="card">
+      <h3>Проверка .env перед read</h3>
+      <div class="schema-box" style="font-size:12px"><span class="h">#!/bin/bash</span>
+<span class="c"># PreToolUse для Read — блокируем .env</span>
+INPUT=$(cat)
+FPATH=$(echo "$INPUT" | python3 -c \
+  "import sys,json; print(json.load(sys.stdin)
+   .get('input',{}).get('path',''))")
+
+if echo "$FPATH" | grep -qE "\.env$|\.env\."; then
+  echo "Blocked: reading .env files is restricted"
+  exit 1
+fi
+exit 0</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Best practices ── -->
+<section class="section">
+  <h2>Best practices — Делай / Не делай</h2>
+  <div class="grid two">
+    <div class="card bg-green">
+      <h3>✅ Делай</h3>
+      <ul>
+        <li>Используй PreToolUse для <b>security-критичных</b> проверок (секреты, prod, destructive)</li>
+        <li>Пиши хуки <b>идемпотентными</b> — повторный вызов не ломает систему</li>
+        <li>Логируй через PostToolUse все tool calls в audit файл</li>
+        <li>Добавляй понятный <code>echo "Blocked: причина"</code> перед exit 1 — агент увидит причину</li>
+        <li>Храни скрипты в git: <code>.cursor/hooks/</code> + <code>hooks.json</code> или <code>scripts/</code> + <code>.claude/settings.json</code></li>
+        <li>Тестируй hook локально: <code>echo '{"tool_name":"Bash","input":{"command":"drop table"}}' | bash scripts/check.sh</code></li>
+      </ul>
+    </div>
+    <div class="card bg-red">
+      <h3>❌ Не делай</h3>
+      <ul>
+        <li>Не заменяй хуки правилами там, где нужно <b>жёсткое</b> принуждение — Rules LLM может "забыть"</li>
+        <li>Не добавляй тяжёлую логику в PreToolUse — это блокирует агента, должно быть быстро</li>
+        <li>Не пиши хуки без <code>chmod +x</code> — скрипт не выполнится</li>
+        <li>Не используй exit 1 для "рекомендаций" — только для реальных блокировок</li>
+        <li>Не логируй секреты в audit log — обрабатывай содержимое command перед записью</li>
+        <li>Не забывай: PostToolUse не отменяет уже выполненное — только PreToolUse может заблокировать</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── Hooks vs Rules comparison ── -->
+<section class="section">
+  <h2>Hooks vs Rules vs AGENTS.md — сравнение</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Аспект</th><th>Hooks</th><th>Rules (.mdc)</th><th>AGENTS.md</th></tr></thead>
+    <tbody>
+      <tr><td>Принуждение</td><td style="color:#dc2626;font-weight:900">Жёсткое (OS уровень)</td><td style="color:#f97316;font-weight:900">Среднее (LLM следует)</td><td style="color:#16a34a;font-weight:900">Мягкое (рекомендация)</td></tr>
+      <tr><td>Можно обойти из промпта</td><td style="color:#dc2626">Нет</td><td style="color:#f97316">Теоретически да</td><td style="color:#16a34a">Да</td></tr>
+      <tr><td>Платформа</td><td>Cursor + Claude Code</td><td>Cursor (.mdc)</td><td>Обе платформы</td></tr>
+      <tr><td>Формат</td><td>Shell script + JSON settings</td><td>Markdown + YAML frontmatter</td><td>Markdown</td></tr>
+      <tr><td>Место</td><td>.cursor/hooks.json или .claude/settings.json</td><td>.cursor/rules/*.mdc</td><td>AGENTS.md / CLAUDE.md</td></tr>
+      <tr><td>Timing</td><td>Pre/Post tool call, Stop</td><td>Всегда в context</td><td>Всегда в context</td></tr>
+      <tr><td>Аудит</td><td>Да — PostToolUse</td><td>Нет</td><td>Нет</td></tr>
+      <tr><td>Когда использовать</td><td>Security, compliance, enterprise</td><td>Team policy, coding standards</td><td>Workflow, context, conventions</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ── Cursor vs Claude Code ── -->
+<section class="section">
+  <h2>Cursor vs Claude Code — сравнение</h2>
+  <div class="platform-split">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor — Hooks</div>
+      <p><b><code>.cursor/hooks.json</code></b> + скрипты. Расширенный набор событий:</p>
+      <ul style="font-size:13px;line-height:1.7">
+        <li><code>preToolUse</code> / <code>postToolUse</code> — любые tools</li>
+        <li><code>beforeShellExecution</code> — только терминал</li>
+        <li><code>beforeReadFile</code> / <code>afterFileEdit</code> — файлы</li>
+        <li><code>beforeSubmitPrompt</code>, <code>subagentStart</code>, <code>stop</code>…</li>
+        <li><code>type: "prompt"</code> — политика через LLM внутри hook</li>
+      </ul>
+      <div class="schema-box">{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [{
+      "matcher": "Shell",
+      "command": ".cursor/hooks/check.sh"
+    }]
+  }
+}</div>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code — Hooks</div>
+      <p><b><code>.claude/settings.json</code></b> — вложенная структура <code>hooks[]</code>:</p>
+      <ul style="font-size:13px;line-height:1.7">
+        <li><code>PreToolUse</code> / <code>PostToolUse</code></li>
+        <li><code>Stop</code>, <code>SubagentStop</code></li>
+        <li>Matcher: <code>Bash</code>, <code>Write</code>, не <code>Shell</code></li>
+        <li>Только <code>type: command</code> (shell)</li>
+      </ul>
+      <div class="schema-box">{
+  "hooks": {
+    "PreToolUse": [{
+      "matcher": "Bash",
+      "hooks": [{
+        "type": "command",
+        "command": "scripts/check.sh"
+      }]
+    }]
+  }
+}</div>
+    </div>
+  </div>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Аспект</th><th>Cursor</th><th>Claude Code</th></tr></thead>
+    <tbody>
+      <tr><td>Конфиг</td><td><code>.cursor/hooks.json</code></td><td><code>.claude/settings.json</code></td></tr>
+      <tr><td>События</td><td>camelCase, больше типов (shell/file/prompt/tab)</td><td>PascalCase: Pre/PostToolUse, Stop</td></tr>
+      <tr><td>Имя shell-tool</td><td><code>Shell</code></td><td><code>Bash</code></td></tr>
+      <tr><td>Блокировка</td><td>JSON <code>permission</code>, exit <code>2</code>, или failClosed</td><td>Ненулевой exit code скрипта</td></tr>
+      <tr><td>Prompt-hook</td><td>Да (<code>type: prompt</code>)</td><td>Нет (только command)</td></tr>
+      <tr><td>Matcher</td><td>JavaScript regex</td><td>Regex / имя tool</td></tr>
+      <tr><td>Версионирование в git</td><td><code>.cursor/hooks.json</code> + <code>.cursor/hooks/*</code></td><td><code>.claude/settings.json</code> + <code>scripts/</code></td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><b>Главное отличие:</b> обе платформы запускают shell вне LLM и могут заблокировать tool call. Cursor богаче по событиям и поддерживает prompt-hooks; у Claude Code привычнее вложенный формат и имена <code>Bash</code>/<code>PreToolUse</code>. Rules на обеих платформах остаются мягче hooks.</div>
+</section>
+
+<section class="section">
+  <h2>Вопросы по уровням</h2>
+
+  <div class="qlevel-group">Junior — 10 вопросов</div>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое Hook?</summary>
+<div class="inside">Hook — скрипт (или prompt-проверка в Cursor), выполняемый автоматически до или после действия агента. <b>Claude Code:</b> <code>.claude/settings.json</code>, ненулевой exit code блокирует PreToolUse. <b>Cursor:</b> <code>.cursor/hooks.json</code>, JSON <code>permission</code> или exit code. Это enforcement вне LLM: агент не выполняет tool, если hook отклонил.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое PreToolUse Hook?</summary>
+<div class="inside">Тип Hook, запускаемый <b>до</b> выполнения tool call. Получает JSON через stdin: <code>tool_name</code>, <code>input</code> (аргументы), <code>session_id</code>. Exit 0 → tool выполняется. Exit 1 → tool блокируется, stdout скрипта передаётся агенту как объяснение. Применение: валидация, проверка безопасности, approval-gates.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое PostToolUse Hook?</summary>
+<div class="inside">Тип Hook, запускаемый <b>после</b> выполнения tool call. Действие уже произошло — отменить нельзя. Stdout скрипта добавляется в context агента. Применение: audit logging (запись всех tool calls), анализ результата, уведомления. PostToolUse exit 1 сигнализирует о проблеме пост-фактум, но не откатывает действие.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Где хранится конфигурация Hooks?</summary>
+<div class="inside"><b>Cursor:</b> <code>.cursor/hooks.json</code> (project) или <code>~/.cursor/hooks.json</code> (user), скрипты в <code>.cursor/hooks/</code>. <b>Claude Code:</b> <code>.claude/settings.json</code> или <code>~/.claude/settings.json</code>, часто скрипты в <code>scripts/</code>. Project-конфиг версионируй в git — команда получает одинаковые hooks при клонировании.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Чем Hook отличается от Rule?</summary>
+<div class="inside">Rule — текстовая инструкция в LLM context: агент читает и <i>старается</i> следовать, но при длинном контексте может «забыть». Hook — shell-скрипт на OS-уровне: агент <i>физически не получает результат</i> tool call если Hook вернул exit 1. Это не LLM-уровень, а системный. Hook нельзя обойти из промпта.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое shell hook скрипт?</summary>
+<div class="inside">Обычный shell/Python/bash скрипт, который Hook вызывает при каждом matching tool call. Получает JSON через stdin, возвращает exit code и stdout. Пример: <code>check_secrets.sh</code> читает путь файла из stdin, grep-ает на паттерны API keys, возвращает exit 1 если найдены. Скрипт должен быть исполняемым: <code>chmod +x script.sh</code>.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Какие типы событий (hook types) доступны в Claude Code?</summary>
+<div class="inside">4 типа: <b>PreToolUse</b> — до выполнения tool; <b>PostToolUse</b> — после выполнения tool; <b>Stop</b> — когда агент завершает работу; <b>SubagentStop</b> — когда завершает работу subagent. Каждый тип настраивается отдельно с matcher (какой tool) и command (что запустить).</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что происходит если Hook возвращает exit 1?</summary>
+<div class="inside">Для <b>PreToolUse</b>: tool call отменяется. Агент получает stdout скрипта как объяснение почему заблокировано. Агент может попробовать альтернативный подход. Для <b>PostToolUse</b>: tool уже выполнился, exit 1 — сигнал о проблеме пост-фактум, агент знает что что-то пошло не так и может компенсировать.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Есть ли Hooks в Cursor IDE?</summary>
+<div class="inside">Да. В Cursor — <code>.cursor/hooks.json</code> (schema <code>version: 1</code>), command- и prompt-hooks на события вроде <code>preToolUse</code> и <code>beforeShellExecution</code>. Блокировка через JSON-ответ (<code>permission: "deny"</code>) или exit code. Это OS-уровень, как в Claude Code, но другие имена событий и tools (<code>Shell</code> вместо <code>Bash</code>). Rules и CI остаются дополнением, не заменой hooks.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Как включить или выключить конкретный Hook?</summary>
+<div class="inside"><b>Cursor:</b> удали запись из массива в <code>hooks.json</code> — файл перечитывается при сохранении (иногда нужен restart Cursor). <b>Claude Code:</b> удали запись из <code>.claude/settings.json</code> — обычно со следующей сессии. JSON без комментариев: отключение = удаление объекта из массива. Скрипты на диске можно оставить.</div></details>
+
+  <div class="qlevel-group">Middle — 10 вопросов</div>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда Hook необходим, а Rule недостаточно?</summary>
+<div class="inside">Rule недостаточно когда нарушение неприемлемо ни при каких обстоятельствах: запись секретов в репо, deploy в production без approval, удаление production данных. LLM может «не заметить» Rule при длинном контексте. Hook необходим для: security compliance, regulatory requirements, irreversible actions. Правило: всё что нельзя допустить ни разу — только Hook.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> PreToolUse для validation vs PostToolUse для logging — в чём разница в применении?</summary>
+<div class="inside"><b>PreToolUse</b> = prevention: проверка до выполнения, может заблокировать. Используй для: проверки секретов, lint check, approval gates, rate limiting. Должен быть быстрым (&lt;500ms). <b>PostToolUse</b> = observation: анализ после, не может отменить. Используй для: audit logging, метрик, добавления context для агента. Может быть медленнее — не блокирует агента.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как написать hook скрипт проверяющий файл перед записью?</summary>
+<div class="inside">Структура PreToolUse hook для Write tool: <code>#!/bin/bash\nINPUT=$(cat)\nFILE=$(echo "$INPUT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['input']['path'])")\nCONTENT=$(echo "$INPUT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['input']['content'])")\nif echo "$CONTENT" | grep -qE '(password|api_key|secret)\s*=\s*["'\''`][^"'\''`]+'; then\n  echo 'ERROR: Detected possible secret in file'; exit 1\nfi\nexit 0</code></div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как именно Hook блокирует действие агента технически?</summary>
+<div class="inside">Механизм: Claude Code запускает hook скрипт как subprocess перед tool call. Передаёт JSON через stdin (tool name, args, session). Если subprocess завершился с exit code != 0 → Claude Code не выполняет tool call и передаёт агенту stdout скрипта как ошибку. Агент получает сообщение типа «Action blocked: [stdout hook]» и реагирует на него. Это OS-уровень, не LLM-уровень.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как использовать Hooks для security compliance?</summary>
+<div class="inside">Паттерны: (1) <b>No-secrets</b>: PreToolUse на Write — сканирование контента на API keys, passwords; (2) <b>No-prod</b>: PreToolUse на Bash — блокировка команд с prod-хостами; (3) <b>Approval gate</b>: PreToolUse на Deploy — проверка флага в файле/env что деплой авторизован; (4) <b>Audit trail</b>: PostToolUse на все tools — запись в лог файл. Специализированные инструменты лучше: trufflehog, detect-secrets вместо самописного grep.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Чем Hooks отличаются от Permissions (allow/deny) в settings.json?</summary>
+<div class="inside">Permissions — статический список разрешённых/запрещённых tools и путей. Пример: <code>"allow": ["Bash(git *)", "Write(src/*)"]</code>. Это declarative: или разрешено или нет. Hooks — dynamic: shell-скрипт с произвольной логикой. Может проверять содержимое файла, время суток, внешний API, флаги deployment. Permissions — простые ограничения; Hooks — сложная условная логика.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как тестировать Hooks до выхода в production?</summary>
+<div class="inside">Стратегия: (1) Запускай скрипт вручную с тестовым stdin: <code>echo '{"tool_name":"Write","input":{"path":"test.env","content":"key=value"}}' | ./scripts/check_secrets.sh</code>; (2) Тестируй граничные случаи: файл с настоящим секретом, без секрета, edge cases; (3) Проверяй exit codes: убедись что exit 1 возвращается именно когда нужно; (4) Staging environment с теми же hooks перед production.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Какой performance impact от Hooks на скорость агента?</summary>
+<div class="inside">Каждый PreToolUse Hook добавляет latency к каждому tool call. Если hook занимает 2 секунды, а агент делает 30 tool calls — 60 секунд overhead. Оптимизация: (1) PreToolUse должен выполняться &lt;500ms; (2) фильтруй по matcher — не запускай тяжёлый hook для каждого Read; (3) кешируй результаты для неизменившихся файлов; (4) тяжёлый анализ → PostToolUse или отдельный CI step.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как настроить Hooks для audit logging всех tool calls?</summary>
+<div class="inside">PostToolUse Hook с matcher <code>".*"</code> (все tools): <code>#!/bin/bash\nTIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")\nINPUT=$(cat)\necho "$TIMESTAMP $INPUT" >> ~/.claude/audit.log\nexit 0</code>. Добавь ротацию логов (размер или дата). Логируй: timestamp, tool_name, input summary, session_id. Для серьёзного audit: отправляй в centralized logging (ELK, Datadog).</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Приведи примеры реальных Hooks: no-secrets check и lint check</summary>
+<div class="inside"><b>No-secrets PreToolUse (Write)</b>: сканирует content файла grep'ом на паттерны <code>api_key=, password=, secret=</code> — блокирует если найдено. Лучше использовать detect-secrets или gitleaks. <b>Lint PreToolUse (Write для *.py)</b>: после записи файла — запускает <code>flake8</code> или <code>ruff</code>, если ошибки → exit 1 с сообщением. Важно: lint check лучше как PostToolUse (быстрое PreToolUse) или post-write callback.</div></details>
+
+  <div class="qlevel-group">Senior — 5 вопросов</div>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как спроектировать архитектуру Hooks для enterprise compliance?</summary>
+<div class="inside">Многоуровневая система: (1) <b>Global Hooks</b> (<code>~/.claude/settings.json</code>) — universal security для всех проектов: secrets scan, audit log; (2) <b>Project Hooks</b> (<code>.claude/settings.json</code>) — домен-специфичные: billing approval gate, prod-protection; (3) <b>Shared scripts repository</b> — библиотека проверенных hook скриптов для всей организации; (4) <b>CI/CD duplication</b> — те же проверки в pipeline как fallback. Project перекрывает global — проектные нужды приоритетнее.</div></details>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Чем Hooks отличаются от OS-level access controls и когда что использовать?</summary>
+<div class="inside">OS controls (AppArmor, SELinux, filesystem permissions, containers) — работают независимо от агента, не знают о семантике AI задачи. Hooks — контекстно-зависимы: знают tool_name, session_id, конкретные аргументы. Hooks подходят для: бизнес-логики (deploy только по пятницам), context-aware блокировок. OS controls — для: изоляции процессов, filesystem sandboxing, network policies. Архитектура: оба слоя вместе — defence in depth.</div></details>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как диагностировать failing Hook который не блокирует то что должен?</summary>
+<div class="inside">Чеклист: (1) скрипт исполняемый? (<code>ls -la scripts/</code> → <code>chmod +x</code>); (2) путь в settings.json корректный? (абсолютный vs относительный); (3) matcher совпадает с tool name? (регистр важен: «Write» не «write»); (4) JSON в settings.json валидный? (синтаксическая ошибка игнорирует весь файл); (5) скрипт возвращает правильный exit code? (<code>echo 'test_input' | ./script.sh; echo $?</code>); (6) логика условия верна? Добавь <code>set -x</code> в скрипт для debug.</div></details>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как реализовать цепочку Hooks (hooks composition) для многошаговой проверки?</summary>
+<div class="inside">Два паттерна: (1) <b>Single orchestrator script</b>: один hook скрипт последовательно вызывает несколько проверок, возвращает первую ошибку или exit 0; (2) <b>Multiple hooks on same event</b>: несколько записей в settings.json для одного matcher — все выполняются, первый non-zero блокирует. Рекомендация: orchestrator лучше для связанных проверок (secrets → lint → size limit); multiple records — для независимых проверок разных команд/доменов.</div></details>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как использовать Hooks для координации multi-agent систем?</summary>
+<div class="inside">PreToolUse Hooks как coordination layer: (1) <b>Locking</b>: проверяет файл блокировки перед критическими операциями — блокирует если другой агент держит lock; (2) <b>State validation</b>: агент A читает state, Hook проверяет что state консистентен перед тем как агент B продолжит; (3) <b>Sequencing</b>: PostToolUse пишет в shared state, следующий агент проверяет через PreToolUse. Ограничение: Hooks синхронные, нет встроенной message passing между агентами.</div></details>
+
+  <div class="qlevel-group">Lead — 5 вопросов</div>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как выстроить governance Hooks политику в команде?</summary>
+<div class="inside">Governance framework: (1) <b>Mandatory Hooks список</b> документирован в AGENTS.md — какие Hooks обязательны и почему; (2) <b>Owner per hook</b> — каждый скрипт имеет ответственного; (3) <b>PR review для .claude/settings.json</b> — изменения проходят review; (4) <b>Hook scripts в shared repo</b> — централизованная библиотека, не копирование по проектам; (5) <b>Alert на hook failures</b> — если обязательный Hook сломан, команда должна знать.</div></details>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Какие Hooks обязательны для production-окружения?</summary>
+<div class="inside">Минимальный обязательный набор: (1) <b>Secrets scanner</b> (PreToolUse, Write) — никаких credentials в коде; (2) <b>Production guard</b> (PreToolUse, Bash) — блокировка destructive команд на prod хостах без явного approval; (3) <b>Audit log</b> (PostToolUse, all) — полный trail всех tool calls; (4) <b>File scope guard</b> (PreToolUse, Write) — запись только в разрешённые директории. Дополнительно для финтех/медтех: PII detection, HIPAA/PCI compliance checks.</div></details>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как включить Hooks в onboarding процесс?</summary>
+<div class="inside">Onboarding с Hooks: (1) <code>.claude/settings.json</code> версионируется в репо — новый разработчик клонирует → Hooks активны автоматически; (2) hook скрипты в <code>.claude/scripts/</code> или <code>scripts/hooks/</code> также в репо; (3) onboarding checklist: «убедись что hook скрипты исполняемые (chmod +x)»; (4) тест: попробуй записать файл с fake API key — должен быть заблокирован; (5) документация в AGENTS.md: какие Hooks активны и что они проверяют.</div></details>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как построить audit trail через Hooks?</summary>
+<div class="inside">Полноценный audit trail: (1) PostToolUse на все tools (matcher: <code>.*</code>); (2) Логируй: timestamp (UTC), tool_name, session_id, input summary, user; (3) Append-only лог файл: <code>~/.claude/audit.log</code> или centralized; (4) Log rotation: daily files, retention policy (30/90 дней); (5) Для compliance: отправка в SIEM (Splunk, Datadog) в реальном времени; (6) Алерты на suspicious patterns: массовые deletes, prod access в нерабочее время.</div></details>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как распределить ответственность за Hooks между командами?</summary>
+<div class="inside">Матрица ответственности: (1) <b>Security team</b>: owns secrets scanner, audit trail — пишут, review, мониторят; (2) <b>Platform/DevOps</b>: owns prod guards, deployment Hooks; (3) <b>Feature teams</b>: owns domain-specific Hooks для своих сервисов; (4) <b>Tech Lead</b>: финальный review всех изменений в .claude/settings.json. Shared hook scripts repository: Platform team владеет, но принимает PR от всех команд.</div></details>
+
+  <div class="qlevel-group">Architect — 5 вопросов</div>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как Hooks образуют security enforcement layer в AI-системе?</summary>
+<div class="inside">Hooks — второй после OS controls слой в AI security stack: [OS/Container isolation] → [Claude Code Hooks] → [LLM Rules/AGENTS.md] → [User]. Hooks уникальны тем что: знают семантику AI-действий (tool_name, аргументы), работают в real-time до/после каждой операции, программируемы бизнес-логикой. Архитектурный принцип: Hooks не заменяют OS security — они добавляют application-level semantic layer поверх infrastructure controls.</div></details>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как спроектировать pipeline архитектуру для Hooks?</summary>
+<div class="inside">Hook pipeline для enterprise: (1) <b>Global pre-checks</b> (~/.claude/settings.json): secrets, audit; (2) <b>Project checks</b> (.claude/settings.json): domain logic, prod guards; (3) <b>Orchestrator pattern</b>: один entry-point script вызывает модульные проверки последовательно; (4) <b>Plugin architecture</b>: hook script загружает проверки из <code>hooks.d/</code> директории — команды добавляют проверки без изменения основного скрипта; (5) shared library: общие функции (parse_stdin, log_action) в sourced файле.</div></details>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как Hooks и Rules образуют defence in depth для AI агента?</summary>
+<div class="inside">Два уровня одной политики: <b>Rules</b> (LLM-level) — educates агента: «не пиши секреты, это опасно»; срабатывает в 95% случаев, но не надёжен при context saturation. <b>Hooks</b> (OS-level) — enforces: физически блокирует запись если паттерн найден; срабатывает в 100% случаев независимо от состояния LLM. Принцип: критические политики ВСЕГДА дублируются на обоих уровнях. Rule объясняет, Hook гарантирует.</div></details>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как использовать Hooks для observability в production AI-системе?</summary>
+<div class="inside">Observability через Hooks: (1) <b>Metrics</b>: PostToolUse считает tool calls по типам → Prometheus/Datadog; (2) <b>Tracing</b>: session_id как trace ID, tool calls как spans; (3) <b>Anomaly detection</b>: Hook отправляет в stream processor, ML модель детектирует аномалии (необычно много deletes, ночная активность); (4) <b>Business KPIs</b>: сколько PR создано агентом, сколько файлов изменено, deploy frequency через AI. Hooks — идеальная injection точка для observability без изменения агента.</div></details>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как выработать cross-team стандарты для Hooks?</summary>
+<div class="inside">Стандартизация на уровне организации: (1) <b>Shared hooks library</b>: git репо с проверенными скриптами, SemVer версионирование; (2) <b>Hook contract</b>: стандарт stdin/stdout формата, exit code semantics; (3) <b>Testing framework</b>: набор тестовых JSON fixtures для каждого hook; (4) <b>Rollout process</b>: новый обязательный Hook → pilot в одной команде → gradual rollout → всем; (5) <b>Exception process</b>: как команда запрашивает исключение из обязательного Hook с justification.</div></details>
+
+</section>
+
+<div class="pageFooter"><div class="nextPrev">
+  <a href="rules.html">← Rules</a>
+  <a href="skills.html">Skills →</a>
+</div></div>
+</main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

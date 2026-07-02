@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Контекст агента · интерактивная схема</title>
+  <link rel="stylesheet" href="../assets/style.css"/>
+  <link rel="stylesheet" href="../assets/overall-embed.css"/>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>
+    <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html" class="active"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div>
+  <div class="progressBox"><b>Формула</b><p class="sourceNote">System instructions → AGENTS/Rules → Current task → Memory/RAG/MCP/Skills → Subagent findings.</p></div>
+</aside>
+
+<style>
+  .schema-box{background:#0f172a;color:#e2e8f0;border-radius:16px;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.65;overflow:auto;margin:10px 0;white-space:pre-wrap}
+</style>
+<main class="main">
+  <section class="hero">
+    <div class="kicker">Agent Context Academy</div>
+    <h2>Контекст агента</h2>
+    <p>Интерактивная карта слоёв контекста — как граф на Roadmap: клик по узлу, стрелки зависимостей, zoom и всплывающая карточка. Ниже — полная схема слоёв на странице (без iframe).</p>
+    <div class="heroActions">
+      <a class="btn primary" href="home.html">На главную</a>
+      <a class="btn" href="roadmap.html">Roadmap-граф</a>
+      <a class="btn" href="overall-full.html" target="_blank" rel="noopener">Таблица выбора + Q&amp;A (fullscreen)</a>
+      <a class="btn" href="conflicts.html">Конфликты</a>
+      <a class="btn" href="assessment.html">К assessment</a>
+      <button class="markDone">Отметить страницу изученной</button>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Карта слоёв контекста</h2>
+    <p class="sectionIntro">Стрелки: что питает слой и куда влияет при сборке context window. Сверху — <b>System instructions</b> (зонтик), ниже — состав prefix. Под <b>Subagents</b> — слой <b>7 · Внутри subagent</b>: срез задачи, permissions, свой loop и возврат findings в чат main. Масштаб <b>только у графа</b> (кнопки ± или <b>Alt + колёсико</b> над графом).</p>
+    <div class="ac-graph-axis-key" role="note" aria-label="Две оси карты контекста">
+      <div class="axis-up"><b>↑ Вверх по карте</b> — <b>выше приоритет</b> при противоречии инструкций (System → Rules/Hooks → AGENTS.md → …). Побеждает верхний слой, не «последнее в чате».</div>
+      <div class="axis-down"><b>↓ Вниз по карте</b> — <b>конкретнее данные</b> (задача, память, RAG, MCP). Это не значит «сильнее Rules»: свежие факты важны по отдельному правилу <a href="conflicts.html">свежести</a>.</div>
+    </div>
+    <div id="contextGraphFilters">
+      <button type="button" class="ac-graph-filter-pill active" data-level="all">Все слои</button>
+      <button type="button" class="ac-graph-filter-pill" data-level="platform">Платформа</button>
+      <button type="button" class="ac-graph-filter-pill" data-level="policy">Enforcement</button>
+      <button type="button" class="ac-graph-filter-pill" data-level="project">Проект</button>
+      <button type="button" class="ac-graph-filter-pill" data-level="task">Задача</button>
+      <button type="button" class="ac-graph-filter-pill" data-level="data">Данные</button>
+      <button type="button" class="ac-graph-filter-pill" data-level="playbook">Skills / Commands</button>
+      <button type="button" class="ac-graph-filter-pill" data-level="delegate">Делегирование</button>
+      <button type="button" class="ac-graph-filter-pill" data-level="subctx">Внутри subagent</button>
+    </div>
+    <div class="ac-graph-legend" id="contextGraphLegend"></div>
+    <div class="ac-graph-wrap ac-graph-wrap--context-map" id="contextGraphWrap">
+      <div class="ac-graph-zoom" aria-label="Масштаб карты">
+        <button type="button" id="contextZoomOut" title="Уменьшить граф (−)">−</button>
+        <span class="zoom-label" id="contextZoomLabel">100%</span>
+        <button type="button" id="contextZoomIn" title="Увеличить граф (+)">+</button>
+        <button type="button" id="contextZoomReset" title="Сбросить граф (100%). Alt+колёсико над графом">🔍</button>
+        <button type="button" id="contextZoomFullscreen" title="На весь экран" aria-label="На весь экран">⛶</button>
+      </div>
+      <div class="ac-graph-viewport" id="contextGraphViewport">
+        <div class="ac-graph-inner" id="contextGraphInner"></div>
+      </div>
+    </div>
+    <p class="ac-graph-scroll-hint" id="contextGraphScrollHint" role="note">
+      <b>↓ Прокрутите граф внутри рамки</b> — под узлом Subagents идут слои <b>7 · Внутри subagent</b> и возврат findings в чат. Удобно: фильтр <b>«Делегирование»</b>, кнопка ниже или ⛶ на весь экран.
+      <button type="button" class="btn" id="contextGraphJumpDelegate">Показать низ карты</button>
+    </p>
+  </section>
+
+  <div class="ac-graph-modal" id="contextGraphModal" hidden aria-hidden="true">
+    <div class="ac-graph-modal-backdrop" id="contextGraphBackdrop"></div>
+    <div class="ac-graph-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle">
+      <button type="button" class="ac-graph-modal-close" id="contextGraphClose" aria-label="Закрыть">×</button>
+      <div class="ac-graph-detail" id="contextGraphPanel"></div>
+    </div>
+  </div>
+
+  <section class="section context-interactive" id="contextSchemaSection">
+    <h2>Схема: что попадает в модель</h2>
+    <p class="sectionIntro">Слева — вспомогательные слои (RAG, MCP, checkpoint…). Справа — иерархия при сборке context window. После блока Subagents — пунктирная зона <b>8a · внутри subagent</b> (отдельное окно, не слой main). Под каждым блоком — <b>«Подробнее →»</b> с кейсами и приоритетами. Esc или фон — закрыть.</p>
+<div class="overall-embed" id="overallSchema">
+    <section class="layout" id="schema">
+      <aside>
+        <h2 class="column-title">Источники / слои</h2>
+        <div class="sources">
+          <button class="source-card" data-key="conflicts">
+            <div class="source-head"><div class="icon">⚠️</div><div class="source-title">Conflicts / противоречия</div></div>
+            <ul><li>Rule vs Skill</li><li>AGENTS.md vs Chat</li><li>Memory vs RAG</li><li>Tool result vs assumption</li></ul>
+          </button>
+
+          <button class="source-card clickable orange orange-text" data-key="checkpoint">
+            <div class="source-head"><div class="icon">✅</div><div class="source-title">Checkpoint</div></div>
+            <ul><li>Снимок состояния</li><li>Что сделано</li><li>Решения / риски / next steps</li></ul>
+          </button>
+
+          <button class="source-card clickable red red-text" data-key="chat">
+            <div class="source-head"><div class="icon">💬</div><div class="source-title">Запрос / текущий чат</div></div>
+            <ul><li>Текущая задача</li><li>Последние сообщения</li><li>Файлы / ссылки</li></ul>
+          </button>
+
+          <button class="source-card clickable green green-text" data-key="rag">
+            <div class="source-head"><div class="icon">🔎</div><div class="source-title">RAG / retrieval</div></div>
+            <ul><li>Docs, code, wiki</li><li>Релевантные фрагменты</li><li>Факты из базы знаний</li></ul>
+          </button>
+
+          <button class="source-card clickable teal teal-text" data-key="mcp">
+            <div class="source-head"><div class="icon">🛠</div><div class="source-title">MCP / Tools</div></div>
+            <ul><li>API, базы, файлы, web</li><li>Живые данные</li><li>Реальные действия</li></ul>
+          </button>
+
+          <button class="source-card clickable purple purple-text" data-key="summary">
+            <div class="source-head"><div class="icon">🧾</div><div class="source-title">Summary / Compression</div></div>
+            <ul><li>Сжатая история</li><li>Экономия контекста</li><li>Может потерять детали</li></ul>
+          </button>
+
+          <button class="source-card clickable navy navy-text" data-key="subagents">
+            <div class="source-head"><div class="icon">👥</div><div class="source-title">Subagents</div></div>
+            <ul><li>Специализированные агенты</li><li>Делегирование</li><li>Свои инструкции</li></ul>
+          </button>
+        </div>
+      </aside>
+
+      <section class="overall-flow-main">
+        <div class="main-title">Что реально попадает в модель и что сильнее при конфликте</div>
+
+        <button class="system-card clickable" data-key="system">
+          <div class="sys-title">0. System instructions → Prompt · Prefix Cursor · Prefix Claude Code</div>
+          <div class="sys-grid">
+            <div><b>System Prompt:</b> скрытый platform layer (safety, tools).</div>
+            <div><b>Prefix Cursor:</b> склейка окна + alwaysApply Rules — <a href="caching.html#prefix-example">пример prefix</a>.</div>
+            <div><b>Prefix Claude Code:</b> platform + settings + CLAUDE.md/metadata.</div>
+          </div>
+        </button>
+
+        <button class="conflict-box clickable" data-key="conflicts">
+          <div class="num yellow-bg">!</div><div class="big-icon yellow-text">⚠️</div>
+          <div>
+            <h2 class="yellow-text">Conflict Resolver: что делать при противоречиях</h2>
+            <p class="desc"><b>Что это:</b> логика выбора, если разные слои говорят разное: Rule vs Skill, AGENTS.md vs Chat, Memory vs RAG, RAG vs MCP.</p>
+            <ul><li><b>Главное:</b> сначала <b>приоритет слоя</b> (выше на карте), потом конкретность, потом свежесть фактов.</li><li><b>Для assessment:</b> «ниже» ≠ «сильнее» — Rule в чате не отменяется просьбой пользователя.</li></ul>
+          </div>
+          <div class="badge yellow-bg">ВАЖНО</div>
+        </button>
+
+        <div class="flow">
+          <button class="layer-card clickable red-border" data-key="agents">
+            <div class="num red-bg">1</div><div class="big-icon red-text">📄</div>
+            <div class="layer-body"><h2 class="red-text">AGENTS.md текущего репозитория / агента</h2><p class="desc"><b>Что это:</b> проектная инструкция: роль, стиль работы, ограничения, команды, workflow.</p><ul><li><b>Когда:</b> почти всегда в репозитории.</li><li><b>Зачем:</b> базовое поведение агента.</li></ul></div>
+            <div class="badge red-bg">ВЫСОКИЙ</div>
+          </button>
+
+          <button class="layer-card clickable purple-border" data-key="rules">
+            <div class="num purple-bg">2</div><div class="big-icon purple-text">⚖️</div>
+            <div class="layer-body"><h2 class="purple-text">Rules / Policy</h2><p class="desc"><b>Что это:</b> обязательные правила: code style, safety, compliance, формат, запреты.</p><ul><li><b>Когда:</b> когда нужно соблюдать стандарты.</li><li><b>При конфликте:</b> обычно сильнее Skill и текущего пожелания.</li></ul></div>
+            <div class="badge purple-bg">ОЧЕНЬ ВЫСОКИЙ</div>
+          </button>
+
+          <button class="layer-card clickable blue-border" data-key="chat">
+            <div class="num blue-bg">3</div><div class="big-icon blue-text">💬</div>
+            <div class="layer-body"><h2 class="blue-text">Запрос пользователя / текущий чат</h2><p class="desc"><b>Что это:</b> конкретная задача, последние сообщения, файлы, уточнения.</p><ul><li><b>Когда:</b> всегда.</li><li><b>Зачем:</b> определяет текущий output.</li></ul></div>
+            <div class="badge blue-bg">ВЫСОКИЙ</div>
+          </button>
+
+          <button class="layer-card clickable orange-border" data-key="memory">
+            <div class="num orange-bg">4</div><div class="big-icon orange-text">🧠</div>
+            <div class="layer-body"><h2 class="orange-text">Memory Bank</h2><p class="desc"><b>Что это:</b> долговременная память о проекте, пользователе, решениях и соглашениях.</p><ul><li><b>Когда:</b> для continuity.</li><li><b>Риск:</b> может устареть.</li></ul></div>
+            <div class="badge orange-bg">MEDIUM-HIGH</div>
+          </button>
+
+          <button class="layer-card clickable green-border" data-key="rag">
+            <div class="num green-bg">5</div><div class="big-icon green-text">🔎</div>
+            <div class="layer-body"><h2 class="green-text">RAG / релевантные фрагменты</h2><p class="desc"><b>Что это:</b> найденные куски docs/code/wiki/tickets/knowledge base.</p><ul><li><b>Когда:</b> когда нужны факты.</li><li><b>Риск:</b> может найти устаревший фрагмент.</li></ul></div>
+            <div class="badge green-bg">MEDIUM</div>
+          </button>
+
+          <button class="layer-card clickable teal-border" data-key="mcp">
+            <div class="num teal-bg">6</div><div class="big-icon teal-text">🛠</div>
+            <div class="layer-body"><h2 class="teal-text">MCP / Tools</h2><p class="desc"><b>Что это:</b> подключённые инструменты: API, БД, файлы, браузер, CI/CD, мониторинг.</p><ul><li><b>Когда:</b> когда нужно проверить или выполнить.</li><li><b>Приоритет фактов:</b> свежий tool-result часто сильнее Memory/RAG.</li></ul></div>
+            <div class="badge teal-bg">MEDIUM</div>
+          </button>
+
+          <button class="layer-card clickable blue-border" data-key="skills">
+            <div class="num blue-bg">7</div><div class="big-icon blue-text">🎓</div>
+            <div class="layer-body"><h2 class="blue-text">Skills</h2><p class="desc"><b>Что это:</b> готовые инструкции и сценарии выполнения типовых задач.</p><ul><li><b>Когда:</b> для повторяемых процессов.</li><li><b>При конфликте:</b> Skill ниже Rules и AGENTS.md.</li></ul></div>
+            <div class="badge blue-bg">MEDIUM-LOW</div>
+          </button>
+
+          <button class="layer-card clickable navy-border" data-key="subagents">
+            <div class="num navy-bg">8</div><div class="big-icon navy-text">👥</div>
+            <div class="layer-body"><h2 class="navy-text">Subagents / другие AGENTS.md</h2><p class="desc"><b>Что это:</b> отдельные специализированные агенты для подзадач.</p><ul><li><b>Когда:</b> при делегировании.</li><li><b>Ограничение:</b> видят не весь контекст.</li></ul></div>
+            <div class="badge navy-bg">TASK-SPECIFIC</div>
+          </button>
+
+          <div class="sub-delegate-zone" aria-label="Внутри subagent — отдельное окно контекста">
+            <div class="sub-delegate-head">
+              <span class="sub-delegate-kicker">8a · Внутри subagent (отдельное окно)</span>
+              <p class="sub-delegate-lead">Это <b>не</b> ещё один слой в context window main-агента. Main делегирует → worker крутит свой loop → в main попадают только <b>findings</b> (стрелка вверх в чат).</p>
+            </div>
+            <div class="sub-delegate-grid">
+              <div class="sub-delegate-step"><span class="sds-icon">📝</span><b>Task brief</b><span>Срез задачи, constraints, формат ответа</span></div>
+              <div class="sub-delegate-step"><span class="sds-icon">🛡️</span><b>Permissions</b><span>Readonly, урезанные tools</span></div>
+              <div class="sub-delegate-step"><span class="sds-icon">🔄</span><b>Subagent loop</b><span>think → tools/MCP → observe</span></div>
+              <div class="sub-delegate-step"><span class="sds-icon">📤</span><b>Findings → main</b><span>Summary в текущий чат; main сверяет с Rules</span></div>
+            </div>
+            <div class="sub-delegate-return">↑ findings</div>
+            <p class="sub-delegate-links">
+              <button type="button" class="sub-delegate-more clickable" data-key="subagent-inner">Подробнее → внутри subagent</button>
+              <span class="sub-delegate-sep">·</span>
+              <a href="subagents.html">Subagents</a>
+              <span class="sub-delegate-sep">·</span>
+              <a href="agent-loop.html">Agent Loop</a>
+              <span class="sub-delegate-sep">·</span>
+              <a href="agentic-systems.html">Параллель / pipeline</a>
+            </p>
+          </div>
+        </div>
+
+        <div class="result-card">
+          <div class="check">✓</div>
+          <div><b>Сформированный контекст передаётся модели</b><span>Модель использует инструкции, память, retrieved-данные, tools, skills и <b>findings subagents</b> (после проверки main на Rules). При конфликте она должна выбрать более приоритетный и надёжный источник.</span></div>
+        </div>
+
+        <section class="legend-card legend-below">
+          <h3>Формула для assessment</h3>
+          <p><b>Сначала приоритет, потом конкретность, потом свежесть.</b> System выше всех. Rules/AGENTS.md задают рамки. User request задаёт задачу. MCP/tool-result часто даёт самые свежие факты. Skill — способ выполнения, но не право нарушать правила.</p>
+        </section>
+      </section>
+    </section>
+
+    <div class="detail-float" id="detailFloat" hidden aria-hidden="true">
+      <div class="detail-float-backdrop" id="detailFloatBackdrop"></div>
+      <div class="detail-float-dialog">
+        <button type="button" class="detail-float-close" id="detailFloatClose" aria-label="Закрыть">×</button>
+        <section class="details-panel" id="details"></section>
+      </div>
+    </div>
+</div>
+
+  </section>
+
+  <section class="section">
+    <h2>Кратко: что такое context</h2>
+    <p class="sectionIntro">Context — не только последний prompt. Это <a href="prompting.html#system-instructions">system instructions</a>, AGENTS.md, Rules, чат, RAG, Memory, tool results и summaries в одном окне.</p>
+    <div class="grid two">
+      <div class="card bg-yellow">
+        <h3>Самая короткая модель</h3>
+        <p><b>Поведение:</b> System, Rules, AGENTS.md.</p>
+        <p><b>Задача:</b> current chat.</p>
+        <p><b>Знания:</b> Memory, RAG, Checkpoints.</p>
+        <p><b>Действия:</b> MCP / Tools.</p>
+        <p><b>Процесс:</b> Skills.</p>
+        <p><b>Делегирование:</b> Subagents.</p>
+      </div>
+      <div class="card">
+        <h3>Context window</h3>
+        <ul>
+          <li>В окно не помещается весь репозиторий — нужен RAG и @mention.</li>
+          <li>Длинный чат сжимается (compaction) — детали теряются.</li>
+          <li>Checkpoint фиксирует состояние задачи структурно.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Слои в одной таблице</h2>
+    <div class="tableWrap"><table>
+      <thead><tr><th>Слой</th><th>Роль</th><th>При конфликте</th></tr></thead>
+      <tbody>
+        <tr><td>System Prompt</td><td>Платформа, safety, tools</td><td>Выше всего</td></tr>
+        <tr><td>Team / Project Rules</td><td>Policy, compliance</td><td>Выше AGENTS.md и чата</td></tr>
+        <tr><td>AGENTS.md / CLAUDE.md</td><td>Workflow проекта</td><td>Выше Skills и RAG</td></tr>
+        <tr><td>Current chat</td><td>Текущая цель</td><td>Не отменяет Rules</td></tr>
+        <tr><td>Memory / RAG / MCP</td><td>Факты и live data</td><td>Freshness &gt; stale</td></tr>
+        <tr><td>Skills</td><td>Commands</td><td>Ниже Rules</td></tr>
+        <tr><td>Subagent findings</td><td>Делегированные выводы</td><td>Проверяет main agent</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="section">
+    <h2>Примеры контекста агента</h2>
+    <p class="sectionIntro">Как выглядит реальный context window агента в разных сценариях.</p>
+
+    <h3 style="font-size:15px;margin:12px 0 8px">Пример 1: Минимальный контекст (Junior задача)</h3>
+    <div class="schema-box">System prompt:     ~500 токенов  (AGENTS.md + правила)
+User message:      ~100 токенов  ("Fix the bug in auth.py")
+Files in context:  ~800 токенов  (auth.py)
+─────────────────────────────────────
+Total:            ~1400 токенов  (из 200k возможных)</div>
+
+    <h3 style="font-size:15px;margin:12px 0 8px">Пример 2: Типичный рабочий контекст</h3>
+    <div class="schema-box">System prompt:     ~2000 токенов (AGENTS.md + Rules + Skills descriptions)
+Conversation:      ~5000 токенов (история 10 turns)
+Tool results:      ~8000 токенов (прочитанные файлы, grep результаты)
+RAG documents:     ~3000 токенов (релевантные фрагменты)
+Current task:       ~500 токенов
+─────────────────────────────────────
+Total:            ~18500 токенов (9% от 200k)</div>
+
+    <h3 style="font-size:15px;margin:12px 0 8px">Пример 3: Контекст перед compaction</h3>
+    <div class="schema-box">System prompt:     ~2000 токенов
+Long conversation: ~80000 токенов (100+ turns, много файлов)
+Tool results:      ~50000 токенов (накопленные)
+─────────────────────────────────────
+Total:           ~132000 токенов → приближается к лимиту
+→ Автоматический compaction: summary заменяет историю</div>
+  </section>
+
+  <section class="section">
+    <h2>Тонкости и нюансы контекста</h2>
+    <div class="nuance-card nc-red">
+      <h4>Lost in the middle — реальная проблема</h4>
+      <p>LLM модели хорошо обрабатывают начало и конец context window, но информация в середине получает меньше attention. При 200K токенов контекста критический fact в позиции 100K может быть "проигнорирован". Именно поэтому важные инструкции кладут в начало (System/Rules), а не в середину длинного промпта.</p>
+    </div>
+    <div class="nuance-card nc-orange">
+      <h4>Compaction уничтожает детали</h4>
+      <p>При длинном чате Claude Code/Cursor автоматически сжимает историю (compaction). Детали теряются: конкретные имена переменных, точные error messages, решения принятые 10 сообщений назад. Защита: Checkpoint/Summary фиксирует состояние структурно ДО compaction. Без checkpoint агент "забывает" контекст задачи.</p>
+    </div>
+    <div class="nuance-card nc-blue">
+      <h4>Весь репозиторий не помещается в context</h4>
+      <p>Context window даже самых больших моделей (200K токенов) — это ~150K слов. Большой монорепозиторий может содержать миллионы токенов кода. Агент физически не может "видеть" всё. Поэтому нужны RAG (поиск релевантного кода) и @mention (явное добавление файла). Без них агент работает только с тем, что явно передали.</p>
+    </div>
+    <div class="nuance-card nc-purple">
+      <h4>Каждый слой контекста потребляет токены</h4>
+      <p>System prompt + Rules (alwaysApply) + AGENTS.md + Memory + текущий чат + RAG chunks + tool results — всё это накапливается. Каждый подключённый MCP сервер добавляет descriptions tools. 10 Rules по 500 токенов = 5000 токенов overhead на каждый запрос. Оптимизируй: только нужные Rules, компактная Memory, ограниченный RAG top-k.</p>
+    </div>
+    <div class="nuance-card nc-green">
+      <h4>Приоритеты слоёв — не абсолютны</h4>
+      <p>Иерархия (System > Rules > AGENTS.md > Chat > Memory) описывает типичное поведение, но LLM может отклоняться при противоречиях. Если пользователь в chat явно просит нарушить правило из Rules — агент столкнётся с конфликтом. В Cursor: agentRespondedWithHarmful → safety system. Hooks в Claude Code устраняют этот риск для критических проверок на OS-уровне.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Best practices — Делай / Не делай</h2>
+    <div class="grid two">
+      <div class="card bg-green">
+        <h3>✅ Делай</h3>
+        <ul>
+          <li>Клади критичные инструкции в <b>начало</b> контекста (System/Rules), не в середину</li>
+          <li>Используй <b>Checkpoint</b> перед длинными задачами — фиксируй прогресс</li>
+          <li>@mention конкретные файлы вместо надежды что агент найдёт их сам</li>
+          <li>Ограничивай RAG top-k до 3-7 chunks для чистоты context</li>
+          <li>Используй Memory для устойчивых фактов, не засоряй чат повторениями</li>
+          <li>Явно разделяй инструкции и данные (retrieved docs = данные, не инструкции)</li>
+        </ul>
+      </div>
+      <div class="card bg-red">
+        <h3>❌ Не делай</h3>
+        <ul>
+          <li>Не клади весь проект в context — выбирай через RAG и @mention</li>
+          <li>Не игнорируй эффект compaction — чекпойнтируй длинные задачи</li>
+          <li>Не добавляй все Rules как alwaysApply — только критичные</li>
+          <li>Не полагайся на агента "помнящего" детали из 30+ сообщений назад</li>
+          <li>Не подключай все MCP серверы — каждый добавляет token overhead</li>
+          <li>Не путай уровни: Chat prompt не отменяет System-level правила</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Вопросы по уровням</h2>
+
+    <div class="qlevel-group">Junior — 10 вопросов</div>
+
+    <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое context window агента?</summary>
+    <div class="inside">Context window — это максимальный объём текста (в токенах), который языковая модель может «видеть» и учитывать при генерации ответа. Всё, что находится вне context window, для агента просто не существует. Современные модели имеют окна от 128K (GPT-4) до 200K (Claude Sonnet) и 1M+ токенов (Gemini). Чем больше окно, тем больше информации агент может учесть за один раз.</div></details>
+
+    <details class="details"><summary><span class="q-level q-junior">Junior</span> Что входит в context window агента?</summary>
+    <div class="inside">В context window одновременно помещаются: System Prompt платформы (Cursor/Claude Code), пользовательские Rules (alwaysApply), AGENTS.md/CLAUDE.md, вся история текущего чата, результаты tool calls, RAG chunks (найденные по смыслу фрагменты), Memory Bank (если подключён), Checkpoint/Summary и текущий запрос пользователя. Все эти слои конкурируют за ограниченное количество токенов.</div></details>
+
+    <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое System Prompt?</summary>
+    <div class="inside">System Prompt — это специальное сообщение, которое платформа (Cursor, Claude Code, claude.ai) отправляет модели перед началом диалога. Он содержит инструкции по поведению, описания доступных инструментов, safety guidelines. Пользователь не может напрямую редактировать System Prompt — это привилегия платформы. Rules (alwaysApply) добавляются к System Prompt как дополнительный слой, который уже контролируется пользователем.</div></details>
+
+    <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое compaction и когда он срабатывает?</summary>
+    <div class="inside">Compaction — автоматическое сжатие истории чата, которое срабатывает, когда context window приближается к лимиту токенов. Платформа заменяет ранние сообщения их кратким резюме. Детали при этом теряются: точные имена переменных, конкретные error messages, нюансы принятых решений. Именно поэтому нужен Checkpoint — структурированная фиксация прогресса до того, как произойдёт compaction.</div></details>
+
+    <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое @mention файла?</summary>
+    <div class="inside">@mention — явное включение конкретного файла целиком в context window. Когда вы пишете @filename.py, весь файл добавляется в context, и агент гарантированно его видит. Это детерминированный способ включения данных — в отличие от RAG, где поиск вероятностный. Каждый @mention занимает токены пропорционально размеру файла.</div></details>
+
+    <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое alwaysApply в Rules?</summary>
+    <div class="inside">alwaysApply: true — настройка в .mdc файле правила, которая заставляет правило загружаться в каждый запрос агента, независимо от контекста работы. Такие правила добавляются к System Prompt при каждом запросе. Используется для глобальных стандартов: язык ответа, запреты на определённые действия, стиль кода. Auto-attached правила загружаются только при работе с определёнными файлами по glob-паттернам.</div></details>
+
+    <details class="details"><summary><span class="q-level q-junior">Junior</span> Как RAG добавляет данные в context?</summary>
+    <div class="inside">RAG (Retrieval-Augmented Generation) работает в три шага: 1) Запрос пользователя превращается в embedding-вектор; 2) По этому вектору в индексированном corpus ищутся похожие фрагменты (chunks); 3) Найденные top-k chunks добавляются в context window перед запросом к модели. Агент «видит» эти chunks как часть context и может использовать их для ответа. RAG экономит токены по сравнению с @mention всего репозитория.</div></details>
+
+    <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое token limit?</summary>
+    <div class="inside">Token limit — максимальный размер context window в токенах для конкретной модели. Один токен ≈ 4 символа на английском, 2-3 символа на русском. GPT-4: 128K, Claude Sonnet: 200K, Gemini 1.5 Pro: 1M+. Агент физически не может учесть информацию, которая не поместилась в лимит. Для больших баз знаний используются RAG и subagents, чтобы работать в рамках ограничений.</div></details>
+
+    <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое .cursorignore?</summary>
+    <div class="inside">.cursorignore — файл, аналогичный .gitignore, но для AI-индексации. Паттерны в нём исключают файлы и директории из RAG-индекса Cursor. Файл может быть в git, но исключён из AI-поиска. Типичные кандидаты: build артефакты (dist/, target/), generated код, large binary files, migration scripts. В Claude Code аналог — .claudeignore.</div></details>
+
+    <details class="details"><summary><span class="q-level q-junior">Junior</span> Как Memory Bank влияет на context?</summary>
+    <div class="inside">Memory Bank — это набор markdown-файлов (например, memory.md), которые агент загружает в начало каждой сессии как постоянный контекст. В отличие от истории чата, Memory Bank не теряется при compaction — это файлы на диске. Содержит: стек технологий, принятые архитектурные решения, текущий статус проекта. Ограничение: всё содержимое занимает токены, поэтому Memory Bank должен быть компактным (≤800 слов).</div></details>
+
+    <div class="qlevel-group">Middle — 10 вопросов</div>
+
+    <details class="details"><summary><span class="q-level q-middle">Middle</span> Чем @mention файла отличается от RAG?</summary>
+    <div class="inside">@mention — явное детерминированное включение файла целиком. Агент гарантированно видит весь файл, но это дорого по токенам. RAG — вероятностный семантический поиск: возвращает chunks похожие по смыслу на запрос, экономит токены, но может вернуть нерелевантный фрагмент. Правило выбора: знаешь нужный файл → @mention; ищешь по смыслу в большом corpus → RAG. Комбинирование: RAG находит файл, @mention добавляет полностью если нужен весь контекст.</div></details>
+
+    <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда использовать alwaysApply vs auto-attached правила?</summary>
+    <div class="inside">alwaysApply: true — только для абсолютно универсальных правил, которые нужны при ЛЮБОЙ задаче: язык ответа, запрет destructive операций, базовый стиль коммуникации. Максимум 3-5 таких правил, иначе overhead растёт и lost-in-the-middle ухудшается. Auto-attached (по glob-паттернам) — для правил специфичных для типа файлов: правила для *.py только при работе с Python, правила для *.sql только при SQL-задачах. Это экономит токены и фокусирует агента.</div></details>
+
+    <details class="details"><summary><span class="q-level q-middle">Middle</span> Как избежать token overflow в длинных задачах?</summary>
+    <div class="inside">Стратегии: 1) Checkpoint до compaction — фиксируй прогресс в файл, не в чат; 2) Новый чат + @checkpoint.md вместо бесконечного продолжения; 3) Subagent для изоляции — пусть читает 100 файлов, а main agent получает только summary; 4) @mention только нужных файлов, не директорий; 5) Компактный AGENTS.md (≤800 слов); 6) alwaysApply только для критичных правил; 7) RAG вместо @mention всего репозитория.</div></details>
+
+    <details class="details"><summary><span class="q-level q-middle">Middle</span> Что такое «lost in the middle» и как это влияет на работу с context?</summary>
+    <div class="inside">LLM attention mechanism неравномерно обрабатывает позиции в sequence: начало (primacy effect) и конец (recency effect) получают максимум attention, середина — значительно меньше. При 200K context ключевой факт на позиции 100K может быть фактически проигнорирован. Следствие: критические инструкции помещай в Rules (начало), Few-shot примеры — ближе к концу перед запросом. Длинный список RAG chunks: лучший chunk должен быть первым (reranking).</div></details>
+
+    <details class="details"><summary><span class="q-level q-middle">Middle</span> Как строить context для длинной многоэтапной задачи?</summary>
+    <div class="inside">Паттерн multi-session context engineering: 1) Разбей задачу на этапы с явными Checkpoint'ами между ними; 2) Checkpoint пиши в файл (checkpoint.md), не в чат — файл переживёт compaction; 3) Каждый новый этап начинай свежим чатом с @checkpoint.md; 4) Memory Bank содержит глобальное состояние (стек, решения), Checkpoint — текущее состояние этапа; 5) Subagents для параллельных независимых частей. Большие задачи = pipeline of sessions, не один бесконечный чат.</div></details>
+
+    <details class="details"><summary><span class="q-level q-middle">Middle</span> Как compaction влияет на принятые ранее решения?</summary>
+    <div class="inside">При compaction ранние сообщения заменяются summary. Конкретные решения («выбрали Redis вместо Memcached, потому что нужен TTL и persistence») превращаются в общие факты («использован Redis»). Причина выбора теряется. Агент может в дальнейшем предлагать Memcached, «забыв» trade-off. Защита: ключевые архитектурные решения с их причинами фиксируй в AGENTS.md или Memory Bank — они загружаются каждый запрос и не подвержены compaction.</div></details>
+
+    <details class="details"><summary><span class="q-level q-middle">Middle</span> Каковы приоритеты слоёв context при конфликте?</summary>
+    <div class="inside">Порядок приоритетов (от высшего к низшему): Platform System Prompt (safety, core capabilities) → Team/Project Rules (alwaysApply) → AGENTS.md/CLAUDE.md → Auto-attached Rules (по glob) → Memory Bank → RAG chunks → Tool call results → История чата → Текущий запрос. При конфликте: вышестоящий слой побеждает. Rules «не использовать библиотеку X» имеет приоритет над просьбой в чате «используй X».</div></details>
+
+    <details class="details"><summary><span class="q-level q-middle">Middle</span> Как оптимизировать token usage в agentic workflow?</summary>
+    <div class="inside">Ключевые техники: 1) Stable prefix для кеширования (System Prompt + Rules стабильны → cache hit rate >50%); 2) AGENTS.md ≤800 слов, без устаревших фактов; 3) alwaysApply максимум 3-5 правил; 4) RAG top-k ≤ 5-7 chunks; 5) @mention только конкретные нужные файлы; 6) .cursorignore для build артефактов и generated code; 7) Subagents для изоляции token-heavy операций (чтение 100 файлов); 8) Checkpoint как файл вместо длинной истории.</div></details>
+
+    <details class="details"><summary><span class="q-level q-middle">Middle</span> Как Checkpoint помогает при compaction?</summary>
+    <div class="inside">Checkpoint — структурированный снимок задачи: что сделано, какие решения приняты (с причинами), что осталось, на чём остановились. Записывается в файл (не в чат), поэтому compaction его не затрагивает. При следующей сессии: новый чат + @checkpoint.md в первом сообщении — агент мгновенно получает полный контекст задачи без длинной истории. Checkpoint как файл > Checkpoint как сообщение в чате.</div></details>
+
+    <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда использовать subagents для изоляции context?</summary>
+    <div class="inside">Subagent оправдан когда: 1) Задача требует чтения 50+ файлов — context overflow для main agent; 2) Нужен параллельный анализ независимых частей (subagents работают параллельно); 3) Хочешь изолировать «шум» — subagent погружается в детали, main видит только summary; 4) Sensitive операции в изолированном context. Coordination overhead есть (передача задачи, получение результата), поэтому subagent оправдан когда isolation benefit > overhead.</div></details>
+
+    <div class="qlevel-group">Senior — 5 вопросов</div>
+
+    <details class="details"><summary><span class="q-level q-senior">Senior</span> Как спроектировать многоуровневый context для сложного agentic системы?</summary>
+    <div class="inside">Архитектурный подход: разделить context на слои с чёткой ответственностью. Слой 1 — Stable Core: System Prompt + alwaysApply Rules + AGENTS.md (кешируется, не меняется между запросами). Слой 2 — Task Context: Checkpoint + Memory Bank (обновляется при смене этапа). Слой 3 — Dynamic: RAG chunks + @mention для текущего запроса. Принципы: maximize cache hit rate для Слоя 1; minimize token usage для Слоя 2; maximize relevance для Слоя 3. Subagents получают только Слой 3 (задачу) + минимальный Слой 1 (правила). Main agent не передаёт весь Слой 2 — только distilled summary.</div></details>
+
+    <details class="details"><summary><span class="q-level q-senior">Senior</span> Как тюнинговать RAG для кода vs документации?</summary>
+    <div class="inside">Код и документация требуют разных стратегий chunking и retrieval. Для кода: chunk по функциям/классам (не по строкам), включать signature + docstring + первые строки реализации в chunk, использовать code-specific embeddings (CodeBERT, code-specific fine-tuned models). Для документации: semantic chunking по параграфам, иерархический индекс (заголовки → разделы → параграфы), freshness metadata с датой последнего обновления. Общее: reranking после retrieval — best chunk первым (primacy effect). Top-k ≤ 5 для кода (нужна точность), ≤ 7 для docs (нужна полнота).</div></details>
+
+    <details class="details"><summary><span class="q-level q-senior">Senior</span> Как диагностировать context saturation в production?</summary>
+    <div class="inside">Context saturation проявляется как: агент игнорирует инструкции, даёт поверхностные ответы, «забывает» ранее обсуждённые детали, повторяет уже сделанное. Диагностика: 1) Логируй usage.input_tokens при каждом запросе — при приближении к лимиту → compaction скоро; 2) Отслеживай cache_read_input_tokens / total_tokens — падение cache hit rate сигнализирует о нестабильном prefix; 3) Token composition audit: сколько токенов занимает каждый слой? Нет ли раздутого AGENTS.md или лишних alwaysApply правил? 4) Behavioral consistency test: один запрос 10 раз — насколько похожи ответы?</div></details>
+
+    <details class="details"><summary><span class="q-level q-senior">Senior</span> Как оптимизировать layout context под attention механизм LLM?</summary>
+    <div class="inside">Attention в transformer — не равномерный: primacy (начало) и recency (конец) эффекты реальны и измеримы. Оптимальный layout (сверху вниз): 1) Stable prefix: System + Rules (кешируется + максимум attention при примость); 2) AGENTS.md + Memory Bank (важные факты — близко к Rules для attention); 3) RAG chunks: лучший chunk ПЕРВЫМ после reranking; 4) Checkpoint (task state — близко к запросу); 5) Текущий запрос (конец, recency effect). Избегай: длинные промежуточные блоки между Rules и запросом — это «середина». Few-shot примеры: ближе к концу, не к началу.</div></details>
+
+    <details class="details"><summary><span class="q-level q-senior">Senior</span> Как проектировать систему для 200K token window?</summary>
+    <div class="inside">При 200K window стратегия меняется, но принципы остаются: 1) Не «бросать всё в окно» — lost in the middle работает и при 200K, только масштаб другой. Факт на позиции 100K всё равно получает меньше attention; 2) Пересмотреть что раньше шло через RAG только из-за лимита — некоторые docs выгоднее включить прямо (@mention); 3) Кеш: 200K stable prefix дороже кешировать, но при высоком hit rate экономия огромная; 4) Long-context reranking: при 200K особенно важно лучшие chunks в начало, худшие — убрать; 5) Subagents всё равно полезны для параллелизма, не только для лимита.</div></details>
+
+    <div class="qlevel-group">Lead — 5 вопросов</div>
+
+    <details class="details"><summary><span class="q-level q-lead">Lead</span> Как выстроить стандарты context management для команды разработчиков?</summary>
+    <div class="inside">Практический framework: 1) Документируй в AGENTS.md что агент «видит» и что «не видит» (.cursorignore); 2) Создай team Rules library — shared .mdc файлы в репозитории с алгоритмом: что alwaysApply, что auto-attached; 3) Установи лимиты: AGENTS.md ≤800 слов, alwaysApply ≤5 правил, Memory Bank ≤800 слов — это SLA для context overhead; 4) Checkpoint conventions: стандартный формат (что сделано / решения / следующий шаг) — template в AGENTS.md; 5) Quarterly Rules audit — каждый .mdc файл проверяется на актуальность. Rules Debt опаснее, чем их отсутствие.</div></details>
+
+    <details class="details"><summary><span class="q-level q-lead">Lead</span> Как обучить junior разработчиков минимизировать потребление токенов?</summary>
+    <div class="inside">Обучение через практику: 1) Покажи token composition на реальном запросе — сколько токенов занимает каждый слой (Cursor показывает в debug); 2) Упражнение «@mention диета»: ограничь на 1 неделю использование @mention до 3 файлов на запрос — учит думать что реально нужно; 3) Code review context: добавь чеклист «проверь что @mention только нужные файлы»; 4) Покажи разницу: запрос с 10 @mention vs 2 @mention + RAG — что агент отвечает лучше; 5) Обучи Checkpoint habit — создай team template, требуй Checkpoint при задачах >30 мин.</div></details>
+
+    <details class="details"><summary><span class="q-level q-lead">Lead</span> Как организовать аудит context размера в CI/CD?</summary>
+    <div class="inside">CI-интеграция context audit: 1) Скрипт проверки AGENTS.md — word count, wc -w agents.md, fail если >1000 слов; 2) Rules audit: count alwaysApply rules, warn если >5, fail если >10; 3) .cursorignore completeness check: build/, dist/, node_modules/ должны быть в ignore; 4) Тест на cache stability: запустить один и тот же prompt 3 раза, сравнить cache_read_input_tokens — должно быть >50% hit rate; 5) Memory Bank size check аналогично AGENTS.md. Эти checks быстрые (секунды) и предотвращают незаметное накопление context bloat со временем.</div></details>
+
+    <details class="details"><summary><span class="q-level q-lead">Lead</span> Какие conventions по Rules и AGENTS.md нужны при onboarding нового разработчика?</summary>
+    <div class="inside">Onboarding context conventions: 1) AGENTS.md — первый файл для чтения, должен объяснять что агент видит/не видит, ключевые Rules, примеры Checkpoint; 2) Guided tour: покажи как читать .cursor/rules/, объясни alwaysApply vs auto-attached разницу; 3) Practice задача: junior должен создать первый Checkpoint самостоятельно по template; 4) Shadow session: разработчик наблюдает за senior при работе с агентом — видит как выбирают @mention, когда используют RAG; 5) Rules ownership: каждый .mdc файл имеет OWNER и LAST_REVIEWED — при onboarding назначают владельца. Цель: за 1 день junior знает как не «засорять» context.</div></details>
+
+    <details class="details"><summary><span class="q-level q-lead">Lead</span> Как выстроить governance контроля context в команде?</summary>
+    <div class="inside">Governance framework: 1) Context Policy Document: что можно включать в context (типы данных, классификация), что нельзя (PII, secrets); 2) Rules change process: изменения alwaysApply Rules → PR review с 2 approvers (влияют на всех); 3) AGENTS.md ownership: team lead review при обновлении; 4) Quarterly context audit — все .mdc файлы, AGENTS.md, Memory Bank проверяются командой; 5) Incident process: если агент повёл себя неожиданно из-за context — root cause в context layers, fix в Rules/Hooks; 6) Метрики: average context size per request, cache hit rate, compaction frequency — в team dashboard.</div></details>
+
+    <div class="qlevel-group">Architect — 5 вопросов</div>
+
+    <details class="details"><summary><span class="q-level q-arch">Arch</span> Как спроектировать context architecture для multi-agent системы?</summary>
+    <div class="inside">Multi-agent context architecture строится на принципе isolation + shared state: 1) Shared State Layer: AGENTS.md/Memory Bank доступен всем агентам read-only; только main agent или orchestrator имеет write access (предотвращает race conditions); 2) Agent-specific context: каждый subagent получает только свою задачу + минимальный глобальный контекст; 3) Communication protocol: агенты общаются через structured output (JSON), не через свободный текст — это детерминирует передачу данных; 4) Context versioning: при параллельной работе — optimistic locking на shared files (проверяй версию до записи); 5) Observability: логируй context composition каждого агента для debugging variance.</div></details>
+
+    <details class="details"><summary><span class="q-level q-arch">Arch</span> Как проектировать retrieval pipeline с учётом context constraints?</summary>
+    <div class="inside">Production RAG pipeline для agentic систем: 1) Инgest: semantic chunking (не fixed size), code-aware splitting для кода, freshness metadata (дата, версия, source); 2) Retrieval: hybrid search (dense embeddings + BM25 keyword), query expansion для лучшего recall; 3) Reranking: cross-encoder для точного ранжирования, best chunk → position 0 в context (primacy effect); 4) Context assembly: top-k выбирается динамически на основе доступного budget (не фиксированное 5 всегда); 5) Freshness gate: chunk старше N дней → помечается stale, альтернативно → MCP live tool; 6) Evaluation: NDCG, MRR для retrieval качества в CI при каждом изменении corpus.</div></details>
+
+    <details class="details"><summary><span class="q-level q-arch">Arch</span> Как рассматривать context window как архитектурный ресурс?</summary>
+    <div class="inside">Context window — это finite shared resource, аналог памяти или CPU. Архитектурные принципы: 1) Budget allocation: явно определи квоты токенов для каждого слоя (Rules: 2K, AGENTS.md: 3K, RAG: 5K, chat: 10K); 2) Priority preemption: при нехватке — исключать слои от низшего приоритета к высшему; 3) Caching economics: stable prefix кешируется → амортизирует cost; нестабильный prefix → каждый запрос платит полную цену; 4) Capacity planning: при росте команды Rules и AGENTS.md растут → нужно проектировать «сжатие» заранее; 5) SLA: max context size constraint в архитектуре системы, нарушение → degraded mode (subagent isolation включается автоматически).</div></details>
+
+    <details class="details"><summary><span class="q-level q-arch">Arch</span> Как реализовать кэширование context layers для снижения стоимости?</summary>
+    <div class="inside">Prompt caching (Anthropic, OpenAI) работает на prefix matching: byte-for-byte совпадение кешируется. Архитектурная реализация: 1) Stable layer первым: System Prompt → Rules → AGENTS.md → Memory Bank (неизменны между запросами); 2) Dynamic layer в конце: RAG chunks, user query (меняются каждый раз); 3) Explicit cache breakpoints (Anthropic API): cache_control markers после stable части; 4) Rules ordering: алфавитный или по важности — главное, чтобы порядок не менялся; 5) Мониторинг: cache_read_input_tokens / total_tokens → target >60%; при падении — найди что изменилось в stable layer; 6) Versioned snapshots: при изменении AGENTS.md — invalidate cache намеренно.</div></details>
+
+    <details class="details"><summary><span class="q-level q-arch">Arch</span> Что такое context isolation pattern и когда его применять?</summary>
+    <div class="inside">Context isolation — архитектурный паттерн, при котором разные агенты или части системы работают в изолированных context windows, не разделяя состояние напрямую. Применение: 1) Security isolation: subagent для работы с sensitive данными не получает глобальный context (ограничение blast radius при prompt injection); 2) Noise isolation: агент-исследователь читает 200 файлов в своём окне, main agent получает distilled summary — его context чист; 3) Parallel execution: независимые subagents работают параллельно в изолированных контекстах, нет конкурентного доступа; 4) Failure isolation: сбой subagent не «загрязняет» context main agent; 5) Anti-pattern: isolation без structured communication → черный ящик, неотлаживаемый.</div></details>
+
+  </section>
+
+  <div class="pageFooter">
+    <div class="nextPrev">
+      <a href="context-engineering.html">← Context Engineering</a>
+      <a href="model-variance.html">Почему модель ≠ модель →</a>
+    </div>
+  </div>
+</main>
+</div>
+<script src="../assets/app.js"></script>
+<script src="../assets/academy-graph.js"></script>
+<script src="../assets/context-map.js"></script>
+<script src="../assets/overall-details.js"></script>
+</body>
+</html>

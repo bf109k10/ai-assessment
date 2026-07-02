@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Rules — архитектура, типы, тонкости. Cursor vs Claude Code</title>
+  <link rel="stylesheet" href="../assets/style.css"/>
+  <style>
+    .schema-box{background:#0f172a;color:#e2e8f0;border-radius:16px;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.65;overflow:auto;margin:10px 0;white-space:pre-wrap}
+    .schema-box .h{color:#c084fc;font-weight:900}
+    .schema-box .c{color:#64748b}
+    .schema-box .k{color:#93c5fd}
+    .schema-box .v{color:#86efac}
+    .schema-box .s{color:#fcd34d}
+    .schema-box .r{color:#f87171}
+
+    .rule-type{display:grid;grid-template-columns:180px 1fr;gap:0;border:1px solid var(--line);border-radius:18px;overflow:hidden;margin:10px 0;background:#fff}
+    .rule-type-label{padding:16px;display:flex;flex-direction:column;gap:8px;border-right:1px solid var(--line);background:#f8fafc}
+    .rule-type-label h4{margin:0;font-size:15px}
+    .rule-type-label p{margin:0;font-size:12px;color:#64748b}
+    .rule-pill{display:inline-block;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:900;border:1px solid}
+    .rp-always{background:#fff1f2;border-color:#fca5a5;color:#dc2626}
+    .rp-auto{background:#eff6ff;border-color:#93c5fd;color:#1e40af}
+    .rp-cond{background:#fefce8;border-color:#fde68a;color:#92400e}
+    .rp-manual{background:#f5f3ff;border-color:#d8b4fe;color:#6b21a8}
+    .rule-type-body{padding:16px}
+
+    .nuance-card{border-left:4px solid;border-radius:0 14px 14px 0;padding:12px 16px;margin:8px 0;background:#fff;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+    .nc-blue{border-left-color:#2563eb}
+    .nc-red{border-left-color:#dc2626}
+    .nc-orange{border-left-color:#f97316}
+    .nc-green{border-left-color:#16a34a}
+    .nc-purple{border-left-color:#7c3aed}
+
+    .frontmatter-table{width:100%;border-collapse:collapse;font-size:13px}
+    .frontmatter-table th,.frontmatter-table td{padding:9px 12px;border-bottom:1px solid #e2e8f0;text-align:left;vertical-align:top}
+    .frontmatter-table th{background:#f8fafc;font-weight:900}
+    .req-yes{color:#dc2626;font-weight:900}
+    .req-no{color:#64748b}
+    code{background:#f1f5f9;padding:2px 5px;border-radius:5px;font-family:ui-monospace,Menlo,monospace;font-size:12px}
+    .diff-split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media(max-width:900px){.diff-split{grid-template-columns:1fr}.rule-type{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="app">
+
+<aside class="sidebar">
+  <div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>
+    <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub active"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div>
+  <div class="progressBox"><b>Приоритет</b><p class="sourceNote">Rules &gt; AGENTS.md &gt; Skills. alwaysApply=true — всегда в контексте. Hooks (Claude Code) — принуждение на уровне shell.</p></div>
+</aside>
+
+<main class="main">
+<section class="hero">
+  <div class="kicker">Agent Context Academy · AGENTS / Rules / Skills</div>
+  <h2>Rules — политика агента</h2>
+  <p>Rules — жёсткие инструкции поведения агента: что всегда делать, что никогда, как вести себя с конкретными файлами. Четыре типа (always / auto-attached / conditional / manual) с разным поведением загрузки и приоритетом.</p>
+  <div class="heroActions">
+    <a class="btn" href="agents-md.html">← AGENTS.md</a>
+    <a class="btn" href="agents-rules-skills.html">Обзор</a>
+    <a class="btn" href="skills.html">Skills →</a>
+    <button class="markDone">Отметить страницу изученной</button>
+  </div>
+</section>
+
+<!-- ── Что такое Rules ── -->
+<section class="section">
+  <h2>Что такое Rules и чем отличаются от AGENTS.md</h2>
+  <div class="grid">
+    <div class="card bg-blue">
+      <h3>Rules = политика</h3>
+      <p>Если AGENTS.md описывает workflow и контекст (рекомендации), то Rules — жёсткая политика. Примеры:</p>
+      <ul>
+        <li>"Никогда не коммить файлы с секретами"</li>
+        <li>"Всегда добавлять unit тест к каждому PR"</li>
+        <li>"При работе с *.java — использовать только JPA"</li>
+        <li>"Не устанавливать npm пакеты без approval"</li>
+      </ul>
+    </div>
+    <div class="card bg-orange">
+      <h3>Cursor: .cursor/rules/*.mdc</h3>
+      <p>Файлы с расширением <code>.mdc</code> в директории <code>.cursor/rules/</code>. Содержат YAML frontmatter + Markdown body. Cursor читает их и включает в context по правилам активации.</p>
+    </div>
+    <div class="card bg-purple">
+      <h3>Claude Code: аналоги</h3>
+      <p>В Claude Code понятие "Rules" реализуется через:</p>
+      <ul>
+        <li><b>CLAUDE.md секции</b> с жёсткими инструкциями</li>
+        <li><b>Hooks</b> — shell-скрипты, которые принуждают к соблюдению (PreToolUse, PostToolUse)</li>
+        <li><b>Permissions</b> — разрешения в <code>.claude/settings.json</code></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── Формат .mdc ── -->
+<section class="section">
+  <h2>Формат .mdc файла — архитектура</h2>
+  <div class="diff-split">
+    <div>
+      <h3 style="margin-bottom:10px">Полный формат</h3>
+      <div class="schema-box">
+<span class="h">---</span>
+<span class="k">description</span>: <span class="s">"No secrets in commits"</span>
+<span class="k">globs</span>: <span class="v">[]</span>          <span class="c"># [] = all files</span>
+<span class="k">alwaysApply</span>: <span class="v">true</span>   <span class="c"># всегда в context</span>
+<span class="h">---</span>
+
+<span class="h"># No Secrets Rule</span>
+
+Never commit files containing:
+- API keys, tokens, passwords
+- .env files with real values
+- Private certificates or keys
+
+<span class="r">ALWAYS</span> check before suggesting git add/commit.
+If a secret is found — stop and warn the user.
+</div>
+
+      <div class="schema-box" style="margin-top:10px">
+<span class="c"># Auto-attached rule для Java файлов</span>
+<span class="h">---</span>
+<span class="k">description</span>: <span class="s">"Java coding standards"</span>
+<span class="k">globs</span>: <span class="v">["**/*.java", "**/*.kt"]</span>
+<span class="k">alwaysApply</span>: <span class="v">false</span>
+<span class="h">---</span>
+
+Use JPA for all database operations.
+No raw SQL. Method length max 30 lines.
+Always add Javadoc to public methods.
+</div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:10px">Поля frontmatter</h3>
+      <div class="tableWrap">
+        <table class="frontmatter-table">
+          <thead><tr><th>Поле</th><th>Обяз.</th><th>Описание</th></tr></thead>
+          <tbody>
+            <tr><td><code>description</code></td><td class="req-yes">✓</td><td>Краткое описание правила. Используется AI для понимания когда применять.</td></tr>
+            <tr><td><code>globs</code></td><td class="req-no">—</td><td>Паттерны файлов для auto-attach. <code>[]</code> = все файлы. <code>["**/*.java"]</code> = только Java.</td></tr>
+            <tr><td><code>alwaysApply</code></td><td class="req-no">—</td><td><code>true</code> — правило ВСЕГДА в context независимо от файлов. <code>false</code> — только при match.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout" style="margin-top:12px">
+        <b>Naming convention:</b> называй файлы описательно: <code>no-secrets.mdc</code>, <code>java-standards.mdc</code>, <code>pr-checklist.mdc</code>. Не <code>rule1.mdc</code>.
+      </div>
+      <div class="callout warn" style="margin-top:8px">
+        <b>Лимиты:</b> в description не более 80 символов. Не все версии Cursor поддерживают сложные globs. Тестируй на реальных файлах.
+      </div>
+    </div>
+  </div>
+  <div class="platform-split" style="margin-top:14px">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor — Rules (.mdc)</div>
+      <p style="font-size:13px">Файлы <code>.cursor/rules/*.mdc</code>. YAML frontmatter + Markdown body. Три режима активации: alwaysApply, globs, description-only.</p>
+      <div class="schema-box" style="font-size:11px">---
+description: "No secrets in commits"
+globs: []
+alwaysApply: true
+---
+Never commit API keys or .env files.</div>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code — аналоги Rules</div>
+      <p style="font-size:13px">В Claude Code «жёсткие правила» реализуются через секции CLAUDE.md + Hooks (принуждение) + settings.json (permissions).</p>
+      <div class="schema-box" style="font-size:11px"># CLAUDE.md — секция правил
+## Hard Rules
+- Never commit secrets
+- Always run tests before commit
+- No npm installs without approval
+
+# hooks.json — принуждение
+PreToolUse: проверяет перед действием</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 4 типа правил ── -->
+<section class="section">
+  <h2>4 типа Rules — как работает активация</h2>
+
+  <div class="rule-type">
+    <div class="rule-type-label">
+      <h4>Always</h4>
+      <span class="rule-pill rp-always">alwaysApply: true</span>
+      <p>Всегда в context. Независимо от файлов и задачи.</p>
+    </div>
+    <div class="rule-type-body">
+      <p><b>Когда использовать:</b> критическая политика которую агент ВСЕГДА должен соблюдать — безопасность, запреты на секреты, обязательные шаги workflow.</p>
+      <p><b>Стоимость:</b> каждый запрос потребляет токены на этот файл. Держи маленьким (&lt;100 строк).</p>
+      <div class="schema-box">alwaysApply: true
+globs: []
+<span class="c"># Пример: правило безопасности, PR-чеклист, team conventions</span></div>
+    </div>
+  </div>
+
+  <div class="rule-type">
+    <div class="rule-type-label">
+      <h4>Auto Attached</h4>
+      <span class="rule-pill rp-auto">globs: ["**/*.java"]</span>
+      <p>Включается автоматически при match с файлами в context.</p>
+    </div>
+    <div class="rule-type-body">
+      <p><b>Когда использовать:</b> language/framework-специфичные стандарты. Правило для Java файлов не нужно при работе с Python.</p>
+      <p><b>Примеры globs:</b></p>
+      <ul>
+        <li><code>["**/*.java", "**/*.kt"]</code> — Java/Kotlin файлы</li>
+        <li><code>["src/billing/**"]</code> — конкретный модуль</li>
+        <li><code>["**/*.sql"]</code> — SQL файлы</li>
+        <li><code>["**/tests/**", "**/*Test*.java"]</code> — тестовые файлы</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="rule-type">
+    <div class="rule-type-label">
+      <h4>Agent Requested</h4>
+      <span class="rule-pill rp-cond">description-only</span>
+      <p>Агент сам решает когда включить, на основе description.</p>
+    </div>
+    <div class="rule-type-body">
+      <p><b>Когда использовать:</b> специализированные гайды которые нужны только иногда — "deployment checklist", "database migration guide". Агент читает description и включает если задача релевантна.</p>
+      <p><b>Важно:</b> хороший description критичен — по нему агент решает включать ли правило.</p>
+      <div class="schema-box"><span class="c"># alwaysApply: false, globs: [] →</span>
+<span class="c"># агент сам решает на основе description</span>
+description: "Database migration checklist for schema changes"</div>
+    </div>
+  </div>
+
+  <div class="rule-type">
+    <div class="rule-type-label">
+      <h4>Manual</h4>
+      <span class="rule-pill rp-manual">@rule-name</span>
+      <p>Только когда пользователь явно упоминает через @mention.</p>
+    </div>
+    <div class="rule-type-body">
+      <p><b>Когда использовать:</b> большие гайды которые нужны редко — "архитектурный review", "security audit guide". Не засоряют context в обычной работе.</p>
+      <p><b>Использование:</b> <code>@rule-name</code> или <code>@.cursor/rules/deploy-guide.mdc</code> в чате.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Примеры реальных правил ── -->
+<section class="section">
+  <h2>Примеры реальных правил</h2>
+  <div class="grid two">
+    <div class="card">
+      <h3>Безопасность (alwaysApply)</h3>
+      <div class="schema-box" style="font-size:12px">---
+description: "Security: no secrets in code"
+alwaysApply: true
+---
+NEVER include in code or commits:
+- API keys, tokens, passwords
+- .env files with real values
+- Connection strings with credentials
+
+If asked to add such values → suggest .env
+and add .env to .gitignore first.</div>
+    </div>
+    <div class="card">
+      <h3>Java стандарты (auto-attached)</h3>
+      <div class="schema-box" style="font-size:12px">---
+description: "Java/Kotlin code standards"
+globs: ["**/*.java", "**/*.kt"]
+alwaysApply: false
+---
+- Use JPA for all DB operations, no raw SQL
+- Max method length: 30 lines
+- Public methods require Javadoc
+- Use Optional, not null returns
+- Exceptions: checked for IO, unchecked for logic</div>
+    </div>
+    <div class="card">
+      <h3>PR чеклист (alwaysApply)</h3>
+      <div class="schema-box" style="font-size:12px">---
+description: "PR creation checklist"
+alwaysApply: true
+---
+Before suggesting PR creation:
+1. Tests passing (`mvn test`)
+2. No hardcoded secrets
+3. PR description: Problem→Fix→Tests→Risk
+4. DB migration has rollback plan
+5. API changes → architecture approval</div>
+    </div>
+    <div class="card">
+      <h3>Deploy guide (manual)</h3>
+      <div class="schema-box" style="font-size:12px">---
+description: "Production deployment procedure"
+alwaysApply: false
+globs: []
+---
+# Production Deploy Checklist
+1. Feature flag OFF before deploy
+2. DB migration in separate step
+3. Canary 5% → 25% → 100%
+4. Monitor errors for 15 min each step
+5. Rollback: `kubectl rollout undo`</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Тонкости ── -->
+<section class="section">
+  <h2>Тонкости и нюансы</h2>
+
+  <div class="nuance-card nc-blue">
+    <h4>alwaysApply Rules попадают в system-prefix</h4>
+    <p>Rules с <code>alwaysApply: true</code> не живут в user-чате — IDE подмешивает их в <b>начало context window</b> вместе с platform system prompt. Для модели это ведёт себя как system instructions (роль <code>system</code> / стабильный prefix), хотя файлы лежат в <code>.cursor/rules/</code> и версионируются в git. Это не то же самое, что скрытый platform prompt: вы контролируете Rules, но не platform safety. Подробнее: <a href="prompting.html#system-instructions">System instructions</a> и карта <a href="context.html">Контекст агента</a>.</p>
+  </div>
+
+  <div class="nuance-card nc-red">
+    <h4>alwaysApply: true — не злоупотреблять</h4>
+    <p>Каждое alwaysApply правило потребляет токены при КАЖДОМ запросе. Если у тебя 5 таких правил по 200 строк — это 1000 токенов overhead на каждый вопрос, даже простой. Правило: в alwaysApply только то, что реально критично всегда. Остальное — auto-attached или manual.</p>
+  </div>
+
+  <div class="nuance-card nc-orange">
+    <h4>Конфликт Rules с AGENTS.md</h4>
+    <p>Rules имеют приоритет над AGENTS.md. Если AGENTS.md говорит "используй Maven" а rule говорит "используй Gradle для billing/" — rule побеждает. Правило: не дублируй важные правила в AGENTS.md если они уже в Rules, чтобы не создавать конфликтующие инструкции.</p>
+  </div>
+
+  <div class="nuance-card nc-purple">
+    <h4>Claude Code Hooks — жёстче чем Rules</h4>
+    <p>В Claude Code правила можно усилить через Hooks — shell-скрипты выполняющиеся до/после tool calls. Например, PreToolUse hook для <code>Bash</code> может проверять, не содержит ли команда <code>git commit</code> файлы с секретами. Hooks — это enforcement на уровне системы, не suggestion.</p>
+    <div class="schema-box" style="margin-top:8px"><span class="c"># .claude/settings.json — пример hook</span>
+{
+  "hooks": {
+    "PreToolUse": [{
+      "matcher": "Bash",
+      "hooks": [{
+        "type": "command",
+        "command": "scripts/check-secrets.sh"
+      }]
+    }]
+  }
+}</div>
+  </div>
+
+  <div class="nuance-card nc-blue">
+    <h4>Globs — подводные камни</h4>
+    <p>Glob <code>["**/*.java"]</code> матчит все Java файлы рекурсивно. Но если агент работает только с <code>pom.xml</code> — Java rule не включится. Убедись что globs покрывают реальные точки входа: включи и конфигурационные файлы (<code>pom.xml</code>, <code>build.gradle</code>) если они релевантны.</p>
+    <div class="schema-box" style="margin-top:8px"><span class="c"># Лучше для Java-проекта:</span>
+globs: ["**/*.java", "**/*.kt", "**/pom.xml", "**/build.gradle"]</div>
+  </div>
+
+  <div class="nuance-card nc-green">
+    <h4>Rules scope — только Cursor</h4>
+    <p><code>.cursor/rules/*.mdc</code> читает только Cursor Agent. Claude Code использует CLAUDE.md + Hooks + permissions в <code>.claude/settings.json</code>. Если в команде используются оба инструмента — нужно дублировать критические правила в оба формата или хранить общую истину в AGENTS.md/CLAUDE.md.</p>
+  </div>
+</section>
+
+<!-- ── Cursor vs Claude Code comparison ── -->
+<section class="section">
+  <h2>Cursor vs Claude Code — сравнение</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Аспект</th><th>Cursor Rules (.mdc)</th><th>Claude Code</th></tr></thead>
+    <tbody>
+      <tr><td>Место хранения</td><td><code>.cursor/rules/*.mdc</code></td><td>Секции CLAUDE.md + Hooks</td></tr>
+      <tr><td>Формат</td><td>YAML frontmatter + Markdown</td><td>Markdown (CLAUDE.md) + JSON (settings) + Shell (hooks)</td></tr>
+      <tr><td>Типы активации</td><td>always / auto / agent-requested / manual</td><td>Через уровень в CLAUDE.md + Hooks triggers</td></tr>
+      <tr><td>Жёсткое принуждение</td><td>alwaysApply (soft) — агент может игнорировать в теории</td><td>Hooks (hard) — shell-скрипт блокирует действие</td></tr>
+      <tr><td>File-specific</td><td>globs паттерны</td><td>Условные блоки в CLAUDE.md</td></tr>
+      <tr><td>Permissions</td><td>Настройки в Cursor UI</td><td><code>.claude/settings.json</code> — allow/deny lists</td></tr>
+      <tr><td>Документация</td><td><a href="https://docs.cursor.com/context/rules-for-ai" target="_blank">docs.cursor.com/context/rules-for-ai</a></td><td><a href="https://docs.anthropic.com/en/docs/claude-code/settings" target="_blank">docs.anthropic.com/claude-code/settings</a></td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><b>Главное отличие:</b> Cursor Rules — это YAML+Markdown файлы с 4 типами активации, интегрированные в IDE. Claude Code не имеет native .mdc: политика прописывается в CLAUDE.md, а жёсткое принуждение — через Hooks (shell-скрипты в settings.json), которые работают на OS-уровне.</div>
+</section>
+
+<!-- ── Best practices ── -->
+<section class="section">
+  <h2>Best practices создания Rules</h2>
+  <div class="grid">
+    <div class="card bg-green">
+      <h3>Структура правила</h3>
+      <ul>
+        <li>Начинай с <b>NEVER</b> / <b>ALWAYS</b> — агент чётко понимает директиву</li>
+        <li><b>Краткость</b>: 20-50 строк идеал, не роман</li>
+        <li>Один файл — одна тема: <code>no-secrets.mdc</code>, не <code>all-rules.mdc</code></li>
+        <li>Description ≤ 80 символов, конкретный: "Java DB: no raw SQL"</li>
+        <li>Примеры помогают: покажи плохой и хороший вариант</li>
+      </ul>
+    </div>
+    <div class="card bg-red">
+      <h3>Анти-паттерны</h3>
+      <ul>
+        <li>God rule — одно правило на всё → агент путается</li>
+        <li>Все правила как alwaysApply → token overhead</li>
+        <li>Расплывчатые инструкции: "пиши хороший код" — не правило</li>
+        <li>Противоречие между разными .mdc файлами</li>
+        <li>Дублировать то же самое что есть в AGENTS.md</li>
+      </ul>
+    </div>
+    <div class="card bg-orange">
+      <h3>Для команды</h3>
+      <ul>
+        <li>Держи Rules в репо (версионируются как код)</li>
+        <li>PR review для изменений в rules/</li>
+        <li>Документируй в AGENTS.md: "ключевые правила в .cursor/rules/"</li>
+        <li>Периодически аудит: устарели ли правила?</li>
+        <li>Тестируй что правила реально работают на примерах</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Вопросы по уровням</h2>
+
+  <div class="qlevel-group">Junior — 10 вопросов</div>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое Rule в Cursor?</summary>
+<div class="inside">Rule — файл <code>.cursor/rules/*.mdc</code> с YAML frontmatter и Markdown-телом. Содержит инструкции для агента на уровне политики: стандарты кода, ограничения, соглашения команды. Cursor автоматически читает все файлы из <code>.cursor/rules/</code> при запуске сессии.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое .mdc формат файла?</summary>
+<div class="inside">Markdown-файл с YAML frontmatter. Пример структуры: <code>---\ndescription: "Enforce Java style"\nglobs: ["**/*.java"]\nalwaysApply: false\n---\n# Правило\nВсегда используй JPA, не raw SQL.</code> Frontmatter определяет когда и как Rule применяется; тело — сами инструкции в свободном Markdown.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое <code>alwaysApply: true</code> в frontmatter?</summary>
+<div class="inside">Директива, при которой Rule включается в каждый запрос к агенту независимо от открытых файлов и контекста. Потребляет токены при каждом вызове, поэтому используется только для критически важных политик (безопасность, обязательные стандарты). Остальные правила лучше переводить на auto-attached (globs).</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое auto-attached rule?</summary>
+<div class="inside">Rule с заполненным полем <code>globs</code> (например <code>["**/*.py"]</code>). Cursor автоматически добавляет его в контекст, когда в диалоге открыты файлы, совпадающие с паттернами. Более токено-эффективен чем alwaysApply: срабатывает только когда реально нужен.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Как создать Rule в Cursor?</summary>
+<div class="inside">Создай файл в директории <code>.cursor/rules/</code> с расширением <code>.mdc</code>. Добавь YAML frontmatter (description, globs или alwaysApply). Напиши инструкции в Markdown-теле. Cursor подхватит файл автоматически — перезапуск не нужен. Команда: Cursor → Settings → Rules → New Rule, или создай файл вручную.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Где хранятся Rules в Cursor?</summary>
+<div class="inside">В директории <code>.cursor/rules/</code> в корне проекта. Это обычная папка в git-репозитории, поэтому Rules версионируются вместе с кодом. Каждый разработчик, клонировавший репо, автоматически получает все правила команды.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое frontmatter в .mdc файле?</summary>
+<div class="inside">Блок YAML в начале файла, обёрнутый в <code>---</code>. Три ключевых поля: <b>description</b> — для кого этот Rule (используется agent-requested); <b>globs</b> — список паттернов файлов для auto-attach; <b>alwaysApply</b> — true/false, включать ли всегда. Без frontmatter Rule трактуется как manual (только по явному @mention).</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Чем Rule отличается от AGENTS.md?</summary>
+<div class="inside">Rule — <b>политика</b>: постоянное ограничение или стандарт («никогда не коммить секреты», «всегда использовать JPA»). AGENTS.md — <b>контекст и workflow</b>: описание проекта, структура, что избегать в этом конкретном репо. Приоритет: Rules > AGENTS.md при конфликте.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое agent-requested rule?</summary>
+<div class="inside">Rule с непустым <code>description</code> и <code>alwaysApply: false</code> (без globs). Агент читает descriptions всех таких Rules и сам решает, запросить ли конкретный Rule для текущей задачи. Description должен быть ≤80 символов и чётко объяснять когда этот Rule нужен.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое manual rule?</summary>
+<div class="inside">Rule без frontmatter или с пустым description/globs/alwaysApply. Применяется только при явном <code>@rule-name</code> в чате. Полезно для специализированных инструкций, которые нужны редко и в очень конкретном контексте. Не попадает в context автоматически — никакого token overhead.</div></details>
+
+  <div class="qlevel-group">Middle — 10 вопросов</div>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда использовать alwaysApply vs globs?</summary>
+<div class="inside">alwaysApply: true — только для критической политики которая должна соблюдаться абсолютно всегда (no-secrets, обязательный стиль всего кода). Globs — для языко- или модульно-специфичных правил (Java-стиль только для *.java, frontend-соглашения для src/components/**). alwaysApply = token overhead × N запросов; globs = токены тратятся только при работе с нужными файлами.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Каков приоритет Rules относительно AGENTS.md и других слоёв?</summary>
+<div class="inside">Полная иерархия по убыванию приоритета: <b>Hooks (OS) > System Prompt > Rules (alwaysApply) > Rules (auto-attached) > AGENTS.md > current chat > Memory > Skills</b>. При конфликте: более высокий уровень побеждает. Rules — политика, AGENTS.md — контекст, Claude Code Hooks — абсолютный enforcement на уровне системы.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как оптимизировать token overhead от alwaysApply Rules?</summary>
+<div class="inside">1) Переводи тематически узкие Rules с alwaysApply на auto-attached (globs). 2) Объединяй связанные alwaysApply-правила в один файл вместо 10 отдельных. 3) Держи тело alwaysApply-правила лаконичным — только суть, без примеров. 4) Правило: не более 3–5 alwaysApply Rules; остальные — auto-attached или agent-requested.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как Claude Code заменяет Cursor Rules если нет .mdc?</summary>
+<div class="inside">В Claude Code нет .mdc файлов. Аналоги: (1) Секции MUST/NEVER/ALWAYS в <code>CLAUDE.md</code> — мягкое текстовое принуждение; (2) <b>Hooks</b> в <code>.claude/settings.json</code> — PreToolUse/PostToolUse shell-скрипты для жёсткого enforcement; (3) <b>Permissions</b> в settings.json — allow/deny для конкретных tools. Hooks дают настоящее принуждение: агент физически не может выполнить заблокированное действие.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как писать эффективный description для agent-requested Rule?</summary>
+<div class="inside">Description читается агентом при каждом запросе для принятия решения «применять ли». Требования: ≤80 символов, конкретный (плохо: «code style», хорошо: «Java: always JPA, no raw SQL, no Lombok»), написан в третьем лице или как триггер («Use when editing Java files»). Расплывчатый description = агент не знает когда запрашивать Rule = Rule никогда не применяется.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Что такое принцип single responsibility для Rules?</summary>
+<div class="inside">Один .mdc файл — одна тема. <code>no-secrets.mdc</code>, <code>java-style.mdc</code>, <code>db-access.mdc</code> — три отдельных файла, не один. Это позволяет: применять только нужные (auto-attached по globs), легко обновлять одно правило не трогая остальные, избегать конфликтов. «God rule» с 50 инструкциями — антипаттерн: agent confusion + максимальный token overhead.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как правильно версионировать Rules в git?</summary>
+<div class="inside">Rules хранятся в <code>.cursor/rules/</code> — обычная директория, не в .gitignore. PR включает изменение Rules → code review. Рекомендации: добавить дату изменения в description; owner per .mdc (кто отвечает); CHANGELOG для критических Rules; CI-проверка что обязательные Rules присутствуют. Новый разработчик клонирует репо → Rules сразу активны.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как диагностировать конфликт между двумя Rules?</summary>
+<div class="inside">Признаки: агент выдаёт непоследовательное поведение, «балансирует» между двумя инструкциями. Диагностика: (1) перечисли все alwaysApply Rules; (2) ищи противоречия (краткость vs подробность, разные стили); (3) нет deterministic winner для Rules одного уровня. Решение: объедини противоречащие правила в один файл с условиями или удали менее важное.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как использовать Rules для командных стандартов кодирования?</summary>
+<div class="inside">Rules — централизованный источник истины для всей команды. Примеры: <code>java-style.mdc</code> (форматирование, naming), <code>test-conventions.mdc</code> (AAA-паттерн, naming тестов), <code>no-secrets.mdc</code> (никаких паролей в коде). Преимущества перед wiki/README: Rules применяются автоматически, не требуют от разработчика помнить о правилах.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как проверить что Rule работает как ожидается?</summary>
+<div class="inside">1) Спроси агента напрямую: «Какие Rules применяются к этому файлу?». 2) Создай тестовый кейс: попроси агента сделать то, что Rule должен запрещать. 3) Для auto-attached: открой matching файл и проверь что Rule появляется в context. 4) Проверь YAML frontmatter на валидность (нет опечаток в ключах). 5) Убедись что файл в <code>.cursor/rules/</code>, не в другой директории.</div></details>
+
+  <div class="qlevel-group">Senior — 5 вопросов</div>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как спроектировать архитектуру Rules для крупного проекта с несколькими командами?</summary>
+<div class="inside">Многоуровневая архитектура: (1) <b>Глобальные Rules</b> (alwaysApply) — security, compliance, обязательные для всех: <code>no-secrets.mdc</code>, <code>no-direct-prod.mdc</code>. (2) <b>Доменные Rules</b> (auto-attached по globs) — стиль для Java/Python/frontend. (3) <b>Модульные Rules</b> (agent-requested) — специфика платёжного модуля, DB-доступа. Принципы: owner per file, quarterly audit, не более 5 alwaysApply, один файл = одна ответственность.</div></details>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как диагностировать ситуацию когда агент систематически нарушает Rule?</summary>
+<div class="inside">Причины по убыванию вероятности: (1) Rule не попадает в context (не alwaysApply, globs не совпадают, файл не в .cursor/rules/); (2) Lost in the middle — Rule есть в context, но тонет среди большого количества токенов; (3) Конфликт с другим Rule или с инструкцией пользователя; (4) Формулировка правила неоднозначна. Диагностика: спроси агента воспроизвести Rule своими словами — если не может, Rule не в context.</div></details>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Что такое эффект «lost in the middle» для Rules и как с ним бороться?</summary>
+<div class="inside">LLM хуже обрабатывает информацию из середины длинного контекста. Если Rules занимают 5000+ токенов и расположены в середине context window — агент может «не видеть» отдельные правила при длинной задаче. Решение: (1) минимизируй количество alwaysApply Rules; (2) критические правила выноси в начало (Cursor использует начало system prompt); (3) для абсолютно критичных правил — дублируй в Hooks (Claude Code).</div></details>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Что такое Rules inheritance паттерн и как реализовать?</summary>
+<div class="inside">Паттерн: базовые Rules + специализированные, переопределяющие базу. В Cursor нет встроенного наследования, реализуется через: (1) <code>base-style.mdc</code> (alwaysApply) + <code>java-style.mdc</code> (globs *.java) — специфика добавляется поверх базы; (2) явные ссылки в теле Rule: «расширяет base-style.mdc, добавляет...». Риск: при конфликте «базы» и «специализации» — нет deterministic winner, нужно явно прописать приоритет.</div></details>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Что такое Rules debt и как проводить аудит?</summary>
+<div class="inside">Rules debt — накопленные устаревшие, конфликтующие или избыточные правила. Симптомы: агент следует неактуальному правилу; два Rules противоречат друг другу; 20 alwaysApply Rules при работающих 3. Аудит (раз в квартал): (1) список всех .mdc — проверить актуальность каждого; (2) поиск конфликтов (grep по похожим темам); (3) token cost analysis — сколько токенов потребляет набор Rules; (4) sunsetting: помечай устаревшие <code># DEPRECATED</code> перед удалением.</div></details>
+
+  <div class="qlevel-group">Lead — 5 вопросов</div>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как выстроить governance Rules в команде?</summary>
+<div class="inside">Governance model: (1) <b>Owner per .mdc</b> — каждый файл имеет ответственного; (2) <b>PR review для Rules</b> — изменения в .cursor/rules/ проходят review как код; (3) <b>Обязательные Rules</b> задокументированы в AGENTS.md с объяснением зачем; (4) <b>Quarterly audit</b> — встреча команды, проверка актуальности всех Rules; (5) <b>Новые Rules</b> — только через PR, с обоснованием и примером нарушения которое хотим предотвратить.</div></details>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как использовать Rules для onboarding новых разработчиков?</summary>
+<div class="inside">Rules — автоматический учитель для новичков. Стратегия: (1) <code>onboarding.mdc</code> (alwaysApply, временный) — «ты в новом проекте, ключевые соглашения: ...»; (2) Style Rules автоматически корректируют ошибки новичков без manual review; (3) AGENTS.md ссылается на Rules как источник стандартов; (4) onboarding checklist: «клонировал репо → .cursor/rules/ должны загрузиться → проверь что видишь N правил». Результат: снижение onboarding friction.</div></details>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как организовать PR review для изменений в Rules?</summary>
+<div class="inside">Rules = code. Изменения в .cursor/rules/ требуют PR review. Checklist для reviewer: (1) новое правило не конфликтует с существующими; (2) тип Rule соответствует нужде (зачем alwaysApply, а не globs?); (3) description ≤80 символов, конкретный; (4) изменение протестировано — агент ведёт себя как ожидается; (5) owner указан. Рекомендация: назначь Rule-reviewer (Tech Lead или Principal Engineer).</div></details>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> В чём разница между командными и индивидуальными Rules? Как управлять обоими?</summary>
+<div class="inside">Командные Rules: в <code>.cursor/rules/</code> в репо, версионируются, применяются ко всем → изменения через PR. Индивидуальные: в Cursor Settings → Rules (personal) или локальный .mdc в .gitignore → не влияют на команду. Cursor Business: Team Rules через admin panel — не могут быть отменены разработчиком. Правило: личные предпочтения — individual; кодовые стандарты — team; compliance — Team Rules в Cursor Business или Hooks.</div></details>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как найти баланс между enforcement через Rules и доверием агенту?</summary>
+<div class="inside">Over-restricted Rules → агент не может делать разумные задачи; Under-restricted → нарушения стандартов. Баланс: (1) Rules запрещают <b>конкретно опасные</b> действия (секреты, direct DB в prod), а не ограничивают общую свободу; (2) правило «targeted prohibition»: не «можно только X», а «нельзя конкретно Y»; (3) тестируй каждое правило — не мешает ли оно легитимным задачам; (4) Rules — living documents: если правило блокирует valid use case, обнови его.</div></details>
+
+  <div class="qlevel-group">Architect — 5 вопросов</div>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как Rules вписываются в многослойную архитектуру AI-системы?</summary>
+<div class="inside">Rules — слой <b>policy & conventions</b> в AI-стеке: ниже System Prompt (задаёт роль агента), выше AGENTS.md (контекст проекта). В архитектуре: [Hardware] → [OS] → [Claude Code Hooks] → [System Prompt] → [Rules (alwaysApply)] → [Rules (auto-attached)] → [AGENTS.md] → [Chat context]. Rules — единственный слой управляемый командой разработки через git. Правильное применение: policy в Rules, workflow в AGENTS.md, hard enforcement в Hooks.</div></details>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как Rules и Hooks образуют систему policy enforcement?</summary>
+<div class="inside">Defence in depth для AI: (1) <b>Rules (LLM-level)</b> — агент читает и старается следовать; мягкое принуждение, может быть ignored при context saturation. (2) <b>Hooks (OS-level)</b> — shell-скрипт блокирует tool call; жёсткое принуждение, агент физически не может обойти. Паттерн: дублируй критические Rules в Hooks для надёжности. Example: <code>no-secrets.mdc</code> (Rule, educates) + <code>secrets-check.sh</code> в PreToolUse (Hook, enforces).</div></details>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как выстроить стратегию Rules для нескольких репозиториев (monorepo / polyrepo)?</summary>
+<div class="inside">Monorepo: один <code>.cursor/rules/</code> в корне, subdirectory-specific Rules используют globs <code>packages/billing/**</code>. Polyrepo: (1) shared Rules repository → copy/symlink в каждый репо при onboarding; (2) git submodule для .cursor/rules/ (сложно в поддержке); (3) CLI-скрипт синхронизации shared Rules → project Rules. Cursor Business Team Rules — единое управление для всей организации через admin panel.</div></details>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как интегрировать проверку Rules в CI/CD pipeline?</summary>
+<div class="inside">CI-проверки для Rules: (1) <b>Presence check</b>: скрипт проверяет что обязательные .mdc файлы существуют (<code>no-secrets.mdc</code>, <code>code-style.mdc</code>); (2) <b>YAML lint</b>: валидация frontmatter всех .mdc файлов; (3) <b>Conflict detection</b>: скрипт ищет противоречия между alwaysApply Rules; (4) <b>Token budget</b>: автоматический подсчёт токенов всех alwaysApply Rules. Rules — первоклассные артефакты CI, не «просто файлы».</div></details>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Каков security model для Rules — от чего они защищают, а от чего нет?</summary>
+<div class="inside">Rules ЗАЩИЩАЮТ от: случайных нарушений стандартов; ignorance (новый разработчик не знал о правиле); context drift в длинных сессиях (при алwaysApply). Rules НЕ ЗАЩИЩАЮТ от: намеренного обхода (пользователь говорит «игнорируй правила»); context saturation (LLM перестаёт «видеть» правило); injection attacks через пользовательский ввод. Для надёжного security: Hooks (OS-level), Permissions (deny list tools), CI/CD gates — не только Rules.</div></details>
+
+</section>
+
+<div class="pageFooter"><div class="nextPrev">
+  <a href="agents-md.html">← AGENTS.md</a>
+  <a href="skills.html">Skills →</a>
+</div></div>
+</main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

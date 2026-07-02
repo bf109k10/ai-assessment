@@ -1,0 +1,90 @@
+      <div class="topic-grid">
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon green-text">🔎</div><div><h3>RAG / Retrieval-Augmented Generation</h3><div class="tagline">Поиск релевантных знаний и добавление их в контекст</div></div></div>
+          <div class="topic-purpose"><b>Для чего это:</b> чтобы агент отвечал по актуальным фактам из документов/кода/wiki, а не по памяти модели.</div>
+          <h4>Простыми словами</h4>
+          <p>RAG — это когда модель не пытается всё помнить сама, а сначала ищет нужные фрагменты в документах, коде, wiki, базе знаний или тикетах, а потом использует найденное для ответа.</p>
+          <div class="mini-box"><b>Когда использовать</b><ul><li>Нужно ответить по документации.</li><li>Нужно найти API/класс/метод в коде.</li><li>Нужно подтянуть knowledge base.</li><li>Нужно уменьшить hallucination.</li></ul></div>
+          <h4>Важно для assessment</h4>
+          <p>RAG отвечает за факты, но не за правила поведения. Если RAG нашёл старую инструкцию, а Rules говорят другое — Rules выше. Если нужно текущее состояние системы, лучше проверить через MCP/tools.</p>
+        </article>
+
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon orange-text">🧠</div><div><h3>Memory Bank</h3><div class="tagline">Долговременная память проекта, пользователя или workflow</div></div></div>
+          <div class="topic-purpose"><b>Для чего это:</b> чтобы агент помнил принятые решения и не переспрашивал одно и то же между сессиями.</div>
+          <h4>Простыми словами</h4>
+          <p>Memory Bank — это сохранённые устойчивые знания: какие решения уже приняли, какие правила у проекта, какие предпочтения у пользователя, какие команды работают, какие подходы не подходят.</p>
+          <div class="mini-box"><b>Когда использовать</b><ul><li>Нужна continuity между сессиями.</li><li>Есть долгий проект.</li><li>Нужно помнить решения.</li><li>Нужно не спрашивать одно и то же.</li></ul></div>
+          <h4>Memory Bank vs RAG</h4>
+          <p>Memory Bank — это curated память о важных вещах. RAG — поиск по источникам. Memory помогает помнить “что мы решили”, RAG помогает найти “что написано в документации”.</p>
+        </article>
+
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon teal-text">🛠</div><div><h3>MCP / Tools</h3><div class="tagline">Доступ к внешним системам, данным и действиям</div></div></div>
+          <div class="topic-purpose"><b>Для чего это:</b> чтобы агент мог не только рассуждать, но и проверять/менять реальное состояние систем.</div>
+          <h4>Простыми словами</h4>
+          <p>MCP и tools дают агенту возможность не только рассуждать, но и действовать: открыть файл, сходить в API, прочитать Jira, проверить CI, посмотреть логи, выполнить поиск.</p>
+          <div class="mini-box"><b>Когда использовать</b><ul><li>Нужно проверить реальное состояние.</li><li>Нужно прочитать файл/лог/тикет.</li><li>Нужно выполнить действие.</li><li>Нужно получить свежие данные.</li></ul></div>
+          <h4>Важно</h4>
+          <p>MCP не делает агента “умнее” сам по себе. Он даёт доступ к данным и действиям. Качество зависит от того, какие tools доступны, какие права есть и как агент интерпретирует результат.</p>
+        </article>
+
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon orange-text">✅</div><div><h3>Checkpoint</h3><div class="tagline">Структурный снимок состояния задачи</div></div></div>
+          <div class="topic-purpose"><b>Для чего это:</b> чтобы не потерять цель, решения и next steps при длинной задаче или перед сжатием контекста.</div>
+          <h4>Простыми словами</h4>
+          <p>Checkpoint — это не просто summary, а структурированная точка сохранения: цель, что уже сделано, какие решения приняты, какие есть риски и что делать дальше.</p>
+          <div class="split">
+            <div class="mini-box"><b>Когда использовать</b><ul><li>Длинная задача.</li><li>Переход между сессиями.</li><li>Нужно передать работу другому агенту.</li><li>Перед context compression.</li></ul></div>
+            <div class="mini-box"><b>Что включать</b><ul><li>Цель.</li><li>Done / not done.</li><li>Decisions.</li><li>Risks / blockers.</li><li>Next steps.</li></ul></div>
+          </div>
+          <h4>Checkpoint vs Summary</h4>
+          <p>Summary просто кратко пересказывает. Checkpoint сохраняет состояние работы так, чтобы можно было продолжить без потери логики.</p>
+        </article>
+
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon purple-text">🧾</div><div><h3>Summary / Compression</h3><div class="tagline">Сжатие истории, когда контекст переполняется</div></div></div>
+          <div class="topic-purpose"><b>Для чего это:</b> чтобы уместить длинную историю чата в контекстное окно без потери сути.</div>
+          <h4>Простыми словами</h4>
+          <p>Compression — это уменьшение объёма контекста. Summary — один из способов compression: длинный диалог превращается в краткое содержание.</p>
+          <div class="split">
+            <div class="mini-box"><b>Когда использовать</b><ul><li>Длинный чат.</li><li>Много деталей и файлов.</li><li>Нужно продолжить позже.</li><li>Окно контекста ограничено.</li></ul></div>
+            <div class="mini-box"><b>Риски</b><ul><li>Теряются нюансы.</li><li>Может исказить решение.</li><li>Может забыть edge case.</li><li>Не заменяет исходные файлы.</li></ul></div>
+          </div>
+          <h4>Лучший формат</h4>
+          <p>Для рабочих задач лучше использовать structured checkpoint: цель, контекст, сделано, решения, команды, риски, next steps.</p>
+        </article>
+
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon blue-text">🎓</div><div><h3>Skills</h3><div class="tagline">Инструкции “как выполнять” типовые задачи</div></div></div>
+          <div class="topic-purpose"><b>Для чего это:</b> чтобы агент выполнял повторяемую задачу по проверенному сценарию, а не изобретал заново.</div>
+          <h4>Простыми словами</h4>
+          <p>Skill — это специализированная инструкция или playbook. Например: как создавать PDF, как делать code review, как анализировать лог, как оформлять отчёт.</p>
+          <div class="mini-box"><b>Когда использовать</b><ul><li>Повторяемая задача.</li><li>Нужен шаблон выполнения.</li><li>Нужно снизить хаос.</li><li>Нужны best practices.</li></ul></div>
+          <h4>Skill vs Rule</h4>
+          <p>Rule говорит “что можно/нельзя”. Skill говорит “как делать”. Если Skill противоречит Rule, Skill нужно адаптировать.</p>
+        </article>
+
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon red-text">📄</div><div><h3>AGENTS.md</h3><div class="tagline">Проектная инструкция для агента</div></div></div>
+          <div class="topic-purpose"><b>Для чего это:</b> чтобы агент знал правила и workflow конкретного репозитория без повторных объяснений.</div>
+          <h4>Простыми словами</h4>
+          <p>AGENTS.md — это файл, который объясняет агенту, как работать в конкретном репозитории: роль, структура проекта, команды, тесты, ограничения, workflow.</p>
+          <div class="split">
+            <div class="mini-box"><b>Что класть</b><ul><li>Команды сборки/тестов.</li><li>Архитектурные правила.</li><li>Definition of Done.</li><li>Как оформлять изменения.</li></ul></div>
+            <div class="mini-box"><b>Что не класть</b><ul><li>Секреты и токены.</li><li>Большие логи.</li><li>Огромные docs.</li><li>Часто меняющиеся данные.</li></ul></div>
+          </div>
+          <h4>AGENTS.md vs Rules</h4>
+          <p>AGENTS.md — общий проектный workflow. Rules — жёсткие ограничения или стандарты. Они могут пересекаться, но лучше архитектурно разделять.</p>
+        </article>
+
+        <article class="topic-card">
+          <div class="topic-head"><div class="topic-icon navy-text">👥</div><div><h3>Subagents</h3><div class="tagline">Делегирование подзадач специализированным агентам</div></div></div>
+          <div class="topic-purpose"><b>Для чего это:</b> чтобы разгрузить контекст главного агента, делегировав часть работы специализированному агенту.</div>
+          <h4>Простыми словами</h4>
+          <p>Subagent — отдельный агент или режим, которому главный агент передаёт часть задачи: найти причину, проверить гипотезу, собрать факты, сделать review.</p>
+          <div class="mini-box"><b>Когда полезны</b><ul><li>Сложная задача.</li><li>Параллельный анализ.</li><li>Нужна специализация.</li><li>Нужно разделить поиск и решение.</li></ul></div>
+          <h4>Главный принцип</h4>
+          <p>Subagent не заменяет ответственность главного агента. Он возвращает findings, а главный агент объединяет, проверяет конфликт с Rules/AGENTS.md и принимает финальное решение.</p>
+        </article>
+      </div>

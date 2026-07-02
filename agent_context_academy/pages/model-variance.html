@@ -1,0 +1,390 @@
+﻿<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Почему одна модель отвечает по-разному</title><link rel="stylesheet" href="../assets/style.css"/></head><body><div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>
+    <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html" class="active"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div>
+  <div class="progressBox"><b>Формула</b><p class="sourceNote">Ответ = модель × harness × контекст × температура × sampling × permissions</p></div>
+</aside>
+
+<main class="main">
+<section class="hero">
+  <div class="kicker">Agent Context Academy</div>
+  <h2>Почему одна и та же модель отвечает по-разному</h2>
+  <p>Temperature, sampling, harness, context quality, rules, permissions, compaction, tool order — все факторы, которые делают Claude в Cursor не равным Claude в API не равным Claude в claude.ai.</p>
+  <div class="heroActions">
+    <a class="btn primary" href="home.html">На главную</a>
+    <a class="btn" href="assessment.html">К assessment</a>
+    <button class="markDone">Отметить страницу изученной</button>
+  </div>
+</section>
+
+<!-- Main factors -->
+<section class="section">
+  <h2>Все факторы вариации — полная карта</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Фактор</th><th>Что делает</th><th>Диапазон влияния</th><th>Пример</th></tr></thead>
+    <tbody>
+      <tr><td><b>Temperature</b></td><td>Степень случайности в выборе следующего токена</td><td>Очень высокое</td><td>T=0 → детерминированный; T=1 → творческий; T=2 → хаотичный</td></tr>
+      <tr><td><b>Top-P / Top-K sampling</b></td><td>Ограничивает выбор из топ-P% или топ-K токенов</td><td>Высокое</td><td>Top-P=0.9 → только из 90% вероятностной массы</td></tr>
+      <tr><td><b>System prompt (harness)</b></td><td>Роль, ограничения, стиль от платформы</td><td>Очень высокое</td><td>Cursor system prompt ≠ claude.ai system prompt</td></tr>
+      <tr><td><b>Rules / AGENTS.md</b></td><td>Проектные ограничения и workflow</td><td>Высокое</td><td>Rule "не меняй API" кардинально меняет ответ</td></tr>
+      <tr><td><b>Context качество</b></td><td>Какие файлы, chunks, memory попали в контекст</td><td>Очень высокое</td><td>Устаревший chunk → устаревший ответ</td></tr>
+      <tr><td><b>Context длина / compaction</b></td><td>Сжатие длинной истории теряет детали</td><td>Высокое</td><td>После compaction модель "забыла" решение из начала</td></tr>
+      <tr><td><b>Tool order</b></td><td>Порядок определения tools влияет на выбор</td><td>Среднее</td><td>Первый tool чаще выбирается при прочих равных</td></tr>
+      <tr><td><b>Permissions</b></td><td>Что разрешено: read/write/execute</td><td>Среднее</td><td>Subagent без write permission ≠ main agent</td></tr>
+      <tr><td><b>Model version</b></td><td>Claude 3.5 ≠ Claude 3 ≠ Claude 3.7</td><td>Высокое</td><td>Разные веса, разное поведение на одном промпте</td></tr>
+      <tr><td><b>RAG качество</b></td><td>Что нашёл retriever, насколько релевантно</td><td>Высокое</td><td>Плохой chunking → нерелевантные chunks → плохой ответ</td></tr>
+      <tr><td><b>Memory staleness</b></td><td>Устаревшая memory вводит в заблуждение</td><td>Среднее</td><td>Memory из 2 месяцев назад о старой архитектуре</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- Temperature deep dive -->
+<section class="section">
+  <h2>Temperature — самый частый вопрос</h2>
+  <p class="sectionIntro">Temperature контролирует "случайность" модели. Это не умность — это насколько агрессивно модель выбирает наиболее вероятный следующий токен.</p>
+  <div class="grid">
+    <div class="card bg-green">
+      <h3>Temperature = 0</h3>
+      <p><b>Детерминированный.</b> Всегда выбирается токен с максимальной вероятностью. Один и тот же промпт → всегда тот же ответ (при прочих равных).</p>
+      <p><b>Когда:</b> tool use, структурированный вывод, код, анализ, агентные задачи. Нужна предсказуемость.</p>
+    </div>
+    <div class="card bg-blue">
+      <h3>Temperature = 0.5–0.7</h3>
+      <p><b>Балансированный.</b> Немного случайности. Ответы варьируются, но остаются coherent. Хорошо для объяснений, документации, summary.</p>
+      <p><b>Когда:</b> объяснения, документация, резюмирование, общение с пользователем.</p>
+    </div>
+    <div class="card bg-orange">
+      <h3>Temperature = 1.0+</h3>
+      <p><b>Творческий.</b> Высокая случайность, разнообразные ответы, может идти нестандартными путями. Выше 1.5 — часто бессмысленный вывод.</p>
+      <p><b>Когда:</b> brainstorming, творческое письмо, генерация идей. Не для кода или анализа.</p>
+    </div>
+    <div class="card">
+      <h3>Что такое sampling под капотом</h3>
+      <p>Модель вычисляет softmax-вероятности для всех токенов словаря. Temperature делит логиты перед softmax:</p>
+      <pre class="code"># Low temperature → sharper distribution
+logits / 0.1 → almost all probability on top token
+
+# High temperature → flatter distribution  
+logits / 2.0 → probability spread across many tokens</pre>
+      <p>Top-P (nucleus) sampling дополнительно ограничивает: берём только токены из минимального набора, покрывающего P% вероятности.</p>
+    </div>
+  </div>
+  <div class="callout warn"><b>Assessment trap:</b> "Temperature = точность модели?" — Нет. Temperature = степень случайности в sampling. Высокая temperature не делает модель умнее — она делает её более непредсказуемой. Для агентов с tool use рекомендуется temperature = 0–0.2.</div>
+</section>
+
+<!-- Harness differences -->
+<section class="section">
+  <h2>Harness: одна модель — разные оболочки</h2>
+  <p class="sectionIntro">Claude-3.5-Sonnet в Cursor ≠ Claude-3.5-Sonnet в claude.ai ≠ Claude-3.5-Sonnet через API напрямую. Причина — harness: обёртка вокруг модели.</p>
+  <div class="grid">
+    <div class="card bg-blue">
+      <h3>Cursor (Agent mode)</h3>
+      <ul>
+        <li>Cursor system prompt с инструкциями по работе с кодом</li>
+        <li>Автоматически добавляет Rules (.mdc)</li>
+        <li>Добавляет AGENTS.md в контекст</li>
+        <li>Tool definitions: read_file, edit_file, run_command</li>
+        <li>Compaction при длинном контексте</li>
+        <li>@mention файлов = RAG из репозитория</li>
+      </ul>
+    </div>
+    <div class="card bg-purple">
+      <h3>claude.ai</h3>
+      <ul>
+        <li>Свой system prompt с safety guidelines</li>
+        <li>Нет доступа к файловой системе</li>
+        <li>Web search (если включён)</li>
+        <li>Projects = quasi-memory через project knowledge</li>
+        <li>Artifacts для кода и документов</li>
+        <li>Разные tools чем Cursor</li>
+      </ul>
+    </div>
+    <div class="card bg-green">
+      <h3>Claude API (raw)</h3>
+      <ul>
+        <li>Минимальный system prompt (или свой)</li>
+        <li>Полный контроль над temperature, top-p</li>
+        <li>Явная разметка prompt caching</li>
+        <li>Полный контроль tool definitions</li>
+        <li>Нет автоматического RAG</li>
+        <li>Ответы наиболее "чистые" от harness</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout"><b>Ключевой вывод:</b> Если Claude отвечает по-другому чем вы ожидали — сначала проверьте harness: какие Rules активны, что в AGENTS.md, какой system prompt, какие tools доступны, был ли compaction.</div>
+</section>
+
+<!-- Context quality -->
+<section class="section">
+  <h2>Context quality — самый недооцениваемый фактор</h2>
+  <div class="grid two">
+    <div class="card danger">
+      <h3>Плохой контекст → плохой ответ</h3>
+      <ul>
+        <li>Устаревший RAG chunk (старая документация)</li>
+        <li>Нерелевантный файл в @mention (шум)</li>
+        <li>Stale memory (решение 2 месяца назад)</li>
+        <li>Сжатая история потеряла ключевые детали</li>
+        <li>Слишком длинный контекст — lost in the middle</li>
+        <li>Конфликтующие инструкции из разных источников</li>
+      </ul>
+    </div>
+    <div class="card good">
+      <h3>Хороший контекст → хороший ответ</h3>
+      <ul>
+        <li>Актуальные файлы через @mention</li>
+        <li>Свежий RAG с relevantными chunks</li>
+        <li>Checkpoint вместо длинной истории</li>
+        <li>Структурированный AGENTS.md</li>
+        <li>Четкие Rules без конфликтов</li>
+        <li>Важное в начале или конце (не в середине)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Compaction -->
+<section class="section">
+  <h2>Compaction — скрытый убийца качества</h2>
+  <p class="sectionIntro">Когда контекст переполняется, IDE автоматически сжимает историю. Это сохраняет работоспособность, но теряет детали.</p>
+  <div class="grid two">
+    <div class="card">
+      <h3>Что происходит при compaction</h3>
+      <ol>
+        <li>Context window заполняется</li>
+        <li>IDE/platform делает summary старых сообщений</li>
+        <li>Детальные ответы и решения заменяются краткими заметками</li>
+        <li>Модель "забывает" edge cases, договорённости, контекст ошибок</li>
+      </ol>
+      <div class="callout warn">Если модель "изменила мнение" или "забыла" что вы договорились — скорее всего был compaction.</div>
+    </div>
+    <div class="card bg-green">
+      <h3>Защита от compaction</h3>
+      <ul>
+        <li><b>Checkpoint:</b> создавайте структурный снимок перед длинной работой</li>
+        <li><b>AGENTS.md:</b> ключевые решения как постоянный контекст</li>
+        <li><b>Memory Bank:</b> важные факты — не в чат, а в memory</li>
+        <li><b>Новый чат:</b> с checkpoint — свежий контекст</li>
+        <li><b>Subagent:</b> изолирует контекст, не тратит основной</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Why same question different answer -->
+<section class="section">
+  <h2>Практические сценарии: почему разные ответы</h2>
+  <div class="flow">
+    <div class="flowStep">
+      <div class="flowNum">1</div>
+      <div><h4>Сценарий: "Вчера Claude предложил решение X, сегодня предлагает Y"</h4><p><b>Причины:</b> Новый чат = нет памяти предыдущего. Другие @mention файлы. Другой RAG контекст. Случайность при temperature &gt; 0. <b>Решение:</b> Checkpoint + новый чат с checkpoint.</p></div>
+    </div>
+    <div class="flowStep">
+      <div class="flowNum">2</div>
+      <div><h4>Сценарий: "Claude в Cursor пишет Java, в claude.ai пишет Python"</h4><p><b>Причина:</b> Cursor harness + AGENTS.md указывает Java стек. claude.ai не знает о вашем проекте. <b>Вывод:</b> Harness и Context Engineering решают больше, чем "умность модели".</p></div>
+    </div>
+    <div class="flowStep">
+      <div class="flowNum">3</div>
+      <div><h4>Сценарий: "Claude стал давать хуже ответы после 50 сообщений"</h4><p><b>Причина:</b> Compaction! История сжата, потеряны детали. Context window на пределе — lost in the middle эффект. <b>Решение:</b> Checkpoint → новый чат.</p></div>
+    </div>
+    <div class="flowStep">
+      <div class="flowNum">4</div>
+      <div><h4>Сценарий: "Одинаковый вопрос — разные ответы при повторных запросах"</h4><p><b>Причина:</b> Temperature &gt; 0 + sampling случайность. При T=0 ответы более стабильны. <b>Для агентов:</b> используй низкую temperature для предсказуемости.</p></div>
+    </div>
+    <div class="flowStep">
+      <div class="flowNum">5</div>
+      <div><h4>Сценарий: "Subagent ответил иначе чем main agent"</h4><p><b>Причина:</b> Разный контекст (subagent не видит всю историю), возможно другие permissions/tools, другой starting context. Ожидаемое поведение.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- Assessment -->
+
+<section class="section"><h2>Тонкости и нюансы вариативности модели</h2>
+<div class="nuance-card nc-red"><h4>Temperature=0 не гарантирует детерминизм</h4><p>При temperature=0 модель выбирает максимально вероятный токен — это близко к детерминизму, но не абсолютно. GPU параллелизм, floating-point rounding, разные batch sizes могут дать разные результаты даже при T=0. Кроме того, контекст (compaction, порядок документов) меняется — это тоже источник вариативности.</p></div>
+<div class="nuance-card nc-orange"><h4>Harness — главный источник разницы между «одной и той же» моделью</h4><p>Claude через Cursor API и Claude через прямой Anthropic API — это разные harness. Cursor добавляет свой system prompt, AGENTS.md, Rules, tool definitions. API без harness — чистая модель с только вашим system prompt. Ответы будут разными не из-за модели, а из-за обёртки вокруг неё.</p></div>
+<div class="nuance-card nc-blue"><h4>Compaction меняет поведение в середине сессии</h4><p>После compaction (сжатия длинного чата) агент теряет детали из свёрнутой части истории. Он «видит» резюме вместо реальных сообщений. Решения принятые до compaction могут быть «забыты». Именно поэтому Checkpoint/Summary нужен ДО compaction, а не после.</p></div>
+<div class="nuance-card nc-purple"><h4>Порядок tools в context влияет на выбор</h4><p>При нескольких похожих MCP tools агент принимает решение какой использовать. Позиция tool description в context (начало vs конец) влияет на вероятность выбора. Это subtlety: формально все tools доступны, но первые в списке получают чуть больше attention. Порядок подключения MCP серверов имеет значение.</p></div>
+<div class="nuance-card nc-green"><h4>RAG quality и freshness прямо влияют на ответ</h4><p>Если RAG возвращает устаревший chunk (старая версия API), агент строит ответ на неверных данных — и уверенно. Garbage in, garbage out — верно для RAG. Свежесть corpus, качество embeddings, правильный chunking — это не "infrastructure detail", это прямо влияет на качество ответа агента.</p></div>
+</section>
+
+<section class="section"><h2>Best practices — Делай / Не делай</h2>
+<div class="grid two">
+  <div class="card bg-green"><h3>✅ Делай</h3><ul>
+    <li>Для production/agentic workflow используй temperature=0–0.2</li>
+    <li>Стандартизируй harness: одинаковые Rules, AGENTS.md, tools для воспроизводимости</li>
+    <li>Создавай Checkpoint перед длинными задачами (защита от compaction)</li>
+    <li>Обновляй RAG corpus — свежесть данных прямо влияет на ответ</li>
+    <li>Изолируй subagents для sensitive задач (отдельный context, меньше drift)</li>
+    <li>Тестируй критичные промпты на воспроизводимость с одними настройками</li>
+  </ul></div>
+  <div class="card bg-red"><h3>❌ Не делай</h3><ul>
+    <li>Не используй temperature=1.0 для tool-call-heavy agentic workflows</li>
+    <li>Не ожидай одинакового ответа от "одной и той же модели" без одинакового harness</li>
+    <li>Не игнорируй compaction — длинный чат деградирует без checkpoint</li>
+    <li>Не сравнивай Claude в IDE и через API без учёта разного harness</li>
+    <li>Не полагайся на устаревший RAG corpus для актуальных системных решений</li>
+  </ul></div>
+</div></section>
+<section class="section">
+  <h2>Вопросы по уровням</h2>
+
+  <div class="qlevel-group">Junior — 10 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое temperature в языковых моделях?</summary>
+  <div class="inside">Temperature — параметр, контролирующий «случайность» при выборе следующего токена. Технически: делит логиты перед softmax. T=0: всегда выбирается токен с максимальной вероятностью (квази-детерминизм). T=1: стандартное распределение вероятностей. T>1: вероятности выравниваются, выбор более случайный. Temperature не делает модель умнее или глупее — она влияет только на вариативность, не на качество «мышления».</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое sampling в LLM?</summary>
+  <div class="inside">Sampling — процесс выбора следующего токена из распределения вероятностей, которое вычисляет модель. Модель не «пишет слово» — она вычисляет вероятность каждого токена из словаря (~100K вариантов) и «выбирает» один. При T=0 выбирается наиболее вероятный (greedy decoding). При T>0 — случайная выборка из распределения. Модифицирующие параметры: Top-P ограничивает выбор топ-P% вероятностной массой, Top-K — топ-K токенами.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое non-determinism у языковых моделей?</summary>
+  <div class="inside">Non-determinism — свойство LLM давать разные ответы на идентичный запрос при повторных запусках. Источники: 1) Temperature > 0 → sampling случаен; 2) GPU floating-point non-determinism: параллельные вычисления с разными batch sizes дают минимальные различия даже при T=0; 3) Разный context между запросами (история чата, RAG chunks); 4) Провайдер может A/B тестировать разные model versions. Абсолютного детерминизма у LLM в production нет.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Почему модели дают разные ответы?</summary>
+  <div class="inside">Разные ответы — результат множества факторов: 1) Temperature > 0 делает sampling вероятностным; 2) Разный context (история чата, RAG, Memory) между запросами; 3) Разный harness (System Prompt, Rules, AGENTS.md) между платформами; 4) Model version updates провайдером; 5) Compaction изменил историю сессии; 6) GPU non-determinism. «Одинаковый вопрос» редко идентичен на уровне полного context window включая все вышеперечисленные факторы.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое model version?</summary>
+  <div class="inside">Model version — конкретная версия обученной языковой модели, например claude-3-5-sonnet-20241022, gpt-4o-2024-11-20. Разные версии одной модели имеют разные веса — результат разного обучения. Провайдеры регулярно выпускают новые версии с улучшениями. Без явной фиксации версии API может начать использовать новую версию автоматически. Важно: claude-3-5-sonnet ≠ claude-3-7-sonnet — разные модели, не просто «обновление».</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое Top-P (nucleus) sampling?</summary>
+  <div class="inside">Top-P sampling — ограничение выбора токенов только теми, которые в совокупности составляют P% вероятностной массы. Top-P=0.9: берём минимальный набор токенов с суммарной вероятностью 90% → из них случайный выбор. Исключает очень маловероятные («дикие») токены. Часто используется совместно с Temperature: Temperature меняет форму распределения, Top-P отсекает хвост. Top-P=1.0: все токены доступны (нет отсечения).</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое max tokens?</summary>
+  <div class="inside">Max tokens — максимальное количество токенов, которое модель может сгенерировать в одном ответе (output tokens). Не путать с context window (input + output). Если модель не закончила ответ, а лимит max tokens достигнут — ответ обрывается на полуслове. Слишком маленький max tokens → truncated responses. Слишком большой → дороже и медленнее. Рекомендация: ставь реалистичный лимит на основе ожидаемой длины ответа + небольшой буфер.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое system fingerprint?</summary>
+  <div class="inside">System fingerprint — идентификатор конкретной backend конфигурации, который провайдер (OpenAI) возвращает в ответе API. Позволяет определить, изменилась ли backend инфраструктура между запросами — даже при одинаковой model version. Разный fingerprint → возможные различия в ответах из-за backend изменений. Используется для debugging: если при одинаковом промпте ответы изменились — проверь fingerprint, возможно провайдер обновил backend.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое model capabilities?</summary>
+  <div class="inside">Model capabilities — набор задач и форматов, с которыми модель справляется: code generation, reasoning, tool use, multimodal input, function calling, structured output. Разные модели имеют разные capabilities: Claude 3.5 Sonnet лучше в reasoning и instruction following; GPT-4o поддерживает vision и audio; Gemini Ultra имеет 1M context window. При выборе модели для задачи — сначала проверь capabilities. Например: не все модели поддерживают tool use или JSON mode.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое model context limit?</summary>
+  <div class="inside">Context limit — максимальный суммарный объём токенов для одного запроса: input tokens (весь context) + output tokens (генерируемый ответ). GPT-4: 128K, Claude Sonnet 3.5/3.7: 200K, Gemini 1.5 Pro: 1M+. Превышение лимита → ошибка или truncation. Важно: context limit ≠ только «длина промпта». В него входят System Prompt, Rules, история чата, RAG chunks, tool results — всё суммарно. При agentic workflow с длинными tool chains context быстро заполняется.</div></details>
+
+  <div class="qlevel-group">Middle — 10 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как temperature влияет на баланс creativity vs accuracy?</summary>
+  <div class="inside">Low temperature (T=0–0.3): высокая предсказуемость, всегда «безопасный» выбор, мало вариативности. Хорошо для: код, анализ данных, structured output, tool use — там где нужна точность. High temperature (T=0.7–1.0): широкое исследование пространства ответов, нестандартные решения, но выше риск hallucination и нерелевантных ответов. Хорошо для: brainstorming, творческое письмо, генерация идей. Trade-off: предсказуемость ↑ = creativity ↓. Для agentic workflows с tool calls — T=0–0.2, иначе непредсказуемые tool selections.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда использовать T=0 vs T=0.7?</summary>
+  <div class="inside">T=0 для: 1) Agentic tool use — предсказуемые tool calls, нет случайных действий; 2) Structured output (JSON/XML) — стабильный формат; 3) Code generation — детерминированный, воспроизводимый код; 4) Classification задачи — консистентные категории; 5) Production системы где важна воспроизводимость. T=0.7 для: 1) Brainstorming — нужны разные идеи; 2) Творческий контент; 3) Self-consistency approach: запусти 5-10 раз с T=0.7, возьми мажоритарный ответ → повышает reliability для reasoning задач; 4) Генерация альтернатив. Дефолт рекомендация: начни с T=0 и повышай только если нужна вариативность.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Чем Claude Sonnet отличается от GPT-4 в поведении?</summary>
+  <div class="inside">Практические различия: Claude (Anthropic): сильнее в следовании сложным инструкциям, более «осторожный» в safety (чаще отказывает на неоднозначных запросах), хорошо работает со структурированными XML-style промптами, сильный CoT reasoning. GPT-4o (OpenAI): сильнее в multimodal (видео, аудио, изображения), широко поддерживает Function Calling, JSON mode на уровне API. Оба: world-class code generation, но стиль вывода различается. Ключевой вывод: промпт написанный под Claude может работать иначе на GPT-4 — нужно тестировать при смене провайдера.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как system prompt влияет на вариативность поведения модели?</summary>
+  <div class="inside">System prompt — одна из главных причин почему «одна модель» ведёт себя по-разному. Cursor добавляет свой system prompt с IDE-specific инструкциями; Claude.ai — свой с safety guidelines; прямой API — только ваш. Разные system prompts → разное поведение на одинаковый user query. Механизм: system prompt задаёт базовое поведение, ограничения, доступные инструменты — весь фрейм взаимодействия. Важный вывод: при сравнении «одна модель в разных средах» — сначала учти разницу в system prompt, а не только в пользовательском запросе.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как обновление модели меняет поведение при стабильном промпте?</summary>
+  <div class="inside">Model version drift: при обновлении (claude-3-5-sonnet-20241022 → 20250219) новая версия имеет другие веса → другие attention паттерны. Промпт оптимизированный под старую версию может: 1) Давать лучшие ответы на новой (чаще); 2) Давать другие ответы не обязательно лучшие; 3) Изменить стиль/формат вывода; 4) По-другому следовать инструкциям. Защита: 1) Фиксируй model version в production; 2) Golden test set при каждом обновлении; 3) Staged rollout: новая версия на 5% трафика → наблюдай → expand. Автоматическое обновление модели без тестирования = production risk.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как тестировать систему на устойчивость к model variance?</summary>
+  <div class="inside">Тестирование на variance: 1) Multiple runs test: один промпт × 10 запусков → измерь вариативность ответов (насколько разные? нарушают ли они требования?); 2) Semantic consistency: не exact match, а «все 10 ответов в правильной категории?»; 3) Format compliance: все ответы в нужном JSON/структуре?; 4) Edge case sensitivity: при одном и том же edge case входе — стабилен ли ответ?; 5) Temperature sensitivity analysis: как меняется качество при T=0 vs T=0.3 vs T=0.7? Для production: T=0 + зафиксированная model version = максимально возможная консистентность. Полного детерминизма нет — проектируй систему resilient к этому.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Что такое A/B model testing?</summary>
+  <div class="inside">A/B model testing — сравнение двух версий модели (или двух конфигураций) на production трафике. Паттерн: 100% трафика → 95% на текущую модель (control) + 5% на новую (treatment). Метрики: качество ответов (LLM-as-judge или пользовательские оценки), latency, cost, format compliance, error rate. Трудности: 1) Нельзя сравнивать exact outputs — нужны семантические метрики; 2) Нужен достаточный объём для статистической значимости; 3) User satisfaction сложно измерить автоматически. При положительном результате — expand treatment group. A/B test снижает риск при смене модели.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как compaction влияет на вариативность ответов в длинных сессиях?</summary>
+  <div class="inside">Compaction добавляет ещё один источник вариативности: два одинаковых запроса в сессии, где был compaction — дадут разные ответы, потому что context разный. Compaction заменяет конкретные сообщения summary → детали теряются → агент работает с неполными данными → ответы отличаются от pre-compaction. Более тонко: summary качество зависит от того на каком моменте произошёл compaction — это само по себе вариативный процесс. Защита: Checkpoint file до compaction → фиксирует состояние независимо от компрессии.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Best practices для production consistency?</summary>
+  <div class="inside">Production consistency checklist: 1) Зафиксируй model version: claude-3-5-sonnet-20241022 а не «claude-latest»; 2) T=0 или T=0.1 для tool-use agentic workflows; 3) Stable harness: одинаковые Rules, AGENTS.md, system prompt для всей команды (в git); 4) Prompt caching: stable prefix → cache hit rate >50% → снижает cost и вариативность timing; 5) Актуальный RAG corpus: stale docs → stale answers; 6) Checkpoint вместо длинной истории: предотвращает compaction-caused variance; 7) Golden test set: запускай при каждом deплое изменений; 8) Мониторинг: отслеживай drift в ответах со временем через LLM-as-judge.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда model variance — feature, а не баг?</summary>
+  <div class="inside">Model variance — feature когда: 1) Brainstorming: нужны разные идеи, вариативность желательна; 2) Генерация вариантов: «напиши 5 разных названий» — каждый запуск даёт новые; 3) Self-consistency voting: запускаешь 10 раз, берёшь консенсус — variance + многократный запуск = надёжность; 4) Creative tasks: разнообразие ответов ценно; 5) Exploration phase: исследуешь пространство решений. Variance — баг когда: production automation, structured output, tool use, classification, любые задачи где нужна воспроизводимость. Правило: в pipeline где результат парсится программно — variance = потенциальный сбой.</div></details>
+
+  <div class="qlevel-group">Senior — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как достичь максимально возможного детерминизма в production ML системах?</summary>
+  <div class="inside">Максимальный детерминизм (абсолютного нет): 1) T=0 everywhere: снижает sampling variance; 2) Fixed model version: не «gpt-4», а «gpt-4-0613» — конкретная snapshot; 3) Fixed seed (где доступно): некоторые провайдеры принимают seed для reproducibility; 4) Stable prefix: System Prompt + Rules неизменны → cache hit rate стабилен; 5) Идентичный context: одинаковые RAG chunks в одинаковом порядке → нужна детерминированная retrieval система; 6) Single GPU inference: параллелизм на нескольких GPU добавляет float non-determinism; 7) Request идемпотентность: при retry использовать cached ответ, не новый запрос. Даже с всеми мерами — гарантий нет. Проектируй систему tolerant к варианту ответа, не dependant от exact output.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как применять statistical approach к тестированию model variance?</summary>
+  <div class="inside">Statistical testing LLM variance: 1) Distribution testing: не «ответ правильный или нет», а «распределение ответов соответствует ожидаемому?» — chi-square test на категориальных ответах; 2) Consistency metrics: inter-run consistency rate = % запусков с ответом в правильной категории; 3) Variance threshold: определи максимально допустимую вариативность — например «≤10% runs дают неверный формат»; 4) Bootstrap sampling: оцени confidence interval для accuracy на test set; 5) Regression detection: Mann-Whitney U test между ответами до и после изменения промпта — статистически значимо изменилось?; 6) Sample size: для LLM тестов нужно минимум 30-50 samples для статистической силы. Единичный test run — не тест, это анекдот.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как диагностировать регрессию после обновления модели?</summary>
+  <div class="inside">Model regression diagnosis: 1) Isolate variable: при регрессии убедись что единственное изменение — model version (не Rules, не AGENTS.md, не RAG corpus); 2) Golden test set: запусти pre-upgrade test set на новой версии — какие test cases провалились? Есть ли паттерн? 3) Diff analysis: сравни ответы old vs new model на одинаковых задачах — LLM-as-judge для scalable сравнения; 4) Error categorization: систематические ошибки (всегда неверный формат) vs случайные (иногда неверный ответ) — разные причины и решения; 5) Attention analysis (если доступно): какие части промпта модель стала игнорировать? 6) Rollback decision: если регрессия значима → pin old version + open issue с провайдером.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Что такое model fingerprinting и как его применять?</summary>
+  <div class="inside">Model fingerprinting — техника идентификации конкретной версии/конфигурации модели через её поведение на специальных тестовых входах. Применение: 1) Обнаружение тихих обновлений: провайдер обновил модель без объявления → fingerprint изменился → alert; 2) A/B test validation: убедись что control и treatment действительно используют разные модели; 3) Reproducibility audit: при debugging old incident — была ли тогда эта же модель? 4) Canary testing: при постепенном rollout — fingerprint подтверждает что нужные пользователи получают нужную версию. Реализация: набор специально подобранных входов с детерминированными ответами (T=0) — fingerprint = hash этих ответов.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как управлять variance в multi-agent системах?</summary>
+  <div class="inside">Multi-agent variance challenges: каждый агент в цепочке добавляет свою variance → итоговая variance multiplicative. Стратегии: 1) Orchestrator determinism: T=0 для orchestrator — он принимает routing решения, здесь нужна предсказуемость; 2) Specialist diversity: specialist agents (brainstorming, exploration) могут иметь T=0.7; 3) Structured handoff: агенты передают данные через жёсткую JSON schema — снижает variance в интерпретации; 4) Validation gates: между этапами pipeline — validation agent проверяет output соответствует ожидаемой схеме; 5) Redundancy: critical решения принимаются N агентами независимо → majority vote; 6) Retry with same context: при сбое — retry с тем же context snapshot, не с накопленным изменившимся context.</div></details>
+
+  <div class="qlevel-group">Lead — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как управлять model updates в команде?</summary>
+  <div class="inside">Model Update Management: 1) Version pinning policy: production системы всегда используют конкретную версию (claude-3-5-sonnet-20241022), не алиас (claude-3-5-sonnet); 2) Update process: новая версия → запуск golden test set → review результатов → staged rollout (5% → 25% → 100%); 3) Approval gate: обновление model version в production требует explicit approval от tech lead; 4) Communication: при плановом обновлении — advance notice команде (Slack + calendar); 5) Rollback plan: при регрессии — mechanism быстрого возврата к предыдущей version; 6) Change log: фиксируй history версий с датой, причиной обновления, результатами тестирования. Model version — это dependency, управляй ею как dependency management.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как построить regression testing framework для LLM систем?</summary>
+  <div class="inside">LLM Regression Testing Framework: 1) Golden dataset: набор ≥100 task → expected category (не exact output). Пополняется при каждом найденном баге; 2) Automated runner: CI запускает весь dataset при изменении промптов, model version, Rules; 3) LLM-as-judge: evaluator модель с rubric оценивает каждый ответ (0-5 по нескольким критериям) — scalable без ручной разметки; 4) Regression threshold: падение score >5% от baseline → блокирует PR; 5) Flaky test detection: тест «flaky» если LLM-judge даёт разные оценки при одном input → нужен более детерминированный тест; 6) Model comparison mode: запускает dataset на текущей + новой version → diff; 7) Cost budget: ограничь максимальный cost на тест run (не все 1000 задач при каждом PR).</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как коммуницировать о model changes и их влиянии на команду?</summary>
+  <div class="inside">Model Change Communication: 1) Change taxonomy: Minor (patch version) — тихое обновление, тест запустили, всё хорошо → Slack note; Major (major version или провайдер) → team meeting + demo различий; Breaking → incident process; 2) Impact assessment до анонса: «что изменится в поведении агента для типичных задач команды?»; 3) Communication channels: Slack #ai-updates для weekly updates, #ai-incidents для breaking changes, team wiki для decision log; 4) Developer guidance: при breaking change — конкретные инструкции «что нужно обновить в своих промптах/Rules»; 5) Feedback loop: неделя после обновления — собери feedback разработчиков; 6) External changes: если провайдер изменил модель без предупреждения — post-mortem + strengthen pinning strategy.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как выстроить governance выбора модели для организации?</summary>
+  <div class="inside">Model Selection Governance: 1) Evaluation criteria: accuracy для ключевых задач, latency (p50/p95), cost per request, context window, data privacy (где данные обрабатываются?), vendor reliability/SLA; 2) Decision process: выбор модели для production → RFC с оценкой по criteria → Tech Review approval; 3) Data privacy gate: для sensitive data — проверка провайдера на compliance (SOC2, GDPR, data residency); 4) Cost management: model choice влияет на бюджет → Finance sign-off при выборе дорогой модели; 5) Approved models list: white-list одобренных моделей, остальные — по запросу с justification; 6) Regular review: раз в квартал → рынок меняется, появляются лучшие/дешевле альтернативы; 7) Vendor diversification: зависимость от одного провайдера = risk, иметь tested fallback.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как обеспечить SLA при non-deterministic системе?</summary>
+  <div class="inside">SLA для non-deterministic AI систем: 1) Probabilistic SLA: не «всегда правильно» а «≥95% запросов в категории correct»; 2) Human escalation: при low-confidence или critical action → обязательный human review; 3) Retry mechanism: при невалидном output → automatic retry × N → если всё равно плохо → human queue; 4) Graceful degradation: при model недоступности → cached response или fallback модель (более дешёвая и стабильная); 5) Circuit breaker: при error rate >threshold → stop sending requests, alert; 6) SLO monitoring: real-time dashboard с current accuracy rate, p99 latency, error rate; 7) Incident threshold: при нарушении SLO → auto-alert → on-call → potentially rollback model version.</div></details>
+
+  <div class="qlevel-group">Architect — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как проектировать архитектуру resilient к model variance?</summary>
+  <div class="inside">Resilient-to-variance architecture: 1) Schema-first design: система получает от LLM структурированный output по жёсткой schema — Structured Output API или validation layer; 2) Idempotent operations: LLM action должны быть safe for retry — «создай файл если не существует» лучше чем «создай файл»; 3) Validation gates: после каждого LLM шага — validator проверяет output соответствует инварианту системы; 4) Fallback chain: LLM result → validate → if invalid → retry → if still invalid → simpler fallback prompt → if still invalid → human escalation; 5) Stateless LLM calls где возможно: каждый вызов независим → нет накопления variance; 6) Observability: каждый LLM call логирует input/output/model_version — debugging variance требует полного trace.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как реализовать model versioning в ML pipeline?</summary>
+  <div class="inside">Model versioning architecture: 1) Version registry: централизованный реестр всех используемых model version с metadata (провайдер, version string, benchmark scores, approval date, deployed instances); 2) Config-driven: model version в config file (не hardcoded) → изменение через config change, versioned в git; 3) Environment isolation: dev может использовать latest, staging — pre-approved, production — formally approved version; 4) Gradual rollout infra: traffic splitting на уровне gateway — X% к version A, Y% к version B; 5) Version-specific performance baselines: каждая version имеет benchmark → отслеживай drift от baseline; 6) Deprecation process: End-of-life announcement → migration period → hard cutoff → тест что все перешли.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как организовать intelligent routing между моделями?</summary>
+  <div class="inside">LLM Router architecture: разные запросы → разные модели на основе характеристик. Routing strategies: 1) Cost-based: простые запросы → дешёвая модель (GPT-3.5, Claude Haiku); сложные → дорогая (GPT-4o, Claude Sonnet); 2) Capability-based: code tasks → code-optimized model; vision → multimodal model; 3) Latency-based: realtime нужна → fast/cheap model; batch processing → качественная медленная; 4) Complexity classifier: lightweight модель или rule-based классификатор определяет «сложность» запроса → routing decision; 5) Fallback routing: primary model недоступна → fallback; 6) Circuit breaker per model: при high error rate на модели → временно exclude из routing. Router добавляет latency overhead — нужно балансировать с savings.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как обеспечить observability для model behavior в production?</summary>
+  <div class="inside">LLM Observability Stack: 1) Tracing: каждый LLM call = span с: model_version, input_tokens, output_tokens, cache_hit_rate, latency, temperature, prompt_hash; 2) Metrics: accuracy_rate (LLM-as-judge), format_compliance_rate, error_rate, cost_per_request, p50/p95/p99 latency — в time series; 3) Logging: полные input/output для debug (с PII masking); 4) Drift detection: Statistical Process Control на accuracy metrics — при выходе за control limits → alert; 5) Model-specific dashboards: per-model breakdown метрик для сравнения; 6) Prompt versioning in traces: запрос содержит prompt_version → можно коррелировать изменение промпта с изменением качества; 7) User feedback integration: explicit (thumbs up/down) → коррелируй с model/prompt версией. OpenTelemetry + специализированные LLM observability platforms (LangSmith, Helicone, etc).</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как построить model evaluation framework для организации?</summary>
+  <div class="inside">Organizational Model Evaluation Framework: 1) Benchmark suite: domain-specific задачи организации (не только публичные benchmarks) — «как модель справляется с нашими конкретными use cases?»; 2) Automated evaluation pipeline: при release новой version → automatic benchmark run → report генерируется; 3) Human evaluation protocol: для subjectivе качества — sampling + структурированная оценка reviewer'ами по rubric; 4) Multi-dimensional scoring: accuracy, format_compliance, safety, latency, cost, data_privacy — взвешенный итоговый score; 5) Longitudinal tracking: сравни current vs 3 months ago → регрессии без явных причин видны; 6) Competitive benchmarking: раз в полгода — сравни текущую модель с новинками рынка; 7) Stakeholder report: quarterly summary для leadership — ROI of current model choice, recommendations. Framework обеспечивает data-driven model decisions вместо opinion-based.</div></details>
+
+</section>
+
+
+
+<div class="pageFooter"><div class="nextPrev">
+  <a href="context.html">← Контекст агента</a>
+  <a href="agents-rules-skills.html">AGENTS / Rules / Skills →</a>
+</div></div>
+</main></div><script src="../assets/app.js"></script></body></html>

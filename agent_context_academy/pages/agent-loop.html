@@ -1,0 +1,531 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Agent Loop — как работает агент изнутри</title><link rel="stylesheet" href="../assets/style.css"/></head><body><div class="app"><aside class="sidebar"><div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>
+  <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html" class="active"><span class="ico">🔄</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div>
+<div class="progressBox"><b>Формула</b><p class="sourceNote">Prompt → Loop[think → tool → observe] → Answer. Цикл повторяется до решения задачи.</p></div>
+</aside>
+<main class="main">
+<section class="hero">
+  <div class="kicker">Agent Context Academy</div>
+  <h2>Agent Loop — как агент работает изнутри</h2>
+  <p>Механика цикла агента: think → act → observe. Что происходит между твоим промптом и ответом агента, как растёт контекст, когда цикл останавливается и почему это важно для всего остального.</p>
+  <div class="heroActions">
+    <a class="btn primary" href="context.html">← Контекст агента</a>
+    <a class="btn" href="workflow.html">Explore → Plan → Code →</a>
+    <button class="markDone">Отметить страницу изученной</button>
+  </div>
+</section>
+
+<style>
+  .schema-box{background:#0f172a;color:#e2e8f0;border-radius:16px;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.65;overflow:auto;margin:10px 0;white-space:pre-wrap}
+  .schema-box .h{color:#c084fc;font-weight:900}
+  .schema-box .c{color:#64748b}
+  .schema-box .k{color:#93c5fd}
+  .schema-box .v{color:#86efac}
+  .schema-box .s{color:#fcd34d}
+  .schema-box .r{color:#f87171}
+  .nuance-card{border-left:4px solid;border-radius:0 14px 14px 0;padding:12px 16px;margin:8px 0;background:#fff;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .nc-blue{border-left-color:#2563eb}.nc-red{border-left-color:#dc2626}.nc-orange{border-left-color:#f97316}.nc-green{border-left-color:#16a34a}.nc-purple{border-left-color:#7c3aed}
+  .platform-split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:12px 0}
+  .ps-col{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff}
+  .ps-head{border-radius:10px;padding:7px 14px;font-weight:800;font-size:13px;margin-bottom:10px}
+  .ps-cursor{background:#eff6ff;color:#1e40af}
+  .ps-claude{background:#f0fdf4;color:#14532d}
+  .diff-split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .req-yes{color:#dc2626;font-weight:900}.req-no{color:#64748b}
+  @media(max-width:900px){.platform-split{grid-template-columns:1fr}.diff-split{grid-template-columns:1fr}}
+  .phase-row{display:grid;grid-template-columns:80px 1fr;gap:12px;align-items:start;margin:8px 0;padding:10px 14px;border-radius:14px;background:#f8fafc;border:1px solid var(--line)}
+  .phase-badge{border-radius:10px;padding:4px 10px;font-size:11px;font-weight:900;text-align:center;line-height:1.6}
+  .ph-gather{background:#eff6ff;color:#1e40af}
+  .ph-act{background:#fef3c7;color:#92400e}
+  .ph-verify{background:#f0fdf4;color:#14532d}
+  .qlevel-group{font-weight:900;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:18px 0 8px;padding-left:4px}
+</style>
+
+<!-- ── 1. Что такое Agent Loop ── -->
+<section class="section">
+  <h2>Что такое Agent Loop и зачем он нужен</h2>
+  <p class="sectionIntro">Agent Loop — это повторяющийся цикл «подумать → вызвать инструмент → посмотреть результат», который позволяет агенту решать многошаговые задачи автономно, не ожидая инструкции на каждый шаг.</p>
+
+  <div class="grid">
+    <div class="card bg-blue">
+      <h3>Agent Loop = конвейер на заводе</h3>
+      <p>Представь завод, где робот получает задание «собери деталь». Он не делает всё за один раз — он берёт болт, проверяет размер, крутит гайку, снова проверяет... пока деталь не готова. Агент работает так же: каждый шаг использует инструмент, смотрит результат, решает что дальше.</p>
+      <ul>
+        <li>Один проход цикла = один «turn»</li>
+        <li>Простая задача: 1–3 turns</li>
+        <li>Сложная задача: 10–50 turns</li>
+        <li>Каждый turn добавляет данные в контекст</li>
+      </ul>
+    </div>
+    <div class="card bg-orange">
+      <h3>Cursor: Agentic Mode</h3>
+      <p>В Cursor Agent Loop включается в режиме <b>Agent</b> (вкладка в чате). Агент может читать файлы, запускать терминал, редактировать код. Каждое действие требует подтверждения или работает в YOLO-режиме автоматически.</p>
+    </div>
+    <div class="card bg-purple">
+      <h3>Claude Code: встроенный loop</h3>
+      <p>В Claude Code Agent Loop — основа всего. Каждый запрос запускает цикл. Агент сам решает, когда задача выполнена. Цикл останавливается, когда больше нечего вызывать или достигнут лимит turns.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── 2. Три фазы ── -->
+<section class="section">
+  <h2>Три фазы агентного цикла</h2>
+  <p class="sectionIntro">Каждый цикл включает три фазы — они перетекают друг в друга, но логически различны.</p>
+
+  <div class="phase-row">
+    <div><span class="phase-badge ph-gather">Gather</span></div>
+    <div>
+      <b>Сбор контекста</b> — агент читает файлы, ищет код, загружает CLAUDE.md / Rules, запрашивает память и RAG. Цель: понять, что уже известно и чего не хватает.
+      <br><small style="color:#64748b">Инструменты: Read, Grep, LS, WebSearch, Memory, <b>MCP</b> (Jira, GitHub, Sentry, БД…)</small>
+    </div>
+  </div>
+  <div class="phase-row">
+    <div><span class="phase-badge ph-act">Act</span></div>
+    <div>
+      <b>Действие</b> — агент редактирует файлы, запускает команды, вызывает MCP-инструменты, создаёт subagents. Изменения реальны и немедленны.
+      <br><small style="color:#64748b">Инструменты: Edit, Bash, MCP tools, Subagent spawn</small>
+    </div>
+  </div>
+  <div class="phase-row">
+    <div><span class="phase-badge ph-verify">Verify</span></div>
+    <div>
+      <b>Проверка</b> — агент запускает тесты, читает вывод, сравнивает с ожидаемым результатом. Если что-то не так — возвращается к фазе Act или Gather.
+      <br><small style="color:#64748b">Инструменты: Bash (тесты), Read (diff), анализ stderr</small>
+    </div>
+  </div>
+
+  <div class="schema-box" style="margin-top:16px"><span class="h">Полный цикл — пример: «Fix failing tests in auth.ts»</span>
+
+<span class="c">┌────────────────────────────────────────────────────────────────┐</span>
+<span class="c">│  USER → "Fix failing tests in auth.ts"                         │</span>
+<span class="c">├────────────────────────────────────────────────────────────────┤</span>
+<span class="k">Turn 1 [Gather]</span>
+  Read(auth.ts)         → <span class="v">код функции validateToken()</span>
+  Read(auth.test.ts)    → <span class="v">3 теста, 2 падают</span>
+  Bash("npm test")      → <span class="r">Error: expected 403 got 401</span>
+
+<span class="k">Turn 2 [Gather + Reason]</span>
+  Grep("403", "src/")   → <span class="v">нашёл middleware/errors.ts</span>
+  Read(errors.ts)       → <span class="v">понял: HTTP-коды переопределены</span>
+  <span class="s">MCP</span> github.search_commits("errors.ts")
+                        → <span class="v">PR #412: «403 для forbidden после рефактора»</span>
+
+<span class="k">Turn 3 [Act]</span>
+  Edit(auth.ts)         → <span class="v">исправил статус-коды: 401 → 403</span>
+
+<span class="k">Turn 4 [Verify]</span>
+  Bash("npm test")      → <span class="v">✓ 3 passed, 0 failed</span>
+
+<span class="c">└────────────────────────────────────────────────────────────────┘</span>
+<span class="s">Итог: 4 turns, 8 вызовов инструментов (в т.ч. 1× MCP), задача решена</span></div>
+  <div class="callout" style="margin-top:12px">
+    <b>MCP в этом сценарии:</b> встроенные Read/Grep/Bash закрывают репозиторий на диске. MCP подключает <em>внешний</em> контекст — историю PR, тикет, CI, прод-логи — без ручного копипаста. Вызов MCP — тот же паттерн, что ToolUse/ToolResult в контексте; часто фаза <b>Gather</b> (уточнить «зачем 403») или <b>Verify</b> (проверить remote CI через GitHub Actions MCP). В <b>Act</b> MCP бывает для create_issue, post_comment, query DB — когда действие вне git/терминала.
+  </div>
+</section>
+
+<!-- ── 3. Архитектура контекста в loop ── -->
+<section class="section">
+  <h2>Как контекст растёт внутри loop</h2>
+  <div class="diff-split">
+    <div>
+      <h3 style="margin-bottom:10px">Что попадает в контекст</h3>
+      <div class="schema-box"><span class="h">Context Window во время loop</span>
+
+<span class="k">[System]</span>
+  CLAUDE.md / Rules / AGENTS.md          <span class="c">← загружаются 1 раз</span>
+  Описания инструментов (tools)          <span class="c">← статично</span>
+
+<span class="k">[Conversation History]</span>
+  UserMessage: "Fix failing tests..."    <span class="c">← твой промпт</span>
+  AssistantMessage: "I'll start by..."  <span class="c">← текст агента</span>
+  ToolUse: Read("auth.ts")               <span class="c">← вызов инструмента</span>
+  ToolResult: "...код файла..."          <span class="c">← результат (может быть БОЛЬШИМ)</span>
+  ToolUse: Bash("npm test")
+  ToolResult: "Error: expected 403..."
+  AssistantMessage: "I see the issue..." <span class="c">← рассуждение</span>
+  ToolUse: Edit("auth.ts", ...)
+  ToolResult: "File updated"
+  ToolUse: Bash("npm test")
+  ToolResult: "✓ 3 passed"
+  AssistantMessage: "Done! Fixed..."     <span class="c">← финальный ответ</span>
+
+<span class="r">↑ Каждый ToolResult увеличивает контекст!</span></div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:10px">Что это значит</h3>
+      <div class="tableWrap"><table>
+        <thead><tr><th>Компонент</th><th>Размер</th><th>Влияние</th></tr></thead>
+        <tbody>
+          <tr><td>CLAUDE.md</td><td>~1–5 KB</td><td>Небольшое, постоянно</td></tr>
+          <tr><td>Прочитанный файл</td><td>1–100 KB</td><td>Значительное</td></tr>
+          <tr><td>Вывод bash</td><td>0.1–50 KB</td><td>Зависит от команды</td></tr>
+          <tr><td>История turns</td><td>растёт</td><td>Накапливается с каждым turn</td></tr>
+          <tr><td>MCP ответы</td><td>вариативно</td><td>Может быть очень большим</td></tr>
+        </tbody>
+      </table></div>
+      <div class="callout" style="margin-top:12px"><b>Лимит контекста:</b> у Claude — 200K токенов. Длинные сессии заполняют его, тогда срабатывает авто-компакция (/compact). Большие файлы и многословные bash-выводы — главные «пожиратели» контекста.</div>
+      <div class="callout warn" style="margin-top:8px"><b>Важно:</b> когда контекст компактируется — ранние инструкции могут «потеряться». Именно поэтому правила должны быть в CLAUDE.md, а не в начале чата.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 4. Инструменты агента ── -->
+<section class="section">
+  <h2>Инструменты (Tools) — движки agent loop</h2>
+  <p class="sectionIntro">Без инструментов агент — просто текстовая модель: она может только сгенерировать текст. <b>Tool (инструмент)</b> — это оформленное «действие снаружи модели»: прочитать файл, выполнить команду, вызвать API. Хост (Cursor или Claude Code) исполняет действие и возвращает результат в контекст — так работает фаза <em>act → observe</em> в loop.</p>
+
+  <div class="grid">
+    <div class="card bg-blue">
+      <h3>Tool = не магия модели, а контракт</h3>
+      <p>Модель не «знает» ваш диск и терминал. Она выдаёт структурированный запрос: имя инструмента + аргументы (function calling / tool use). <b>Клиент агента</b> (IDE или CLI) проверяет права, выполняет код на вашей машине и кладёт ответ в историю как <code>ToolResult</code>.</p>
+    </div>
+    <div class="card bg-teal">
+      <h3>Кто что поставляет</h3>
+      <ul>
+        <li><b>Вендор LLM</b> (Anthropic, OpenAI…) — умеет в ответах вызывать tools по схеме; сами tools не шипит.</li>
+        <li><b>Хост агента</b> (Cursor, Claude Code) — набор <b>встроенных</b> tools + рантайм исполнения.</li>
+        <li><b>MCP-серверы</b> — <b>внешние</b> tools (БД, Jira, браузер…), подключаются через протокол MCP.</li>
+        <li><b>Вы</b> — конфиг MCP, permissions, rules; иногда отключаете или ограничиваете вызовы.</li>
+      </ul>
+    </div>
+    <div class="card bg-green">
+      <h3>Встроенные vs внешние</h3>
+      <p><b>Встроенные</b> — реализованы внутри Cursor / Claude Code (Read, Grep, Bash…). Список фиксирован версией продукта (может меняться в релизах).</p>
+      <p style="margin-top:8px"><b>Внешние (MCP)</b> — отдельный процесс или сервис; хост только проксирует <code>tools/list</code> и <code>tools/call</code>. Подробнее — на странице <a href="mcp.html">MCP / Tools</a>.</p>
+    </div>
+  </div>
+
+  <h3 style="font-size:15px;margin:18px 0 10px">Три слоя в одном запросе</h3>
+  <div class="schema-box"><span class="h">Цепочка ответственности</span>
+
+<span class="k">1. Модель</span>     решает: «нужен tool X с аргументами {…}»  <span class="c">← только текст/JSON в ответе</span>
+<span class="k">2. Хост агента</span>  маршрутизирует: встроенный handler ИЛИ MCP-сервер  <span class="c">← реальное исполнение</span>
+<span class="k">3. Tool</span>         возвращает данные (файл, stdout, JSON API) → <span class="v">ToolResult</span> в контекст
+
+<span class="s">Один и тот же loop для Read("app.ts") и для mcp__linear__create_issue — разница только в том, кто зарегистрировал tool.</span></div>
+
+  <div class="tableWrap" style="margin-top:14px">
+    <table>
+      <thead><tr><th>Тип</th><th>Кто предоставляет</th><th>Примеры</th><th>Где настраивается</th></tr></thead>
+      <tbody>
+        <tr><td><b>Встроенные tools</b></td><td>Cursor или Anthropic (Claude Code)</td><td>Read, Edit, Grep, Bash, WebFetch</td><td>Обновления IDE/CLI; режимы (Agent / Ask)</td></tr>
+        <tr><td><b>MCP tools</b></td><td>Автор MCP-сервера (комьюнити, ваша команда, SaaS)</td><td>Postgres, Slack, Playwright, кастомный REST</td><td><code>mcp.json</code>, настройки Cursor, <code>claude mcp</code></td></tr>
+        <tr><td><b>Subagent / Task</b></td><td>Хост; внутри — снова модель + свой набор tools</td><td>explore, shell, generalPurpose</td><td>Лимиты субагентов, permissions</td></tr>
+        <tr><td><b>Skills</b></td><td>Репозиторий / пакет (<code>SKILL.md</code>)</td><td>Не отдельный API-tool; инструкции + когда вызывать</td><td><a href="skills.html">Skills</a>, agent packages</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="nuance-card nc-blue" style="margin-top:14px">
+    <h4>Список tools — часть контекста</h4>
+    <p>Перед каждым turn агент видит описания всех доступных инструментов (имя, description, схема параметров). Чем больше MCP-серверов подключено, тем больше «шума» в контексте и тем важнее точные descriptions — см. <a href="mcp.html">как агент выбирает tool</a> и <a href="tool-choice.html">какой инструмент когда</a>.</p>
+  </div>
+
+  <div class="nuance-card nc-orange">
+    <h4>«Встроенный» ≠ «безопасный»</h4>
+    <p>Bash/Terminal и Edit — встроенные, но с реальными последствиями на диске и в shell. Хост добавляет подтверждения (Cursor) или permission rules (Claude Code). MCP-tools наследуют те же гейты, плюс доверие к стороннему серверу.</p>
+  </div>
+
+  <h3 style="font-size:15px;margin:22px 0 10px">Сравнение каталогов по платформам</h3>
+  <p class="sectionIntro" style="margin-bottom:12px">Ниже — типовые <b>встроенные</b> возможности хоста. Строка MCP у Cursor — это не «ещё один встроенный файлоператор», а <b>встроенный шлюз</b> к внешним tools.</p>
+
+  <div class="platform-split">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor — встроенные инструменты</div>
+      <div class="tableWrap"><table>
+        <thead><tr><th>Категория</th><th>Что умеет</th></tr></thead>
+        <tbody>
+          <tr><td>Файлы</td><td>Read, Edit, Create, Rename файлов</td></tr>
+          <tr><td>Поиск</td><td>Grep, Glob, семантический поиск по codebase</td></tr>
+          <tr><td>Терминал</td><td>Запуск команд (часто с подтверждением пользователя)</td></tr>
+          <tr><td>MCP</td><td><b>Шлюз</b> к <em>внешним</em> tools (серверы MCP), не замена Read/Grep</td></tr>
+          <tr><td>Subagents</td><td>Дочерние агенты (explore, shell и др.) — отдельный loop с подмножеством tools</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code — встроенные инструменты</div>
+      <div class="tableWrap"><table>
+        <thead><tr><th>Категория</th><th>Что умеет</th></tr></thead>
+        <tbody>
+          <tr><td>Файлы</td><td>Read, Write, Edit, MultiEdit</td></tr>
+          <tr><td>Поиск</td><td>Glob, Grep (ripgrep), LS</td></tr>
+          <tr><td>Выполнение</td><td>Bash (shell команды)</td></tr>
+          <tr><td>Веб</td><td>WebSearch, WebFetch (встроенные у хоста; в Cursor — через агента / MCP в зависимости от режима)</td></tr>
+          <tr><td>Агенты</td><td>Task (subagents), TodoWrite</td></tr>
+          <tr><td>Интерфейс</td><td>AskFollowUpQuestion, exit_plan_mode</td></tr>
+          <tr><td>MCP</td><td>Те же внешние tools через MCP; список зависит от ваших серверов</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="schema-box" style="margin-top:14px"><span class="h">Как агент выбирает инструмент</span>
+
+<span class="c">Задача: "Найди все функции с TODO в src/api/"</span>
+
+<span class="k">Агент думает:</span>
+  1. Нужно найти файлы → использую <span class="v">Glob("src/api/**/*.ts")</span>
+  2. В каждом файле ищу TODO → использую <span class="v">Grep("TODO", files)</span>
+  3. Вывожу список → <span class="v">AssistantMessage с результатом</span>
+
+<span class="c">Агент НЕ читает каждый файл целиком — он выбирает наиболее дешёвый инструмент для задачи.</span>
+<span class="s">Хороший агент минимизирует токены, выбирая точечные инструменты.</span></div>
+</section>
+
+<!-- ── 5. Условия остановки ── -->
+<section class="section">
+  <h2>Когда loop останавливается</h2>
+
+  <div class="grid">
+    <div class="card bg-green">
+      <h3>Задача выполнена</h3>
+      <p>Агент сам решает, что цель достигнута. Возвращает финальный <code>AssistantMessage</code> без вызова новых инструментов.</p>
+    </div>
+    <div class="card bg-orange">
+      <h3>Нужен ввод пользователя</h3>
+      <p>Агент вызывает <code>AskFollowUpQuestion</code> — цикл приостанавливается и ждёт ответа. После ответа цикл продолжается.</p>
+    </div>
+    <div class="card bg-red">
+      <h3>Лимит turns / контекста</h3>
+      <p>Достигнут максимум вызовов инструментов или заполнен контекст. Агент возвращает частичный результат с предупреждением.</p>
+    </div>
+    <div class="card bg-blue">
+      <h3>Ошибка / Отказ</h3>
+      <p>Инструмент вернул ошибку, которую агент не может обойти (нет прав, файл не существует). Агент сообщает о проблеме.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── 6. Тонкости ── -->
+<section class="section">
+  <h2>Тонкости Agent Loop</h2>
+
+  <div class="nuance-card nc-red">
+    <h4>Контекст растёт необратимо — нельзя «удалить» прочитанный файл</h4>
+    <p>Как только инструмент вернул результат — эти токены в контексте навсегда (до компакции). Поэтому важно не читать огромные файлы без необходимости: одно чтение на 50 KB = 12 000 токенов, и они остаются до конца сессии.</p>
+  </div>
+
+  <div class="nuance-card nc-orange">
+    <h4>«Рассуждение» агента — тоже часть контекста</h4>
+    <p>Каждый <code>AssistantMessage</code> между вызовами инструментов (когда агент «думает вслух») занимает токены. Модель, которая рассуждает многословно между инструментами, быстрее заполняет контекст. Хорошие agents пишут короткие мысли между actions.</p>
+  </div>
+
+  <div class="nuance-card nc-blue">
+    <h4>Порядок инструментов влияет на результат</h4>
+    <p>Агент видит результаты инструментов последовательно. Если сначала прочитать неправильный файл — это «заражает» понимание на все следующие turns. Хорошо сформулированный промпт с указанием конкретных файлов экономит turns и снижает вероятность ошибок.</p>
+  </div>
+
+  <div class="nuance-card nc-purple">
+    <h4>Прерывание loop не откатывает уже сделанные действия</h4>
+    <p>Если агент уже отредактировал 3 файла, а ты нажал Esc после 4-го действия — первые 3 правки остаются. Checkpoint позволяет откатиться к началу, но bash-команды (push, deploy) откатить нельзя. Именно поэтому опасные команды требуют явного подтверждения.</p>
+  </div>
+
+  <div class="nuance-card nc-green">
+    <h4>Agent Loop ≠ Chat — он не ждёт каждого шага</h4>
+    <p>В обычном чате каждый ответ требует твоего следующего сообщения. Agent Loop работает автономно: агент сам вызывает следующий инструмент, не спрашивая тебя. Ты участвуешь только когда агент специально запрашивает ввод или ты прерываешь его.</p>
+  </div>
+</section>
+
+<!-- ── 7. Best practices ── -->
+<section class="section">
+  <h2>Best Practices</h2>
+  <div class="grid">
+    <div class="card bg-green">
+      <h3>Делай</h3>
+      <ul>
+        <li>Указывай конкретные файлы/директории в промпте — агент тратит меньше turns на поиск</li>
+        <li>Давай агенту способ проверить результат (тест, ожидаемый вывод)</li>
+        <li>Используй Plan Mode для сложных задач — сначала план, потом действия</li>
+        <li>Клади персистентные правила в CLAUDE.md / Rules, а не в чат</li>
+        <li>Прерывай (Esc) сразу, если видишь что агент идёт не туда</li>
+      </ul>
+    </div>
+    <div class="card bg-red">
+      <h3>Не делай</h3>
+      <ul>
+        <li>Не давай читать огромные файлы без необходимости — токены не вернуть</li>
+        <li>Не запускай опасные команды (push, drop table) без явных разрешений</li>
+        <li>Не рассчитывай что ранние инструкции в чате сохранятся после компакции</li>
+        <li>Не оставляй агент без условия остановки — он будет крутиться пока не заполнит контекст</li>
+        <li>Не путай «агент подумал» с «агент сделал» — только ToolUse производит реальные изменения</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── 8. Cursor vs Claude Code ── -->
+<section class="section">
+  <h2>Cursor vs Claude Code — сравнение</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Аспект</th><th>Cursor</th><th>Claude Code</th></tr></thead>
+    <tbody>
+      <tr><td>Запуск loop</td><td>Режим Agent в чате</td><td>Каждый запрос в терминале</td></tr>
+      <tr><td>Контроль turns</td><td>Подтверждение каждого действия (или YOLO)</td><td>Auto/Ask/Plan mode</td></tr>
+      <tr><td>Прерывание</td><td>Кнопка Stop в UI</td><td>Esc в терминале</td></tr>
+      <tr><td>Инструменты файлов</td><td>Встроены в IDE (diff view)</td><td>CLI инструменты + файловый API</td></tr>
+      <tr><td>Параллельный loop</td><td>Background Agents (несколько вкладок)</td><td>Agent View, Worktrees</td></tr>
+      <tr><td>Лимит turns</td><td>Настраивается в правилах</td><td>Задаётся через `--max-turns`</td></tr>
+      <tr><td>Просмотр действий</td><td>Inline diff в редакторе</td><td>Терминальный вывод + /context</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><b>Главное отличие:</b> Cursor визуализирует каждое действие агента inline в редакторе и требует подтверждения по умолчанию. Claude Code работает в терминале автономнее, с более гибкой системой режимов (auto/ask/plan).</div>
+</section>
+
+<!-- ── 9. Q&A 35 вопросов ── -->
+<section class="section">
+  <h2>Вопросы по уровням</h2>
+
+  <div class="qlevel-group">Junior — 10 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое Agent Loop простыми словами?</summary>
+  <div class="inside">Agent Loop — это повторяющийся цикл, в котором агент: думает что делать → вызывает инструмент (читает файл, запускает команду) → получает результат → думает снова. Цикл повторяется пока задача не выполнена. Это принципиально отличает агента от обычного чат-бота, который отвечает один раз и ждёт следующего сообщения.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Сколько «шагов» нужно агенту, чтобы исправить небольшой баг?</summary>
+  <div class="inside">Обычно 3–6 turns: 1) прочитать файл с ошибкой, 2) найти связанные файлы (если нужно), 3) внести правку, 4) запустить тест, 5) убедиться что тест прошёл. Если с первой попытки тест не прошёл — добавляется ещё 1–2 turns на диагностику. Простые задачи («добавь комментарий») решаются за 1–2 turns.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что происходит, когда агент вызывает инструмент?</summary>
+  <div class="inside">Результат инструмента добавляется в контекст как <code>ToolResult</code>. Агент видит его при следующем «рассуждении» и использует для принятия решения о следующем шаге. Контекст постепенно заполняется историей всех вызовов и их результатов.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое «turn» в контексте Agent Loop?</summary>
+  <div class="inside">Turn — один проход цикла: агент рассуждает → вызывает один инструмент → получает результат. Затем начинается следующий turn. Количество turns в задаче — это сколько раз агент «подумал и сделал что-то» прежде чем вернуть финальный ответ.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Какие три фазы есть в каждом agent loop?</summary>
+  <div class="inside"><b>Gather</b> (сбор контекста) — читает файлы, ищет информацию. <b>Act</b> (действие) — редактирует файлы, запускает команды. <b>Verify</b> (проверка) — запускает тесты, проверяет результат. Фазы перетекают друг в друга и могут повторяться внутри одной задачи.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Чем Agent Loop отличается от обычного чата с AI?</summary>
+  <div class="inside">В обычном чате AI отвечает один раз и ждёт следующего сообщения от тебя. В Agent Loop AI работает автономно: после получения задачи сам решает что делать дальше, вызывает инструменты, проверяет результаты и продолжает, пока задача не выполнена. Ты не участвуешь в каждом шаге.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Какие инструменты чаще всего использует агент?</summary>
+  <div class="inside">Наиболее частые: <b>Read</b> (прочитать файл), <b>Grep/Glob</b> (найти файлы/строки), <b>Edit/Write</b> (изменить файл), <b>Bash</b> (запустить команду). Для Claude Code ещё WebSearch. Выбор инструмента зависит от типа задачи.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Как агент узнаёт, что задача выполнена?</summary>
+  <div class="inside">Агент сам решает — на основе результатов инструментов. Если тест прошёл, файл изменён правильно, вывод команды соответствует ожидаемому — агент считает задачу выполненной и возвращает финальное сообщение без вызова новых инструментов.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что происходит если нажать Esc во время работы агента?</summary>
+  <div class="inside">Текущий вызов инструмента отменяется, loop останавливается. Уже сделанные изменения (отредактированные файлы) остаются. Агент ждёт следующей инструкции. Если нужно откатить изменения — используй checkpoint или git.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Почему нельзя «удалить» прочитанный файл из контекста?</summary>
+  <div class="inside">Контекст — это последовательность сообщений. Однажды добавленный ToolResult (результат чтения файла) уже является частью этой последовательности. Нельзя «вырезать» токены из середины. Они остаются до тех пор, пока не произойдёт компакция всего контекста.</div></details>
+
+  <div class="qlevel-group">Middle — 10 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как компакция контекста влияет на поведение агента?</summary>
+  <div class="inside">При компакции (/compact или авто) LLM суммаризирует историю, заменяя детальные сообщения кратким резюме. После компакции: ранние детальные инструкции могут быть потеряны или упрощены, агент «забывает» детали но помнит суть. Именно поэтому критичные правила должны быть в CLAUDE.md (он загружается заново в каждую сессию), а не написаны в начале чата.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как Plan Mode меняет поведение agent loop?</summary>
+  <div class="inside">В Plan Mode агент может использовать только инструменты Gather-фазы (Read, Grep, LS, WebSearch) — он может исследовать но не может редактировать файлы или запускать команды с сайд-эффектами. Это позволяет безопасно изучить задачу, составить план, получить фидбек, и только потом перейти к действиям. В Claude Code: Shift+Tab дважды. Агент сам запрашивает подтверждение для перехода в Act-фазу.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Почему важно давать агенту «условие проверки»?</summary>
+  <div class="inside">Без условия проверки агент не знает точно когда остановиться. Он может остановиться слишком рано («код выглядит правильным») или крутиться в петле, пробуя разные подходы. Когда даёшь проверяемое условие (тест, ожидаемый вывод, конкретный файл) — агент может запустить инструмент и получить объективный результат.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Какие задачи требуют больше turns и почему?</summary>
+  <div class="inside">Больше turns нужно когда: 1) задача охватывает много файлов (рефакторинг), 2) нужно исследовать незнакомый код, 3) первая попытка даёт ошибку и нужна диагностика, 4) задача итеративна (написать тест → поправить код → тест → поправить). Простые задачи с чётким указанием «что и где» делаются за 1–3 turns.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как управлять тем, что агент читает первым?</summary>
+  <div class="inside">Через конкретизацию промпта: «Посмотри src/auth/token.ts, там функция validateToken — она возвращает неправильный HTTP-код» гораздо лучше чем «почини баг с авторизацией». Первый вариант направляет агента к нужному файлу сразу, второй заставит его потратить 2–5 turns на поиск. Также можно использовать @-mentions (Cursor) или явно указывать пути.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Что такое «thrashing» (петля компакции) и как с ним бороться?</summary>
+  <div class="inside">Thrashing происходит когда один файл или ответ инструмента настолько большой, что сразу после компакции контекст снова заполняется. Агент компактирует → читает тот же большой файл → снова полный контекст → снова компакция. Claude Code показывает ошибку и останавливается. Решение: разбить задачу на части, использовать subagent для большого файла, или явно указать агенту читать только нужные секции файла.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как subagents помогают с ограничениями agent loop?</summary>
+  <div class="inside">Subagent получает собственный свежий контекст, полностью изолированный от родительского. Его работа не заполняет контекст основного агента — только финальный результат (краткое summary) возвращается. Это позволяет делегировать тяжёлые задачи (анализ большого файла, сложный поиск) без «загрязнения» основного контекста.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как hooks интегрируются с agent loop?</summary>
+  <div class="inside">Hooks — обработчики событий loop. <b>PreToolUse</b> срабатывает до вызова инструмента (можно заблокировать или модифицировать). <b>PostToolUse</b> — после (можно добавить авто-форматирование). <b>Stop</b> — когда агент завершает задачу (можно отправить уведомление). Hooks не меняют контекст LLM, но управляют поведением на уровне harness.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Почему ранние инструкции в чате ненадёжны для долгих сессий?</summary>
+  <div class="inside">При компакции LLM суммаризирует историю чата. Детальные инструкции из раннего сообщения («всегда использовать tabs, не spaces») могут упроститься до «используй правила стиля» или вообще потеряться. CLAUDE.md загружается в начало каждого нового system-промпта и не подвергается компакции — именно там должны быть постоянные правила.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как выглядит «хороший» agent loop с точки зрения токенов?</summary>
+  <div class="inside">Хороший loop: использует точечные инструменты (Grep вместо чтения всего файла), читает только релевантные части, пишет короткие «рассуждения» между инструментами, останавливается как только цель достигнута. Плохой loop: читает все файлы подряд, многословно объясняет каждый шаг, делает redundant проверки. Разница в 5–10x по токенам на одну задачу.</div></details>
+
+  <div class="qlevel-group">Senior — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как ограничить количество turns агента и когда это нужно?</summary>
+  <div class="inside">В Claude Code: флаг <code>--max-turns N</code> при запуске или параметр в SDK. В Cursor: через Rules можно указать ограничения поведения. Зачем ограничивать: 1) в CI/CD — предотвратить бесконечный цикл при непредвиденной ошибке, 2) для дорогих операций — контроль стоимости, 3) для задач с чётким скоупом — агент не должен «уходить» в смежные проблемы. Компромисс: слишком мало turns = задача не выполнена.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как архитектурно решить проблему «lost in the middle» в длинном agent loop?</summary>
+  <div class="inside">«Lost in the middle» — инструкции из середины контекста хуже обрабатываются моделью. Решения: 1) <b>CLAUDE.md с Compact Instructions</b> — ключевые правила, которые сохраняются при компакции, 2) <b>Subagents</b> — каждый работает с коротким свежим контекстом, 3) <b>Checkpoint + /compact focus</b> — явно указать что важно сохранить, 4) <b>Skills</b> — повторяемые workflow вне основного контекста, 5) разбить задачу на несколько коротких сессий.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как отличить «агент застрял в петле» от «агент решает сложную задачу»?</summary>
+  <div class="inside">Признаки петли: агент вызывает одни и те же инструменты с теми же аргументами, сообщения между turns однотипны, количество turns значительно превышает ожидаемое. Признаки сложной задачи: каждый turn открывает новые файлы или возвращает новые данные, агент явно меняет стратегию («первый подход не работает, попробую иначе»). Мониторинг: /context показывает уникальность ToolUse вызовов.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как устроен agent loop в SDK (Agent SDK)?</summary>
+  <div class="inside">В Claude Agent SDK loop реализован явно: <code>agent.run(prompt)</code> возвращает стрим событий. Каждое событие — либо <code>AssistantMessage</code>, либо <code>ToolUse</code> + <code>ToolResult</code>. Разработчик может: перехватывать события (observability), прерывать loop при условии (hooks), передавать custom tools (in-process MCP), управлять permissions (allow/deny rules). Loop продолжается пока агент вызывает инструменты; когда возвращает AssistantMessage без ToolUse — loop завершён.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Какие side effects agent loop нельзя откатить и как это учитывать в дизайне?</summary>
+  <div class="inside">Нельзя откатить: git push, деплой, изменения в БД, отправку email/webhook, API-вызовы с состоянием. Можно откатить: правки файлов (checkpoint + git). Стратегии: 1) <b>Разделить loop на dry-run и apply фазы</b> — сначала план без side effects, потом применение с подтверждением, 2) <b>Permissions</b> — блокировать опасные команды в allow/deny rules, 3) <b>Staging environment</b> — агент работает в изолированной среде, 4) <b>Sandbox mode</b> — в Claude Code sandboxed bash не имеет сетевого доступа.</div></details>
+
+  <div class="qlevel-group">Lead — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как стандартизировать использование agent loop в команде?</summary>
+  <div class="inside">1) <b>Шаблонные CLAUDE.md</b> — корпоративный шаблон с командными правилами, архитектурными решениями, запрещёнными командами. 2) <b>Onboarding skills</b> — команда <code>/team-onboarding</code> которая объясняет новичкам как работать с агентом в данном проекте. 3) <b>Permission policies</b> через managed settings — организационные allow/deny rules для всех. 4) <b>Метрики</b> — отслеживать avg turns per task, token usage, чтобы выявлять неэффективные паттерны промптинга.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как обучать разработчиков эффективно работать с agent loop?</summary>
+  <div class="inside">Основные паттерны для обучения: 1) «Конкретизация промпта» — покажи разницу в turns между размытым и конкретным запросом, 2) «Давай условие проверки» — тест или ожидаемый вывод, 3) «Не читай весь репо» — используй Grep/Glob вместо Read всех файлов, 4) «Plan Mode для сложных задач» — исследуй перед действием, 5) «CLAUDE.md — не чат» — постоянные правила должны быть в файле. Форматы: парное программирование с агентом, code review агентских сессий.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как контролировать затраты на токены при командном использовании agent loop?</summary>
+  <div class="inside">1) <b>Мониторинг</b>: /usage в Claude Code показывает что drive limits. Anthropic Console / analytics dashboard для командных данных. 2) <b>Managed settings</b>: spend limits на пользователя/день/месяц. 3) <b>Практики</b>: поощрять конкретные промпты, использование Grep вместо Read, короткие focused сессии вместо одной гигантской. 4) <b>Модели</b>: Sonnet для рутины, Opus для архитектурных решений — не наоборот. 5) <b>Fast mode</b>: для простых задач включить fast mode — дешевле и быстрее.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как организовать безопасный agent loop для production-критичных операций?</summary>
+  <div class="inside">1) <b>Разделение сред</b>: агент работает только в dev/staging, деплой в prod — через отдельный pipeline с human approval. 2) <b>Permission rules</b>: явный deny для команд с production side effects (kubectl apply --prod, psql prod). 3) <b>Dry-run phase</b>: сначала Plan Mode с полным описанием изменений, потом подтверждение. 4) <b>Audit log</b>: сохранять транскрипты всех агентских сессий (Claude Code: ~/.claude/projects/). 5) <b>Rollback plan</b>: всегда git commit перед сессией с агентом.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как agent loop вписывается в CI/CD пайплайн?</summary>
+  <div class="inside">Паттерны интеграции: 1) <b>PR review</b>: агент запускается на каждый PR, анализирует diff, оставляет комментарии — GitHub Actions + Claude Code. 2) <b>Auto-fix</b>: агент получает failing test, исправляет и создаёт новый коммит. 3) <b>Security audit</b>: ночной запуск, агент ищет уязвимости в новом коде. Ограничения: в CI нет interactive mode, нужно --headless, результат через exit code или вывод в файл. Безопасность: песочница, нет доступа к prod, read-only credentials где возможно.</div></details>
+
+  <div class="qlevel-group">Architect — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как спроектировать multi-agent систему поверх agent loop?</summary>
+  <div class="inside">Паттерны: 1) <b>Orchestrator + Workers</b>: главный агент (orchestrator) разбивает задачу, делегирует subagents, получает summary, интегрирует. 2) <b>Parallel workers</b>: несколько агентов работают над независимыми частями одновременно — в разных worktrees, итог сводится в main. 3) <b>Pipeline</b>: агент 1 исследует → агент 2 планирует → агент 3 реализует → агент 4 тестирует. 4) <b>Dynamic workflows</b>: orchestrator пишет скрипт запуска subagents на основе анализа задачи. Ключевой вопрос: как минимизировать inter-agent context transfer (только Summary, не полный контекст).</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как обеспечить идемпотентность agent loop при сбоях?</summary>
+  <div class="inside">Agent loop не идемпотентен по умолчанию: повторный запуск может создать дубли, конфликты, double-apply. Решения: 1) <b>Checkpoint</b> перед каждой сессией — возможность откатиться к исходному состоянию, 2) <b>Git branch per session</b> — агент работает в отдельной ветке, результат — PR, 3) <b>Idempotent tools</b> — проектировать custom MCP tools идемпотентно (upsert вместо insert), 4) <b>State check в начале</b> — агент читает текущее состояние и пропускает уже выполненные шаги, 5) <b>Session resume</b> — `claude --resume` продолжает с места остановки, не начинает заново.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как спроектировать наблюдаемость (observability) для agent loop в production?</summary>
+  <div class="inside">Уровни наблюдаемости: 1) <b>Трейсы</b>: OpenTelemetry экспорт (Agent SDK поддерживает OTLP) — каждый ToolUse = span, весь loop = trace. 2) <b>Метрики</b>: turns per task, tokens per turn, tool usage distribution, failure rate по типам ошибок. 3) <b>Логи</b>: transcript.jsonl — полная история сессии, searchable. 4) <b>Алерты</b>: петли (N идентичных ToolUse подряд), превышение turns threshold, запрос опасных команд. 5) <b>Дашборд</b>: avg cost per feature, времяко выполнения, hit rate by developer — помогает находить неэффективные паттерны.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как agent loop взаимодействует с permission системой на архитектурном уровне?</summary>
+  <div class="inside">Permission system — harness вокруг loop, не часть LLM. Архитектура: 1) Перед каждым ToolUse harness проверяет allow/deny rules (settings.json, managed settings). 2) Если deny — инструмент блокируется, агент получает отказ в ToolResult и должен найти обходной путь или запросить подтверждение. 3) Auto mode добавляет background safety classifier, который оценивает безопасность до выполнения. 4) Hooks PreToolUse могут динамически модифицировать или блокировать на основе runtime-логики. Разделение ответственности: LLM решает «что делать», harness решает «разрешено ли».</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Каковы архитектурные ограничения agent loop и как их обходить?</summary>
+  <div class="inside">Фундаментальные ограничения: 1) <b>Последовательность</b>: по умолчанию инструменты вызываются последовательно — обходится через subagents в параллель, 2) <b>Контекст</b>: конечный размер окна — обходится компакцией, subagents, Skills-on-demand, 3) <b>Stateless между сессиями</b>: агент «забывает» — решается auto memory, CLAUDE.md, Session resume, 4) <b>Недетерминизм</b>: один промпт → разные actions — решается через Plan Mode review, детальные правила, конкретные тесты для проверки, 5) <b>Latency</b>: каждый turn = API call — решается fast mode, кэширование, параллельные subagents.</div></details>
+</section>
+
+<script src="../assets/app.js"></script>
+</main></div></body></html>

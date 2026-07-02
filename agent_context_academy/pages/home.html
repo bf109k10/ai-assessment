@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Agent Context Academy</title>
+  <link rel="stylesheet" href="../assets/style.css"/>
+  <style>
+    .step-badge{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:999px;background:#0f172a;color:#fff;font-size:11px;font-weight:900;flex-shrink:0}
+    .topicCard .step-badge{position:absolute;top:14px;right:14px}
+    .topicCard{position:relative}
+    .level-pill{display:inline-block;border-radius:999px;padding:3px 9px;font-size:11px;font-weight:900;border:1px solid;margin-right:4px}
+    .lp-a0{background:#eff6ff;border-color:#93c5fd;color:#1e40af}
+    .lp-a1{background:#f0fdf4;border-color:#86efac;color:#166534}
+    .lp-a2{background:#fefce8;border-color:#fde68a;color:#92400e}
+    .lp-a3{background:#fdf4ff;border-color:#d8b4fe;color:#6b21a8}
+    .mental-model{display:flex;flex-direction:column;gap:0;border-radius:20px;overflow:hidden;border:1px solid var(--line)}
+    .mm-row{display:grid;grid-template-columns:36px 200px 1fr auto;align-items:center;padding:11px 16px;gap:12px;border-bottom:1px solid #f1f5f9;background:#fff}
+    .mm-row:last-child{border-bottom:none}
+    .mm-num{width:28px;height:28px;border-radius:999px;display:grid;place-items:center;font-size:12px;font-weight:900;color:#fff;flex-shrink:0}
+    .mm-name{font-weight:900;font-size:14px}
+    .mm-name small{display:block;font-weight:700;font-size:11px;color:#64748b;margin-top:1px}
+    .mm-desc{font-size:13px;color:#475569}
+    .mm-role{font-size:11px;font-weight:900;border-radius:999px;padding:3px 9px;border:1px solid;white-space:nowrap}
+    .card-why{margin:8px 0 10px;padding:7px 10px;border-radius:10px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;font-size:12.5px;line-height:1.4}
+    .card-why b{color:#1d4ed8}
+  </style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>
+    <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html" class="active"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div>
+  <div class="progressBox"><b>Формула</b><p class="sourceNote">System instructions → Rules/Hooks → AGENTS.md → Current task → Memory/RAG/MCP/Skills → Subagents.</p></div>
+</aside>
+
+<main class="main">
+<section class="hero">
+  <div class="kicker">Agent Context Academy</div>
+  <h2>Agent Context Academy</h2>
+  <p>Обучающая платформа по AI-агентам: Cursor, Claude Code, AGENTS.md, Rules, Hooks, Skills, RAG, Memory, MCP, Checkpoints, Subagents — от основ до продвинутых тем.</p>
+  <div class="heroActions">
+    <a class="btn primary" href="roadmap.html">Начать обучение →</a>
+    <a class="btn" href="assessment.html">К assessment</a>
+    <button class="markDone">Отметить страницу изученной</button>
+  </div>
+</section>
+
+<!-- ── Карта обучения по порядку ── -->
+<section class="section">
+  <h2>Карта обучения — по порядку</h2>
+  <p class="sectionIntro">Темы расставлены в рекомендованной последовательности: каждая следующая опирается на предыдущие. Номер в углу = шаг.</p>
+  <style>
+    .phase-header{grid-column:1/-1;margin:8px 0 2px;padding:8px 14px;border-radius:12px;background:linear-gradient(90deg,#f1f5f9 0%,#e2e8f0 100%);font-weight:900;font-size:13px;color:#334155;letter-spacing:.04em;border-left:4px solid #0f172a}
+  </style>
+  <div class="grid">
+
+    <div class="phase-header">&#x1F9E0; Фаза 1 — Фундамент: как работает агент</div>
+
+    <a class="card topicCard" href="prompting.html">
+      <span class="step-badge">1</span>
+      <div class="topicHead"><div class="topicIcon blue">✍️</div><div><h3>Prompt Engineering</h3><p>Zero-shot, Few-shot, CoT, Role Prompting, R-C-T-F-Q, Negative Constraints. Основа общения с LLM.</p></div></div>
+      <p class="card-why"><b>Зачем:</b> получать нужный результат от LLM с первого раза, без лишних итераций.</p>
+      <span class="level-pill lp-a0">A0</span><span class="tag">фундамент</span>
+    </a>
+
+    <a class="card topicCard" href="context-engineering.html">
+      <span class="step-badge">2</span>
+      <div class="topicHead"><div class="topicIcon purple">🧠</div><div><h3>Context Engineering</h3><p>Управление контекстным окном: signal vs noise, порядок слоёв, .cursorignore, Checkpoint, Caching. Уровень выше промптинга.</p></div></div>
+      <p class="card-why"><b>Зачем:</b> управлять тем, что попадает в контекст, а не просто писать промпты.</p>
+      <span class="level-pill lp-a1">A1</span><span class="tag">архитектура</span>
+    </a>
+
+    <a class="card topicCard" href="context.html">
+      <span class="step-badge">3</span>
+      <div class="topicHead"><div class="topicIcon blue">🧩</div><div><h3>Контекст агента</h3><p>Что такое context window, как агент видит мир, слои и приоритеты.</p></div></div>
+      <p class="card-why"><b>Зачем:</b> понять, что реально видит модель и в каком порядке — без этого остальное не сложится.</p>
+      <span class="level-pill lp-a0">A0</span><span class="tag">фундамент</span><span class="tag">обязательно</span>
+    </a>
+
+    <a class="card topicCard" href="agent-loop.html">
+      <span class="step-badge">4</span>
+      <div class="topicHead"><div class="topicIcon blue">🔄</div><div><h3>Agent Loop</h3><p>Как агент работает изнутри: think → tool → observe. Turns, контекст, остановка.</p></div></div>
+      <p class="card-why"><b>Зачем:</b> понять механику цикла — без этого непонятно почему агент иногда «зацикливается» или теряет инструкции.</p>
+      <span class="level-pill lp-a0">A0</span><span class="tag">механика</span><span class="tag">фундамент</span>
+    </a>
+
+    <a class="card topicCard" href="workflow.html">
+      <span class="step-badge">5</span>
+      <div class="topicHead"><div class="topicIcon green">🔀</div><div><h3>Explore → Plan → Code</h3><p>Процесс работы с агентом после Agent Loop: контекст, план, код с проверкой. Параллель и fan-out — в связке с Subagents.</p></div></div>
+      <p class="card-why"><b>Зачем:</b> применить цикл агента на практике — не прыгать сразу в правки без explore и approve плана.</p>
+      <span class="level-pill lp-a0">A0</span><span class="tag">процесс</span><span class="tag">с нуля</span>
+    </a>
+
+    <a class="card topicCard" href="model-variance.html">
+      <span class="step-badge">6</span>
+      <div class="topicHead"><div class="topicIcon orange">🎲</div><div><h3>Почему модель ≠ модель</h3><p>Temperature, sampling, harness, context quality. Claude в Cursor ≠ Claude в API.</p></div></div>
+      <p class="card-why"><b>Зачем:</b> не удивляться, почему один и тот же промпт даёт разный результат.</p>
+      <span class="level-pill lp-a0">A0</span><span class="tag">критично</span>
+    </a>
+
+    <div class="phase-header">&#x2699;&#xFE0F; Фаза 2 — Конфигурация агента: Rules, Hooks, Permissions</div>
+
+    <a class="card topicCard" href="agents-rules-skills.html">
+      <span class="step-badge">7</span>
+      <div class="topicHead"><div class="topicIcon red">📄</div><div><h3>AGENTS / Rules / Skills</h3><p>Иерархия конфигурации: где workflow, где policy, где playbooks.</p></div></div>
+      <p class="card-why"><b>Зачем:</b> понять, где хранить workflow, где policy, а где playbooks — и что важнее при конфликте.</p>
+      <span class="level-pill lp-a1">A1</span><span class="tag">архитектура</span>
+    </a>
+
+    <a class="card topicCard" href="rules.html">
+      <span class="step-badge">8</span>
+      <div class="topicHead"><div class="topicIcon red">🔒</div><div><h3>Rules — политика агента</h3><p>alwaysApply, globs, 4 типа правил. Cursor .mdc vs Claude Code policy.</p></div></div>
+      <p class="card-why"><b>Зачем:</b> задать жёсткие ограничения, которые агент не обойдёт из чата.</p>
+      <span class="level-pill lp-a1">A1</span><span class="tag">обязательно</span>
+    </a>
+
+    <a class="card topicCard" href="hooks.html">
+      <span class="step-badge">9</span>
+      <div class="topicHead"><div class="topicIcon red">🪝</div><div><h3>Hooks</h3><p>Cursor hooks.json и Claude Pre/PostToolUse — shell-принуждение. Жёстче Rules.</p></div></div>
+      <p class="card-why"><b>Зачем:</b> принудительно блокировать опасные действия до/после tool call.</p>
+      <span class="level-pill lp-a2">A2</span><span class="tag">продвинутое</span><span class="tag">новое</span>
+    </a>
+
+    <a class="card topicCard" href="permissions.html">
+      <span class="step-badge">10</span>
+      <div class="topicHead"><div class="topicIcon blue">🛡️</div><div><h3>Permissions — режимы разрешений</h3><p>default/acceptEdits/plan/auto/bypass, allow/deny/ask правила, managed settings.</p></div></div>
+      <p class="card-why"><b>Зачем:</b> контролировать что агент может делать без подтверждения — от read-only до полной автономии.</p>
+      <span class="level-pill lp-a1">A1</span><span class="tag">безопасность</span><span class="tag">контроль</span>
+    </a>
+
+    <div class="phase-header">&#x1F4BE; Фаза 3 — Память и данные: Memory, RAG, MCP</div>
+
+    <a class="card topicCard" href="memory.html">
+      <span class="step-badge">11</span>
+      <div class="topicHead"><div class="topicIcon orange">🧠</div><div><h3>Memory Bank</h3><p>Долговременная память: типы, форматы, lifecycle, Memory vs RAG vs Checkpoint.</p></div></div>
+      <p class="card-why"><b>Зачем:</b> не терять принятые решения между сессиями и не переспрашивать одно и то же.</p>
+      <span class="level-pill lp-a1">A1</span><span class="tag">persistence</span>
+    </a>
+
+    <a class="card topicCard" href="rag.html">
+      <span class="step-badge">12</span>
+      <div class="topicHead"><div class="topicIcon green">🔎</div><div><h3>RAG подробно</h3><p>Chunks, embeddings, retrieval, reranking, context assembly, grounding, риски.</p></div></div>
+      <p class="card-why"><b>Зачем:</b> отвечать по актуальным фактам из документов и кода, а не по памяти модели.</p>
+      <span class="level-pill lp-a1">A1</span><span class="tag">retrieval</span>
+    </a>
+
+    <a class="card topicCard" href="mcp.html">
+      <span class="step-badge">13</span>
+      <div class="topicHead"><div class="topicIcon teal">🛠</div><div><h3>MCP / Tools</h3><p>Протокол, uvx/npm, Registry, Inspector, как AI выбирает tool, permissions.</p></div></div>
+      <p class="card-why"><b>Зачем:</b> дать агенту доступ к реальным данным и действиям, а не только к рассуждениям.</p>
+      <span class="level-pill lp-a1">A1</span><span class="tag">live data</span>
+    </a>
+
+    <div class="phase-header">&#x26A1; Фаза 4 — Оптимизация: Caching, Checkpoints, Subagents</div>
+
+    <a class="card topicCard" href="caching.html">
+      <span class="step-badge">14</span>
+      <div class="topicHead"><div class="topicIcon green">⚡</div><div><h3>Prompt Caching</h3><p>KV-cache, prefix caching, инвалидация, TTL. Почему тратится меньше токенов.</p></div></div>
+      <p class="card-why"><b>Зачем:</b> не платить заново за токены, которые уже были в контексте.</p>
+      <span class="level-pill lp-a1">A1</span><span class="tag">оптимизация</span>
+    </a>
+
+    <a class="card topicCard" href="checkpoints.html">
+      <span class="step-badge">15</span>
+      <div class="topicHead"><div class="topicIcon orange">✅</div><div><h3>Checkpoint / Summary</h3><p>Как сохранять состояние задачи и не потерять решения при compaction.</p></div></div>
+      <p class="card-why"><b>Зачем:</b> не потерять цель и решения при длинной задаче или сжатии контекста.</p>
+      <span class="level-pill lp-a1">A1</span><span class="tag">continuity</span>
+    </a>
+
+    <a class="card topicCard" href="subagents.html">
+      <span class="step-badge">16</span>
+      <div class="topicHead"><div class="topicIcon navy">👥</div><div><h3>Subagents</h3><p>Делегирование, изолированный контекст, permissions, foreground/background.</p></div></div>
+      <p class="card-why"><b>Зачем:</b> делегировать часть работы и не раздувать контекст главного агента.</p>
+      <span class="level-pill lp-a2">A2</span><span class="tag">orchestration</span>
+    </a>
+
+    <a class="card topicCard" href="agentic-systems.html">
+      <span class="step-badge">17</span>
+      <div class="topicHead"><div class="topicIcon navy">🏗</div><div><h3>Построение агентских систем</h3><p>Декомпозиция задачи, параллельно vs последовательно, дерево зависимостей, распределение файлов.</p></div></div>
+      <p class="card-why"><b>Зачем:</b> собрать из subagents рабочую систему и не потерять правки в параллельных ветках.</p>
+      <span class="level-pill lp-a3">A3</span><span class="tag">orchestration</span><span class="tag">параллелизм</span>
+    </a>
+
+    <div class="phase-header">&#x1F3AF; Фаза 5 — Продвинутое: Конфликты, Оценка</div>
+
+    <a class="card topicCard" href="conflicts.html">
+      <span class="step-badge">18</span>
+      <div class="topicHead"><div class="topicIcon yellow">⚠️</div><div><h3>Конфликты контекста</h3><p>Rules vs AGENTS.md vs Memory vs RAG vs chat. Что важнее при противоречии?</p></div></div>
+      <p class="card-why"><b>Зачем:</b> понимать, что побеждает, когда источники контекста противоречат друг другу.</p>
+      <span class="level-pill lp-a2">A2</span><span class="tag">assessment</span>
+    </a>
+
+    <a class="card topicCard" href="skills.html">
+      <span class="step-badge">19</span>
+      <div class="topicHead"><div class="topicIcon purple">⚡</div><div><h3>Skills / Commands</h3><p>Переиспользуемые playbooks: SKILL.md, Cursor Commands, MCP интеграция.</p></div></div>
+      <p class="card-why"><b>Зачем:</b> выполнять повторяемую задачу по проверенному сценарию, а не изобретать заново.</p>
+      <span class="level-pill lp-a2">A2</span><span class="tag">playbooks</span>
+    </a>
+
+    <a class="card topicCard" href="tool-choice.html">
+      <span class="step-badge">20</span>
+      <div class="topicHead"><div class="topicIcon blue">🗂️</div><div><h3>Какой инструмент когда</h3><p>Memory vs AGENTS.md vs Rules vs Skills vs Hooks — таблицы best practices.</p></div></div>
+      <p class="card-why"><b>Зачем:</b> сразу знать куда класть конкретный тип контента, не гадать каждый раз.</p>
+      <span class="level-pill lp-a2">A2</span><span class="tag">best practices</span><span class="tag">сравнение</span>
+    </a>
+
+    <a class="card topicCard" href="tricky-questions.html">
+      <span class="step-badge">21</span>
+      <div class="topicHead"><div class="topicIcon red">🧨</div><div><h3>Каверзные вопросы</h3><p>Неочевидные вопросы по Cursor/Claude docs перед assessment.</p></div></div>
+      <p class="card-why"><b>Зачем:</b> подготовиться к неочевидным вопросам до, а не во время проверки знаний.</p>
+      <span class="level-pill lp-a3">A3</span><span class="tag">обязательно перед assessment</span>
+    </a>
+
+    <a class="card topicCard" href="assessment.html">
+      <span class="step-badge">22</span>
+      <div class="topicHead"><div class="topicIcon purple">🎯</div><div><h3>Assessment тренажёр</h3><p>Короткие ответы, кейсы, quiz — тренировка перед проверкой знаний.</p></div></div>
+      <p class="card-why"><b>Зачем:</b> проверить, что теория действительно закрепилась, перед реальной оценкой.</p>
+      <span class="level-pill lp-a3">A3</span><span class="tag">финал</span>
+    </a>
+
+  </div>
+</section>
+
+<!-- ── Ментальная модель ── -->
+<section class="section">
+  <h2>Ментальная модель — слои контекста</h2>
+  <p class="sectionIntro">Каждый слой отвечает на свой вопрос. Чем выше — тем жёстче ограничение. Чем ниже — тем конкретнее данные.</p>
+  <div class="mental-model">
+    <div class="mm-row">
+      <div class="mm-num" style="background:#475569">0</div>
+      <div class="mm-name">System instructions<small>platform prompt · слой 0</small></div>
+      <div class="mm-desc">Верх платформы (safety, harness). В IDE к prefix добавляются alwaysApply Rules. Агент не переопределяет platform из чата. <a href="prompting.html#system-instructions">Терминология</a></div>
+      <div class="mm-role" style="background:#f8fafc;border-color:#e2e8f0;color:#64748b">ограничение</div>
+    </div>
+    <div class="mm-row" style="background:#fff1f2">
+      <div class="mm-num" style="background:#dc2626">1</div>
+      <div class="mm-name">Hooks<small>PreToolUse / PostToolUse</small></div>
+      <div class="mm-desc">Shell-скрипты принуждения. Блокируют опасные действия до/после tool call. Жёстче Rules.</div>
+      <div class="mm-role" style="background:#fee2e2;border-color:#fca5a5;color:#dc2626">enforcement</div>
+    </div>
+    <div class="mm-row" style="background:#fff7ed">
+      <div class="mm-num" style="background:#ea580c">2</div>
+      <div class="mm-name">Rules / Policy<small>.cursor/rules/*.mdc</small></div>
+      <div class="mm-desc">Жёсткие политики: никогда / всегда. alwaysApply или по globs. Нельзя обойти из чата.</div>
+      <div class="mm-role" style="background:#ffedd5;border-color:#fdba74;color:#c2410c">политика</div>
+    </div>
+    <div class="mm-row" style="background:#fffbeb">
+      <div class="mm-num" style="background:#d97706">3</div>
+      <div class="mm-name">AGENTS.md / CLAUDE.md<small>Project Instructions</small></div>
+      <div class="mm-desc">Workflow, стек, ADRs, conventions. Каскад: global → repo → subdir.</div>
+      <div class="mm-role" style="background:#fef9c3;border-color:#fde047;color:#854d0e">workflow</div>
+    </div>
+    <div class="mm-row" style="background:#eff6ff">
+      <div class="mm-num" style="background:#2563eb">4</div>
+      <div class="mm-name">Current chat / task<small>Текущий запрос</small></div>
+      <div class="mm-desc">Что нужно сделать прямо сейчас. Не переопределяет Rules и Hooks выше.</div>
+      <div class="mm-role" style="background:#dbeafe;border-color:#93c5fd;color:#1e40af">задача</div>
+    </div>
+    <div class="mm-row" style="background:#f5f3ff">
+      <div class="mm-num" style="background:#7c3aed">5</div>
+      <div class="mm-name">Skills / Commands<small>SKILL.md / .cursor/commands</small></div>
+      <div class="mm-desc">Commands для типовых задач. Вызываются явно. Рекомендации, не ограничения.</div>
+      <div class="mm-role" style="background:#ede9fe;border-color:#c4b5fd;color:#5b21b6">playbook</div>
+    </div>
+    <div class="mm-row" style="background:#fff7ed">
+      <div class="mm-num" style="background:#f97316">6</div>
+      <div class="mm-name">Memory Bank<small>memory.md / Checkpoints</small></div>
+      <div class="mm-desc">Долговременная память: решения, стек, предпочтения. Может устаревать.</div>
+      <div class="mm-role" style="background:#ffedd5;border-color:#fdba74;color:#c2410c">память</div>
+    </div>
+    <div class="mm-row" style="background:#f0fdf4">
+      <div class="mm-num" style="background:#16a34a">7</div>
+      <div class="mm-name">RAG<small>Vector DB / Docs</small></div>
+      <div class="mm-desc">Найденные фрагменты документов, кода, wiki. Семантический поиск.</div>
+      <div class="mm-role" style="background:#dcfce7;border-color:#86efac;color:#166534">retrieval</div>
+    </div>
+    <div class="mm-row" style="background:#ecfeff">
+      <div class="mm-num" style="background:#0891b2">8</div>
+      <div class="mm-name">MCP / Tools<small>API / CI / DB / Jira</small></div>
+      <div class="mm-desc">Live данные и действия через tool calls. Результат попадает обратно в context.</div>
+      <div class="mm-role" style="background:#cffafe;border-color:#67e8f9;color:#0e7490">live data</div>
+    </div>
+    <div class="mm-row" style="background:#f8fafc">
+      <div class="mm-num" style="background:#334155">9</div>
+      <div class="mm-name">Subagents<small>Делегированные задачи</small></div>
+      <div class="mm-desc">Findings subagents — проверяй до принятия. Изолированный context, ограниченные tools.</div>
+      <div class="mm-role" style="background:#f1f5f9;border-color:#e2e8f0;color:#475569">delegation</div>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:14px">
+    <b>Правило приоритета:</b> Hooks &gt; Rules &gt; AGENTS.md &gt; chat. При конфликте — выше = жёстче. Hooks нельзя обойти из промпта. Rules — нельзя обойти из чата. AGENTS.md — рекомендация, уступает Rules.
+  </div>
+</section>
+
+<!-- ── Как проходить ── -->
+<section class="section">
+  <h2>Как проходить</h2>
+  <div class="grid">
+    <div class="card"><h3>1. Пойми слои</h3><p>Начни с Prompt Engineering и Context Engineering, затем «Контекст агента» — слои и приоритеты. Дальше AGENTS/Rules.</p></div>
+    <div class="card"><h3>2. Разбери приоритеты</h3><p>Assessment проверяет не определения, а выбор приоритета при конфликте. Hooks > Rules > AGENTS > chat.</p></div>
+    <div class="card"><h3>3. Закрепи кейсами</h3><p>Пройди тренажёр, ответь на каверзные вопросы. Формула: источник → роль → ограничение → пример.</p></div>
+  </div>
+</section>
+
+<div class="pageFooter"><div class="nextPrev"><a href="prompting.html">Prompt Engineering →</a></div></div>
+</main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

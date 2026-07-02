@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Commands — Cursor и Claude Code: форматы, вызов, тонкости</title>
+  <link rel="stylesheet" href="../assets/style.css"/>
+  <style>
+    .schema-box{background:#0f172a;color:#e2e8f0;border-radius:16px;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.65;overflow:auto;margin:10px 0;white-space:pre-wrap}
+    .schema-box .h{color:#c084fc;font-weight:900}
+    .schema-box .c{color:#64748b}
+    .schema-box .k{color:#93c5fd}
+    .schema-box .v{color:#86efac}
+    .schema-box .s{color:#fcd34d}
+    .nuance-card{border-left:4px solid;border-radius:0 14px 14px 0;padding:12px 16px;margin:8px 0;background:#fff;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+    .nc-blue{border-left-color:#2563eb}
+    .nc-red{border-left-color:#dc2626}
+    .nc-orange{border-left-color:#f97316}
+    .nc-green{border-left-color:#16a34a}
+    .nc-purple{border-left-color:#7c3aed}
+    .platform-split{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:#fff}
+    .ps-col{padding:18px}
+    .ps-col:first-child{border-right:1px solid var(--line)}
+    .ps-head{font-weight:900;font-size:15px;padding:10px 12px;border-radius:12px;margin:0 0 14px}
+    .ps-cursor{background:#eff6ff;color:#1e40af}
+    .ps-claude{background:#fdf4ff;color:#6b21a8}
+    .trigger-pill{display:inline-block;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:900;border:1px solid;font-family:ui-monospace,Menlo,monospace}
+    .tp-cursor{background:#eff6ff;border-color:#93c5fd;color:#1e40af}
+    .tp-claude{background:#fdf4ff;border-color:#d8b4fe;color:#6b21a8}
+    .cmd-card{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff;margin:10px 0}
+    .cmd-head{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);background:#f8fafc}
+    .cmd-icon{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-size:18px}
+    .cmd-head h4{margin:0;font-size:15px}
+    .cmd-head p{margin:0;font-size:12px;color:#64748b}
+    .cmd-body{padding:16px}
+    .lifecycle{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff}
+    .lc-step{padding:16px 12px;text-align:center;border-right:1px solid var(--line)}
+    .lc-step:last-child{border-right:none}
+    .lc-num{width:34px;height:34px;border-radius:999px;background:#2563eb;color:#fff;display:grid;place-items:center;font-weight:900;font-size:14px;margin:0 auto 10px}
+    .lc-step h4{font-size:13px;margin:0 0 5px}
+    .lc-step p{font-size:12px;color:#64748b;margin:0;line-height:1.4}
+    code{background:#f1f5f9;padding:2px 5px;border-radius:5px;font-family:ui-monospace,Menlo,monospace;font-size:12px}
+    .platform-badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:900;border:1px solid}
+    .pb-cursor{background:#eff6ff;border-color:#93c5fd;color:#1e40af}
+    .pb-claude{background:#fdf4ff;border-color:#d8b4fe;color:#6b21a8}
+    @media(max-width:900px){.platform-split{grid-template-columns:1fr}.lifecycle{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>
+    <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub active"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div>
+  <div class="progressBox"><b>Правило</b><p class="sourceNote">Commands = явные slash-команды. Cursor: /command из .cursor/commands/. Claude Code: /command из .claude/commands/. Всегда явный вызов.</p></div>
+</aside>
+
+<main class="main">
+<section class="hero">
+  <div class="kicker">Agent Context Academy · AGENTS / Rules / Skills</div>
+  <h2>Commands</h2>
+  <p>Commands — переиспользуемые Markdown-инструкции вызываемые явно через <code>/command-name</code>. Cursor хранит их в <code>.cursor/commands/</code>, Claude Code — в <code>.claude/commands/</code>. Формат отличается, смысл одинаковый. Отличие от <a href="skills.html">Skills</a>: Commands всегда явные, Skills в Claude Code могут применяться автоматически.</p>
+  <div class="heroActions">
+    <a class="btn" href="agent-packages.html">← Agent Package Manager</a>
+    <a class="btn" href="agents-rules-skills.html">Обзор</a>
+    <a class="btn" href="subagents.html">Subagents →</a>
+    <button class="markDone">Отметить страницу изученной</button>
+  </div>
+</section>
+
+<!-- ── Что такое Commands ── -->
+<section class="section">
+  <h2>Что такое Commands и зачем они нужны</h2>
+  <div class="grid">
+    <div class="card bg-blue">
+      <h3>Commands = явные инструкции по требованию</h3>
+      <p>Markdown-файл с пошаговыми инструкциями. Вызывается через <code>/имя</code> в чате — тогда и только тогда файл загружается в context как дополнительные инструкции агенту.</p>
+      <ul>
+        <li>Шаблон PR description</li>
+        <li>Чеклист перед релизом</li>
+        <li>Пошаговый debug workflow</li>
+        <li>Инструкция по рефакторингу</li>
+        <li>Стандарт написания тестов</li>
+      </ul>
+    </div>
+    <div class="card bg-green">
+      <h3>Commands vs Skills vs Rules</h3>
+      <div class="tableWrap" style="margin-top:8px"><table style="font-size:13px">
+        <thead><tr><th></th><th>Rules</th><th>Skills</th><th>Commands</th></tr></thead>
+        <tbody>
+          <tr><td><b>Когда активны</b></td><td>Автоматически</td><td>При вызове / авто (Claude)</td><td>Только явный вызов</td></tr>
+          <tr><td><b>Формат</b></td><td>.mdc + YAML</td><td>MD + YAML frontmatter</td><td>Plain Markdown</td></tr>
+          <tr><td><b>Назначение</b></td><td>Политика</td><td>Workflow-инструкция</td><td>Workflow-инструкция</td></tr>
+          <tr><td><b>Платформа</b></td><td>Cursor (.mdc)</td><td>Claude Code</td><td>Обе</td></tr>
+          <tr><td><b>Приоритет</b></td><td>Высокий</td><td>Низкий</td><td>Низкий</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Два варианта: Cursor и Claude Code ── -->
+<section class="section">
+  <h2>Формат и структура — Cursor и Claude Code</h2>
+  <div class="platform-split">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor — .cursor/commands/</div>
+      <p style="font-size:13px;color:#475569;margin-bottom:10px"><b>Расположение:</b> <code>.cursor/commands/*.md</code><br>
+      <b>Имя команды</b> = имя файла без расширения.<br>
+      <code>pr-template.md</code> → <code>/pr-template</code><br>
+      Frontmatter необязателен. Plain Markdown.</p>
+
+      <div class="schema-box"><span class="c"># .cursor/commands/pr-template.md</span>
+
+<span class="h"># PR Template</span>
+
+When creating a PR description, use:
+
+<span class="h">## Problem</span>
+[What issue does this address?]
+
+<span class="h">## Solution</span>
+[How was it solved?]
+
+<span class="h">## Changes</span>
+- [Key changes list]
+
+<span class="h">## Tests</span>
+- [What was tested]
+
+<span class="h">## Risk</span>
+- [Risks + rollback plan]
+
+<span class="h">## Checklist</span>
+- [ ] Tests passing
+- [ ] No secrets exposed
+- [ ] Docs updated</div>
+
+      <div class="callout" style="margin-top:10px;font-size:13px">
+        <b>Вызов:</b> введи <code>/pr-template</code> в чате → Cursor загружает файл в context → агент следует инструкциям.
+      </div>
+
+      <h4 style="margin:14px 0 6px">Файловое дерево</h4>
+      <div class="schema-box">.cursor/
+└── commands/
+    ├── pr-template.md  <span class="c">← /pr-template</span>
+    ├── debug.md        <span class="c">← /debug</span>
+    ├── pre-release.md  <span class="c">← /pre-release</span>
+    └── refactor.md     <span class="c">← /refactor</span></div>
+      <p style="font-size:13px;color:#f97316;margin-top:8px;font-weight:700">⚠ Только project-level. Глобальных Commands в Cursor нет.</p>
+    </div>
+
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code — .claude/commands/</div>
+      <p style="font-size:13px;color:#475569;margin-bottom:10px"><b>Расположение:</b> <code>.claude/commands/*.md</code> или <code>~/.claude/commands/</code> (global)<br>
+      <b>Имя команды</b> = поле <code>description</code> в YAML frontmatter.<br>
+      Frontmatter обязателен. Поддерживает <code>$ARGUMENTS</code>.</p>
+
+      <div class="schema-box"><span class="c"># .claude/commands/pr-template.md</span>
+<span class="h">---</span>
+<span class="k">description</span>: <span class="s">"Create a structured PR description"</span>
+<span class="h">---</span>
+
+<span class="h"># PR Template</span>
+
+Create a PR description using this structure.
+Arguments: $ARGUMENTS (optional: feature/bugfix/hotfix)
+
+<span class="h">## Problem</span>
+[What issue does this address?]
+
+<span class="h">## Solution</span>
+[How was it solved?]
+
+<span class="h">## Changes</span>
+- [Key changes list]
+
+<span class="h">## Tests</span>
+- [What was tested]
+
+<span class="h">## Risk</span>
+- [Risks + rollback plan]
+
+<span class="h">## Checklist</span>
+- [ ] Tests passing
+- [ ] No secrets exposed
+- [ ] Docs updated</div>
+
+      <div class="callout" style="margin-top:10px;font-size:13px">
+        <b>Вызов:</b> <code>/pr-template</code> или <code>/pr-template bugfix</code> с аргументами. <code>$ARGUMENTS</code> в файле заменяется на введённый текст.
+      </div>
+
+      <h4 style="margin:14px 0 6px">Файловое дерево</h4>
+      <div class="schema-box">.claude/
+└── commands/
+    ├── pr-template.md  <span class="c">← /pr-template</span>
+    ├── debug.md        <span class="c">← /debug</span>
+    └── pre-release.md  <span class="c">← /pre-release</span>
+
+~/.claude/
+└── commands/          <span class="c">← глобальные (все проекты)</span>
+    └── my-style.md</div>
+      <p style="font-size:13px;color:#16a34a;margin-top:8px;font-weight:700">✓ Есть глобальный уровень: ~/.claude/commands/</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Lifecycle ── -->
+<section class="section">
+  <h2>Lifecycle вызова Command</h2>
+  <div class="lifecycle">
+    <div class="lc-step" style="background:#eff6ff">
+      <div class="lc-num">1</div><h4>Вызов</h4>
+      <p>Пользователь вводит <code>/command-name</code> в чате (опционально с аргументами).</p>
+    </div>
+    <div class="lc-step" style="background:#f0fdf4">
+      <div class="lc-num">2</div><h4>Load</h4>
+      <p>Платформа находит файл в <code>commands/</code> и загружает его в context текущего чата.</p>
+    </div>
+    <div class="lc-step" style="background:#fefce8">
+      <div class="lc-num">3</div><h4>Apply</h4>
+      <p>Агент следует инструкциям из файла. Может вызывать MCP tools если они упомянуты.</p>
+    </div>
+    <div class="lc-step" style="background:#fff7ed">
+      <div class="lc-num">4</div><h4>Output</h4>
+      <p>Результат в формате описанном в Command. Структурированно по шаблону.</p>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:12px">
+    <b>Ключевое правило:</b> Commands <em>никогда не применяются автоматически</em> — ни в Cursor, ни в Claude Code. Агент не читает их без явного вызова. Если нужно что-то применять автоматически — используй Rules (Cursor) или добавь в AGENTS.md / CLAUDE.md.
+  </div>
+</section>
+
+<!-- ── Примеры ── -->
+<section class="section">
+  <h2>Примеры реальных Commands</h2>
+
+  <div class="cmd-card">
+    <div class="cmd-head">
+      <div class="cmd-icon" style="background:#eff6ff">📝</div>
+      <div><h4>pr-template</h4><p>Шаблон описания Pull Request</p></div>
+      <span class="trigger-pill tp-cursor">/pr-template</span>
+    </div>
+    <div class="cmd-body">
+      <div class="schema-box" style="font-size:12px"><span class="h"># PR Template</span>
+Create PR description:
+**Problem**: [issue being fixed]
+**Solution**: [how it was solved]
+**Tests**: [what was tested]
+**Risk**: [impact + rollback plan]
+**Checklist**: tests pass / no secrets / docs updated</div>
+    </div>
+  </div>
+
+  <div class="cmd-card">
+    <div class="cmd-head">
+      <div class="cmd-icon" style="background:#f0fdf4">✅</div>
+      <div><h4>pre-release</h4><p>Чеклист перед выкаткой в production</p></div>
+      <span class="trigger-pill tp-cursor">/pre-release</span>
+    </div>
+    <div class="cmd-body">
+      <div class="schema-box" style="font-size:12px"><span class="h"># Pre-release Checklist</span>
+Verify before releasing to production:
+- [ ] All CI checks passing
+- [ ] Feature flags configured correctly
+- [ ] DB migrations tested in staging
+- [ ] Rollback plan documented
+- [ ] Monitoring alerts configured
+- [ ] Team notified in #deployments
+
+If ANY item fails — DO NOT proceed. Fix first.</div>
+    </div>
+  </div>
+
+  <div class="cmd-card">
+    <div class="cmd-head">
+      <div class="cmd-icon" style="background:#fff7ed">♻️</div>
+      <div><h4>refactor</h4><p>Безопасный рефакторинг шаг за шагом</p></div>
+      <span class="trigger-pill tp-cursor">/refactor</span>
+    </div>
+    <div class="cmd-body">
+      <div class="schema-box" style="font-size:12px"><span class="h"># Safe Refactor Workflow</span>
+1. Write characterisation tests BEFORE any change
+2. Make ONE small change at a time
+3. Run tests after EACH change — must stay green
+4. Do NOT change behaviour, only structure
+5. Use IDE rename tools, not manual search/replace
+6. Commit each logical step separately</div>
+    </div>
+  </div>
+
+  <div class="cmd-card">
+    <div class="cmd-head">
+      <div class="cmd-icon" style="background:#fdf4ff">🐛</div>
+      <div><h4>debug — с $ARGUMENTS (Claude Code)</h4><p>Дебаггинг с передачей описания проблемы</p></div>
+      <span class="trigger-pill tp-claude">/debug issue description</span>
+    </div>
+    <div class="cmd-body">
+      <div class="schema-box" style="font-size:12px"><span class="h">---</span>
+<span class="k">description</span>: <span class="s">"Systematic debug workflow for a given issue"</span>
+<span class="h">---</span>
+
+<span class="h"># Debug Workflow</span>
+Issue to debug: $ARGUMENTS
+
+1. Reproduce: confirm we can reproduce reliably
+2. Isolate: binary search — where does it break?
+3. Hypothesize: list 3 most likely root causes
+4. Test each: minimal reproducible example
+5. Fix root cause, not symptom
+6. Add regression test</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Тонкости ── -->
+<section class="section">
+  <h2>Тонкости использования</h2>
+
+  <div class="nuance-card nc-blue">
+    <h4>Имя команды по-разному задаётся в Cursor и Claude Code</h4>
+    <p>В <span class="platform-badge pb-cursor">Cursor</span> имя команды = <b>имя файла</b> без расширения. <code>pr-template.md</code> → <code>/pr-template</code>. Frontmatter не нужен вообще. В <span class="platform-badge pb-claude">Claude Code</span> имя = поле <code>description</code> в YAML frontmatter. Файл без frontmatter в Claude Code работает, но description обязателен для корректной работы. Это частая путаница при переносе Commands между платформами.</p>
+  </div>
+
+  <div class="nuance-card nc-purple">
+    <h4>$ARGUMENTS — только в Claude Code</h4>
+    <p>Claude Code поддерживает плейсхолдер <code>$ARGUMENTS</code> в тексте Command. Всё что пользователь написал после <code>/command-name</code> подставляется на место <code>$ARGUMENTS</code>. Cursor этот механизм не поддерживает — агент получает весь Command файл и задачу пользователя рядом, и сам интерпретирует.</p>
+    <div class="schema-box" style="margin-top:8px"><span class="c"># Claude Code: /debug login page not loading</span>
+<span class="c"># → $ARGUMENTS = "login page not loading"</span>
+
+Issue to debug: login page not loading
+1. Reproduce: confirm we can reproduce...</div>
+  </div>
+
+  <div class="nuance-card nc-orange">
+    <h4>Command vs Rule — куда что класть</h4>
+    <p>Частая ошибка: писать политику в Command вместо Rule. <br>
+    <b>Command:</b> "как делать PR" — пошаговая инструкция, вызывается по требованию.<br>
+    <b>Rule:</b> "не делай PR без тестов" — ограничение, применяется автоматически.<br>
+    Если правило должно применяться <em>всегда</em> — это Rule. Если только когда пользователь просит — Command.</p>
+  </div>
+
+  <div class="nuance-card nc-green">
+    <h4>@mentions внутри Command — включение контекста</h4>
+    <p>Внутри Command файла можно ссылаться на другие файлы через <code>@</code>. Агент прочитает их как часть контекста при выполнении.</p>
+    <div class="schema-box" style="margin-top:8px"><span class="c"># .cursor/commands/refactor.md</span>
+Before refactoring, read:
+@docs/architecture.md
+@docs/adr/ADR-001-no-raw-sql.md
+
+Then apply these steps...</div>
+  </div>
+
+  <div class="nuance-card nc-red">
+    <h4>Commands не применяются автоматически — ни в одной платформе</h4>
+    <p>В отличие от Rules (которые могут быть alwaysApply) и от Claude Code Skills (которые агент может выбрать по description) — Commands <em>никогда</em> не активируются без явного <code>/command-name</code> от пользователя. Это осознанный дизайн: Commands для действий по требованию, не фоновая политика.</p>
+  </div>
+
+  <div class="nuance-card nc-blue">
+    <h4>Глобальный уровень только в Claude Code</h4>
+    <p>В Cursor Commands существуют только на project-level (<code>.cursor/commands/</code>). Хочешь одинаковые Commands во всех проектах — придётся копировать руками или использовать template репо. В Claude Code есть <code>~/.claude/commands/</code> — глобальный уровень, работает во всех проектах без копирования.</p>
+  </div>
+</section>
+
+<!-- ── Best practices ── -->
+<section class="section">
+  <h2>Best practices</h2>
+  <div class="grid">
+    <div class="card bg-green">
+      <h3>Делай</h3>
+      <ul>
+        <li>Короткие имена файлов: <code>pr.md</code>, <code>debug.md</code>, <code>release.md</code></li>
+        <li>Начни с самых частых задач команды: PR template, pre-release checklist</li>
+        <li><b>Структурированный output</b> — чеклисты, секции, формат</li>
+        <li>Документируй Commands в AGENTS.md: <i>"Available: /pr, /debug, /release"</i></li>
+        <li>Используй <code>$ARGUMENTS</code> в Claude Code для гибкости</li>
+        <li>@mention нужных файлов внутри Command</li>
+      </ul>
+    </div>
+    <div class="card bg-red">
+      <h3>Не делай</h3>
+      <ul>
+        <li>Политику в Command — "не делай X" → это Rule</li>
+        <li>Слишком общие имена: <code>help.md</code> — непонятно когда вызывать</li>
+        <li>Большие Commands 500+ строк — агент теряет нить</li>
+        <li>Хранить данные — Commands это инструкции, не Memory</li>
+        <li>Дублировать содержимое AGENTS.md — там уже есть workflow</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── Cursor vs Claude Code ── -->
+<section class="section">
+  <h2>Cursor vs Claude Code — сравнение</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Аспект</th><th><span class="platform-badge pb-cursor">🖱 Cursor</span></th><th><span class="platform-badge pb-claude">🤖 Claude Code</span></th></tr></thead>
+    <tbody>
+      <tr><td><b>Расположение</b></td><td><code>.cursor/commands/*.md</code></td><td><code>.claude/commands/*.md</code></td></tr>
+      <tr><td><b>Глобальный уровень</b></td><td style="color:#dc2626">Нет</td><td><code>~/.claude/commands/</code> ✓</td></tr>
+      <tr><td><b>Имя команды</b></td><td>Имя файла без расширения</td><td>Поле <code>description</code> в frontmatter</td></tr>
+      <tr><td><b>Frontmatter</b></td><td>Не обязателен</td><td>Обязателен (<code>description</code>)</td></tr>
+      <tr><td><b>Аргументы</b></td><td>Нет — агент сам интерпретирует</td><td><code>$ARGUMENTS</code> плейсхолдер ✓</td></tr>
+      <tr><td><b>Автовыбор агентом</b></td><td style="color:#dc2626">Нет — только явный /command</td><td style="color:#dc2626">Нет — только явный /command</td></tr>
+      <tr><td><b>@mentions внутри</b></td><td>✓ Поддерживается</td><td>✓ Поддерживается</td></tr>
+      <tr><td><b>Документация</b></td><td><a href="https://docs.cursor.com/context/commands" target="_blank">docs.cursor.com/context/commands ↗</a></td><td><a href="https://docs.anthropic.com/en/docs/claude-code/slash-commands" target="_blank">docs.anthropic.com/claude-code/slash-commands ↗</a></td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout" style="margin-top:12px">
+    <b>Главное отличие от Skills:</b> Commands — всегда явный вызов на обеих платформах. Claude Code Skills могут выбираться агентом автоматически. Для "умного автоподбора" — используй Skills. Для "вызова по требованию" — Commands.
+  </div>
+</section>
+
+<section class="section">
+  <h2>Вопросы по уровням</h2>
+
+  <div class="qlevel-group">Junior — 10 вопросов</div>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое Command в Cursor?</summary>
+<div class="inside">Command (Slash Command) — файл <code>.cursor/commands/*.md</code> с инструкцией для агента. Вызывается явно через <code>/имя-команды</code> в chat. При вызове содержимое .md файла передаётся агенту как инструкция. Cursor предлагает autocomplete при вводе <code>/</code> — показывает список доступных Commands с описаниями.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Как вызвать Command через /slash синтаксис?</summary>
+<div class="inside">В поле чата Cursor набери <code>/</code> — появится список доступных Commands. Выбери нужный или введи имя полностью: <code>/code-review</code>. Cursor загрузит содержимое соответствующего .md файла в контекст агента. Агент выполнит описанный в файле процесс. Без <code>/</code> — Command не активируется.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Где хранятся Commands в Cursor?</summary>
+<div class="inside">Cursor: <code>.cursor/commands/*.md</code> (project-level, версионируются в git). Claude Code: <code>.claude/commands/*.md</code> (project) или <code>~/.claude/commands/*.md</code> (global, личные). Project Commands доступны всей команде. Global Commands (~/.claude/) доступны во всех проектах для конкретного пользователя.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое .md файл для Command?</summary>
+<div class="inside">Обычный Markdown файл с инструкцией для агента. В Cursor: просто Markdown без frontmatter — содержимое передаётся агенту как prompt. В Claude Code: может содержать YAML frontmatter (<code>description</code>, <code>allowed-tools</code>) и переменную <code>$ARGUMENTS</code> для подстановки аргументов. Имя файла = имя команды (без .md).</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Чем Command отличается от Skill?</summary>
+<div class="inside">Command: вызывается <b>только явно</b> через /имя пользователем. Skill (Claude Code): может применяться <b>автоматически</b> агентом по description. Command = пользователь инициирует выполнение. Skill = агент сам решает применить. Для задач требующих явного намерения — Command. Для автоматически срабатывающих процессов — Skill.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Чем Command отличается от Rule?</summary>
+<div class="inside">Rule — <b>постоянная политика</b>, применяется автоматически при каждом запросе (alwaysApply) или при работе с определёнными файлами (globs). Command — <b>шаблон задачи</b>, вызывается явно по запросу. Rule говорит «как вести себя всегда». Command говорит «вот инструкция для конкретного типа задачи». Для постоянных стандартов — Rule. Для повторяемых задач — Command.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Как создать новый Command в Cursor?</summary>
+<div class="inside">1. Создай файл в директории <code>.cursor/commands/</code>. 2. Имя файла = имя команды: <code>code-review.md</code> → <code>/code-review</code>. 3. Напиши Markdown инструкцию: описание, шаги, expected output. 4. Command появится в autocomplete при вводе <code>/</code>. 5. Версионируй в git — команда получит Command при клонировании.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое slash trigger?</summary>
+<div class="inside">Slash trigger — ввод <code>/имя-команды</code> в chat для активации Command. Cursor и Claude Code используют <code>/</code> как prefix для Commands. Без <code>/</code> — агент воспринимает текст как обычный запрос, Command не активируется. В Claude Code: <code>$ARGUMENTS</code> в Command файле захватывает текст после имени команды: <code>/fix-bug NullPointerException</code> → <code>$ARGUMENTS = "NullPointerException"</code>.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Какие встроенные Commands есть в Cursor?</summary>
+<div class="inside">Cursor имеет встроенные команды: <code>/edit</code> (редактировать выделенный код), <code>/fix</code> (исправить ошибки), <code>/explain</code> (объяснить код), <code>/generate</code> (сгенерировать код). Пользовательские Commands из <code>.cursor/commands/</code> добавляются к встроенным. При одинаковом имени: пользовательский Command имеет приоритет.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Как передать аргументы в Command (в Claude Code)?</summary>
+<div class="inside">В Claude Code: использовать переменную <code>$ARGUMENTS</code> в .md файле. Пример Command: <code>Fix the following bug: $ARGUMENTS</code>. Вызов: <code>/fix-bug NullPointerException in UserService</code>. Результат: <code>$ARGUMENTS</code> заменяется на «NullPointerException in UserService». В Cursor: формального <code>$ARGUMENTS</code> нет — агент видит текст после /имя-команды в context.</div></details>
+
+  <div class="qlevel-group">Middle — 10 вопросов</div>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда использовать Command, а не просто написать задачу в chat?</summary>
+<div class="inside">Command оправдан когда: (1) задача повторяется (каждый PR проходит review по одинаковому процессу); (2) процесс многошаговый — легко что-то забыть без структуры; (3) нужна консистентность — все в команде делают одинаково; (4) согласован командой — хочешь зафиксировать «правильный» способ. Разовая уникальная задача → просто chat. Повторяемый структурированный процесс → Command.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как писать эффективный Command для code generation?</summary>
+<div class="inside">Структура Command для code gen: 1. Чёткий шаблон: «Сгенерируй [тип компонента] с следующими требованиями: $ARGUMENTS». 2. Стандарты: «Используй наш style guide, добавь unit тесты, следуй паттернам из existing code». 3. Output format: «Верни: файл компонента + тест файл + описание что создано». 4. Пример в Command: показывает структуру ожидаемого output. Конкретность = предсказуемость генерации.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как Commands помогают в написании документации?</summary>
+<div class="inside">Документация через Commands: <code>/document-function</code> — принимает функцию, генерирует docstring/JSDoc; <code>/update-readme</code> — обновляет README по изменениям в API; <code>/generate-changelog</code> — создаёт changelog из git commits. Преимущества: единый стиль документации, агент следует шаблону из Command, не нужно помнить что включать — Command содержит checklist.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как настроить Commands для review workflow?</summary>
+<div class="inside">PR review Command: <code>/pr-review</code> содержит: 1. Correctness check (логика, edge cases); 2. Security review (input validation, auth); 3. Test coverage (что не покрыто); 4. Performance (N+1, unnecessary loops); 5. Code style (соответствие team standards); 6. Output: summary + список issues по severity. Дополнительно: <code>/security-review</code>, <code>/performance-review</code> как отдельные Commands.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как организовать Commands в командном репозитории?</summary>
+<div class="inside">Организация: 1. <code>.cursor/commands/</code> — все team Commands в git; 2. Именование: <code>area-action.md</code> (<code>db-migrate.md</code>, <code>api-document.md</code>); 3. README в .cursor/commands/: список Commands с кратким описанием; 4. Личные Commands → <code>~/.claude/commands/</code>, не в репо; 5. AGENTS.md: секция «доступные Commands и когда использовать».</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как Commands взаимодействуют с текущим context (открытые файлы, выделенный код)?</summary>
+<div class="inside">При вызове Command агент видит: (1) содержимое Command .md файла; (2) открытые в редакторе файлы (Cursor передаёт их в context); (3) выделенный код (если есть); (4) текст пользователя после /command-name. Command может ссылаться на context: «Примени к выделенному коду». Это позволяет Commands быть контекстно-зависимыми без явного указания файлов.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как Commands обеспечивают консистентность повторяемых задач?</summary>
+<div class="inside">Консистентность через Commands: каждый developer вызывает <code>/code-review</code> → агент всегда выполняет одни и те же шаги → review всегда включает security, tests, style. Без Command: каждый помнит разный набор проверок, junior пропускает security check, senior забывает документацию. Command = «команда договорилась как делать и зафиксировала».</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как тестировать Commands перед выкаткой команде?</summary>
+<div class="inside">(1) Создай Command на feature branch. (2) Вызови с типичными входными данными — выполняет ли все шаги? (3) Тестируй edge cases: пустые аргументы, граничные случаи. (4) Проверь Output: соответствует ли ожидаемому формату? (5) Спроси коллегу попробовать — «интуитивно ли поведение?». (6) Для Claude Code: тест с реальным <code>$ARGUMENTS</code>. (7) PR с примером output — reviewer может оценить качество.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как версионировать Commands при изменении процессов?</summary>
+<div class="inside">Commands — код, не документация. При изменении процесса деплоя → обновление <code>/deploy</code> Command входит в migration checklist. Практики: (1) дата последнего обновления в Command файле; (2) CHANGELOG секция в README commands/; (3) тег <code>deprecated</code> в имени при устаревании (<code>deploy-old.md</code> → <code>deploy.md</code>); (4) CI check: не обновлявшиеся 6+ месяцев Commands — alert.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда использовать Command vs Skill — ключевые trade-offs?</summary>
+<div class="inside">Command: ✓ явное намерение пользователя, ✓ Cursor поддерживает нативно, ✗ нет автозапуска, пользователь должен помнить имя. Skill (Claude Code): ✓ автоматический trigger по description, ✓ пользователь не помнит имя — агент выбирает сам, ✗ только Claude Code (не Cursor). Практика: Commands для Cursor-проектов; Skills для Claude Code workflows где нужен auto-trigger.</div></details>
+
+  <div class="qlevel-group">Senior — 5 вопросов</div>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как спроектировать библиотеку Commands для организации?</summary>
+<div class="inside">Архитектура Commands library: (1) <b>Standard Commands</b> — универсальные для всех проектов: code-review, security-audit, document-api; в shared template репо, копируются при создании нового проекта; (2) <b>Domain Commands</b> — специфичные для домена; (3) <b>Naming convention</b>: <code>domain-action</code>; (4) <b>Commands catalog</b>: внутренний каталог всех Commands с примерами; (5) <b>Version management</b>: major.minor для Commands которые разные команды синхронизируют.</div></details>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как использовать Commands для complex automation?</summary>
+<div class="inside">Многошаговая автоматизация через Commands: (1) <b>Pipeline Command</b>: <code>/full-release</code> — run tests → build → check security → create changelog → tag → notify; (2) <b>Conditional logic в Command</b>: «If $ARGUMENTS contains 'hotfix' — skip integration tests»; (3) <b>Tool orchestration</b>: Command перечисляет tools agenta (<code>allowed-tools: [Bash, Write, WebFetch]</code>); (4) <b>Checkpoints</b>: «После шага 3 выведи summary и жди подтверждения». Сложный Command = маленькая программа для агента.</div></details>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как диагностировать ситуации когда Command выполняется некорректно?</summary>
+<div class="inside">Типичные проблемы: (1) Агент выполнил только часть шагов → lost in the middle: длинный Command, средние шаги пропускаются; решение: нумерация + verification checklist в конце; (2) Output не соответствует ожидаемому → Output раздел Command неточный; добавь пример; (3) Command применяется не к тому файлу → Command должен явно указывать «к чему применять»; (4) $ARGUMENTS не подставляется → проверь Claude Code settings, не Cursor.</div></details>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как строить Commands composition — цепочка Commands?</summary>
+<div class="inside">Прямого вызова Command из Command нет. Паттерны: (1) <b>Orchestrator Command</b>: <code>/full-audit</code> описывает применить сначала <code>/security-check</code>, затем <code>/performance-check</code>, затем <code>/doc-check</code>; (2) <b>Shared content</b>: выносить общие шаги в отдельный .md, ссылаться через <code>@path/shared-steps.md</code>; (3) <b>Parameter passing</b>: результат Command A передаётся как $ARGUMENTS в Command B; (4) DRY principle для Commands: не дублировать шаги.</div></details>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Чем Commands отличаются от MCP tools и когда что использовать?</summary>
+<div class="inside">MCP tools: код написанный разработчиком, выполняет конкретную техническую операцию (query DB, call API, search files). Commands: Markdown-инструкция для агента как выполнить workflow используя уже доступные tools. MCP: низкоуровневый building block — atomарное действие. Command: высокоуровневый workflow — последовательность действий. Комбинация: Command описывает процесс, MCP tools — его реализация.</div></details>
+
+  <div class="qlevel-group">Lead — 5 вопросов</div>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как выстроить governance Commands в команде?</summary>
+<div class="inside">Governance: (1) <b>Owner per Command</b> — кто отвечает за актуальность; (2) <b>PR review для Commands</b> — новые Commands через PR с тестом output; (3) <b>Commands catalog</b> в AGENTS.md — список доступных Commands с примерами; (4) <b>Deprecation process</b>: устаревшие Commands помечаются, не удаляются без уведомления; (5) <b>Стандарты именования</b>: <code>domain-action.md</code> — команда понимает назначение без чтения файла.</div></details>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как Commands становятся инструментом командной продуктивности?</summary>
+<div class="inside">Commands как продуктивность: (1) стандартизируют «правильный способ» выполнения задач; (2) снижают cognitive load: не нужно помнить 15-шаговый review процесс — просто <code>/pr-review</code>; (3) накапливают team knowledge: лучшие практики закодированы в Commands; (4) измерение value: сравни время review до/после команды Commands; (5) Commands как competitive advantage: команда с хорошей Commands library быстрее выполняет стандартные задачи.</div></details>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как использовать Commands в onboarding процессе?</summary>
+<div class="inside">Onboarding через Commands: (1) <code>/onboarding-checklist</code>: первые задачи нового разработчика; (2) <code>/setup-dev-env</code>: пошаговая настройка окружения; (3) первая неделя: senior показывает какие Commands есть и когда использовать; (4) в AGENTS.md: «для code review используй /pr-review, для документации /document»; (5) onboarding checklist включает: «попробуй /pr-review на любом PR», «создай свой первый Command».</div></details>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как поддерживать актуальность Commands со временем?</summary>
+<div class="inside">Commands rot prevention: (1) <b>Change triggers</b>: при изменении процесса деплоя, API, архитектуры — обновление Commands входит в Definition of Done; (2) <b>Review cadence</b>: раз в квартал проверять все Commands; (3) <b>Last-modified tracking</b>: дата в файле или git blame; (4) <b>Stale detection</b>: CI алерт для Commands без изменений 6+ месяцев; (5) <b>Team feedback</b>: разработчик обнаружил что Command не работает → создаёт issue (не просто игнорирует).</div></details>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как выработать стандарты написания Commands для команды?</summary>
+<div class="inside">Commands style guide: (1) <b>Структура</b>: описание (1 строка) → Prerequisites → Steps → Output; (2) <b>Именование</b>: <code>domain-action</code>, максимум 3 слова через дефис; (3) <b>Шаги</b>: явная нумерация, каждый шаг = одно действие; (4) <b>Output</b>: явно описать что агент вернёт; (5) <b>Специфичность</b>: Commands должны быть конкретными — «создай backup: <code>pg_dump -h HOST > /backups/$(date).sql</code>», а не «создай backup».</div></details>
+
+  <div class="qlevel-group">Architect — 5 вопросов</div>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как Commands реализуют programmatic interface к AI?</summary>
+<div class="inside">Commands = публичный API агента для команды. Аналогия: Commands как REST endpoints — <code>/deploy</code> = <code>POST /deploy</code>, <code>/pr-review</code> = <code>POST /review</code>. Интерфейс: имя команды = endpoint, $ARGUMENTS = request body, Output = response. Стабильный интерфейс: разработчики знают какие Commands доступны и что ожидать от каждого. Версионирование: <code>/deploy-v2</code> при breaking change.</div></details>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как Commands вписываются в developer workflow automation?</summary>
+<div class="inside">Commands в workflow: (1) <b>Development cycle</b>: /generate-component → разработка → /pr-review → /document → merge; (2) <b>IDE integration</b>: Commands вызываются прямо из Cursor без переключения контекста; (3) <b>Standardized workflows</b>: команда следует одинаковым процессам независимо от опыта разработчика; (4) <b>Automation hooks</b>: git hooks → /release-notes автоматически. Commands = programmatic workflow layer над AI.</div></details>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как Commands и Hooks образуют automated workflow?</summary>
+<div class="inside">Commands + Hooks = полный automation pipeline: Command описывает <b>что делать</b> (агент выполняет шаги), Hook обеспечивает <b>безопасность каждого шага</b> (блокирует опасные tool calls). Пример: <code>/deploy</code> Command запускает deployment process → PreToolUse Hook проверяет каждый Bash call на prod-safety → PostToolUse Hook логирует каждое действие в audit trail. Разделение обязанностей: Command = workflow logic, Hook = safety guarantees.</div></details>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как интегрировать Commands в CI/CD pipeline?</summary>
+<div class="inside">CI/CD интеграция Commands: (1) <b>CI lint</b>: проверка всех .md файлов в .cursor/commands/ — наличие обязательных секций, YAML frontmatter (Claude Code); (2) <b>Integration tests</b>: sandbox запуск агента с каждым Command + тестовым input, проверка output; (3) <b>Breaking change detection</b>: diff Command Steps → уведомление команды; (4) <b>Distribution</b>: pipeline синхронизирует shared Commands в новые репозитории; (5) <b>Documentation generation</b>: из Commands автоматически генерируется Commands Reference в wiki.</div></details>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как Commands становятся productivity infrastructure организации?</summary>
+<div class="inside">Commands как infrastructure: (1) <b>Institutional knowledge</b>: лучшие практики закодированы в Commands, не теряются при уходе людей; (2) <b>Scale</b>: 100 команд используют одинаковые Core Commands — обновление одного файла улучшает продуктивность всей организации; (3) <b>Standardization</b>: Commands делают «правильный путь» самым лёгким путём; (4) <b>Measurement</b>: через PostToolUse Hooks измеряй ROI Commands (сколько раз вызван, время выполнения, качество output); (5) <b>Platform product</b>: Commands library = внутренний продукт, Platform team = его владелец.</div></details>
+
+</section>
+
+<div class="pageFooter"><div class="nextPrev">
+  <a href="agent-packages.html">← Agent Package Manager</a>
+  <a href="subagents.html">Subagents →</a>
+</div></div>
+</main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

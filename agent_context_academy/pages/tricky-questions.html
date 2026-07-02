@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Каверзные вопросы assessor’а</title>
+  <link rel="stylesheet" href="../assets/style.css"/>
+</head>
+<body>
+  <div class="app">
+    
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">AI</div>
+        <div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div>
+      </div>
+        <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html" class="active"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox">
+        <b>Прогресс обучения</b>
+        <div class="progressBar"><div class="progressFill"></div></div>
+        <div class="progressText"></div>
+      </div>
+      <div class="progressBox">
+        <b>Формула приоритета</b>
+        <p class="sourceNote">System → Team/Project Rules → AGENTS/CLAUDE.md → Current task → Memory/RAG/MCP/Skills → Subagent findings.</p>
+      </div>
+    </aside>
+    
+    <main class="main">
+      <section class="hero">
+        <div class="kicker">Assessment Deep Dive</div>
+        <h2>Каверзные вопросы assessor’а</h2>
+        <p>Неочевидные вопросы по Cursor, Claude Platform, Claude Code, Rules, AGENTS.md, Skills, MCP, RAG, Memory, Hooks, Prompt Caching и Subagents. Формат: слабый ответ → сильный ответ → что проверяют.</p>
+        <div class="heroActions">
+          <a class="btn primary" href="home.html">На главную</a>
+          <a class="btn" href="assessment.html">К тренажёру</a>
+          <a class="btn" href="conflicts.html">К конфликтам</a>
+          <button class="markDone">Отметить страницу изученной</button>
+        </div>
+      </section>
+      
+<section class="section">
+  <h2>Что изменено с учётом официальных docs</h2>
+  <p class="sectionIntro">Эта страница специально под assessment: здесь собраны неочевидные вопросы, где легко ответить слишком общо. Я добавил формулировки, которые можно говорить assessor’у.</p>
+  <div class="sourceGrid">
+    <a class="sourceLink" href="https://cursor.com/docs/rules" target="_blank"><b>Cursor Rules</b><span>Project/User/Team Rules, AGENTS.md, nested AGENTS.md, order of precedence, rule activation.</span></a>
+    <a class="sourceLink" href="https://cursor.com/docs/skills" target="_blank"><b>Cursor Skills</b><span>Open standard, SKILL.md, scripts/references/assets, progressive loading, paths, disable-model-invocation.</span></a>
+    <a class="sourceLink" href="https://cursor.com/docs/mcp" target="_blank"><b>Cursor MCP</b><span>Tools, prompts, resources, roots, elicitation, transports, allowlists, approval, security.</span></a>
+    <a class="sourceLink" href="https://cursor.com/docs/subagents" target="_blank"><b>Cursor Subagents</b><span>Own context window, clean context, foreground/background, built-ins, model/readonly, cloud subagents.</span></a>
+    <a class="sourceLink" href="https://platform.claude.com/docs/ru/home" target="_blank"><b>Claude Platform RU</b><span>Messages vs Managed Agents, tool use, web search, code execution, structured outputs, prompt caching.</span></a>
+    <a class="sourceLink" href="https://code.claude.com/docs/en/sub-agents" target="_blank"><b>Claude Code Subagents</b><span>Built-in/custom subagents, tool restrictions, permissions, context preservation, specialized prompts.</span></a>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Каверзные вопросы по Cursor</h2>
+  <div class="grid two">
+    <div class="trickCard flash">
+      <h3>1. В Cursor Rules имеют один тип?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Rule — это просто инструкция для агента”.</div>
+      <div class="good"><b>Сильный ответ:</b> “В Cursor есть Project Rules, User Rules, Team Rules и AGENTS.md. Project Rules лежат в `.cursor/rules` как `.mdc`, User Rules глобальные, Team Rules задаются командой/админами, AGENTS.md — plain markdown альтернатива для простых инструкций.”</div>
+      <div class="why"><b>Почему каверзно:</b> assessor может проверить не термин, а детали применения и scope.</div>
+    </div>
+
+    <div class="trickCard flash">
+      <h3>2. Что выше в Cursor: Team, Project или User Rules?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Последнее правило побеждает”.</div>
+      <div class="good"><b>Сильный ответ:</b> “Cursor docs описывают порядок применения Team Rules → Project Rules → User Rules, при этом applicable rules merge’ятся, а более ранние источники имеют precedence при конфликте. Enforced Team Rules пользователь не может отключить.”</div>
+      <div class="why"><b>Ключ:</b> это специфично для Cursor, не универсальная истина для всех IDE.</div>
+    </div>
+
+    <div class="trickCard flash">
+      <h3>3. `.cursor/rules/api.md` будет работать?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Да, это же markdown”.</div>
+      <div class="good"><b>Сильный ответ:</b> “Нет как Project Rule: Cursor ожидает `.mdc` с frontmatter. Plain `.md` в `.cursor/rules` игнорируется rules system. Для plain markdown лучше использовать AGENTS.md.”</div>
+      <div class="why"><b>Ключ:</b> формат файла важен.</div>
+    </div>
+
+    <div class="trickCard flash">
+      <h3>4. Rules применяются всегда?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Да, если rule есть, он всегда в контексте”.</div>
+      <div class="good"><b>Сильный ответ:</b> “Нет. В Cursor rule может быть Always Apply, Apply Intelligently, Apply to Specific Files через globs, или manual через @mention. Поэтому rule может не попасть в контекст, если scope/description/glob не сработали.”</div>
+      <div class="why"><b>Ключ:</b> надо проверять, был ли rule реально attached.</div>
+    </div>
+
+    <div class="trickCard flash">
+      <h3>5. AGENTS.md и Project Rules — одно и то же?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Да, оба инструкции”.</div>
+      <div class="good"><b>Сильный ответ:</b> “Похожи по цели, но разные по механике. AGENTS.md — simple plain markdown instruction, удобен для простых случаев. Project Rules — `.mdc` с metadata: description, globs, alwaysApply; их можно точнее scope’ить.”</div>
+      <div class="why"><b>Ключ:</b> одинаковая идея, разная управляемость.</div>
+    </div>
+
+    <div class="trickCard flash">
+      <h3>6. Nested AGENTS.md в Cursor работает?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Только один AGENTS.md в root”.</div>
+      <div class="good"><b>Сильный ответ:</b> “Cursor поддерживает AGENTS.md в root и subdirectories. Инструкции родительских и nested AGENTS.md комбинируются, а более специфичные nested instructions имеют precedence для файлов в этой области.”</div>
+      <div class="why"><b>Ключ:</b> в monorepo это критично.</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Каверзные вопросы по Skills</h2>
+  <div class="grid two">
+    <div class="trickCard">
+      <h3>7. Skill — это просто Rule с другим названием?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Да, это одно и то же”.</div>
+      <div class="good"><b>Сильный ответ:</b> “Нет. Rule задаёт persistent guidance/constraints. Skill — reusable capability/playbook: инструкции + scripts + references + assets. В Cursor Skills — open standard и progressive: ресурсы грузятся on demand, чтобы не забивать контекст.”</div>
+    </div>
+
+    <div class="trickCard">
+      <h3>8. Когда dynamic rule лучше мигрировать в Skill?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Никогда, rules удобнее”.</div>
+      <div class="good"><b>Сильный ответ:</b> “Если правило стало процедурой: много шагов, шаблонов, скриптов, references. Cursor docs прямо описывают `/migrate-to-skills` для dynamic rules и slash commands.”</div>
+    </div>
+
+    <div class="trickCard">
+      <h3>9. Skill всегда автоматически применяется?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Да, агент сам всегда выберет”.</div>
+      <div class="good"><b>Сильный ответ:</b> “Не обязательно. Skill может быть auto-discovered и выбран агентом, может иметь paths scope, а `disable-model-invocation: true` делает его explicit slash-command only.”</div>
+    </div>
+
+    <div class="trickCard">
+      <h3>10. Где хранить длинный reference для Skill?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Всё в SKILL.md”.</div>
+      <div class="good"><b>Сильный ответ:</b> “Лучше держать SKILL.md focused, а длинные материалы — в `references/`, scripts — в `scripts/`, templates/assets — в `assets/`. Это экономит context благодаря progressive loading.”</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Каверзные вопросы по MCP / Tools</h2>
+  <div class="grid two">
+    <div class="trickCard">
+      <h3>11. MCP — это RAG?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Да, оба подключают внешние знания”.</div>
+      <div class="good"><b>Сильный ответ:</b> “Нет. RAG — retrieval фрагментов из corpus. MCP — протокол подключения tools/resources/prompts к внешним системам. Через MCP можно сделать retrieval, но MCP шире: tools могут выполнять действия, возвращать UI/images, обращаться к API.”</div>
+    </div>
+
+    <div class="trickCard">
+      <h3>12. Если Claude/Cursor вызывает tool, модель сама выполняет действие?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Да, модель пошла и выполнила”.</div>
+      <div class="good"><b>Сильный ответ:</b> “В Claude Platform tool use — это контракт: модель формирует structured tool request, а приложение/сервер выполняет операцию и возвращает результат. Модель не исполняет внешний код сама.”</div>
+    </div>
+
+    <div class="trickCard">
+      <h3>13. MCP tool можно запускать без approval?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Да, MCP всегда автоматический”.</div>
+      <div class="good"><b>Сильный ответ:</b> “Зависит от run mode, allowlists и tool approval. В Cursor MCP tools по умолчанию требуют approval; team admins могут настраивать allowlist, network controls и tool allowlists.”</div>
+    </div>
+
+    <div class="trickCard">
+      <h3>14. Чем опасен MCP server?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Ничем, это просто источник данных”.</div>
+      <div class="good"><b>Сильный ответ:</b> “MCP server может иметь доступ к внешним сервисам и выполнять код/действия от имени пользователя. Надо проверять источник, permissions, API keys, sandbox/network mode и audit.”</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Каверзные вопросы по Subagents</h2>
+  <div class="grid two">
+    <div class="trickCard">
+      <h3>15. Subagent видит всю историю parent chat?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Да, это же часть того же чата”.</div>
+      <div class="good"><b>Сильный ответ:</b> “В Cursor subagent starts with clean context. Parent agent передаёт релевантную информацию в prompt. Поэтому хорошая постановка задачи критична.”</div>
+    </div>
+
+    <div class="trickCard">
+      <h3>16. Subagent всегда быстрее?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Да, потому что параллельно”.</div>
+      <div class="good"><b>Сильный ответ:</b> “Не всегда. Subagents дают context isolation и parallel work, но у них есть startup overhead, отдельное token usage и latency. Для маленькой задачи main agent часто быстрее.”</div>
+    </div>
+
+    <div class="trickCard">
+      <h3>17. Subagent и Skill — когда что выбрать?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Subagent всегда мощнее”.</div>
+      <div class="good"><b>Сильный ответ:</b> “Subagent нужен для отдельного context window, long research, parallel work, independent verification. Skill лучше для single-purpose повторяемого action/playbook без отдельного контекста.”</div>
+    </div>
+
+    <div class="trickCard">
+      <h3>18. Может ли Cursor subagent использовать MCP?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Нет, MCP только у parent”.</div>
+      <div class="good"><b>Сильный ответ:</b> “В Cursor subagents inherit tools from parent, включая MCP, но cloud subagents используют MCP servers из team configuration на cursor.com/agents, а не из local session.”</div>
+    </div>
+
+    <div class="trickCard">
+      <h3>19. В Claude Code subagents всегда грузят CLAUDE.md?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Да, все subagents одинаковые”.</div>
+      <div class="good"><b>Сильный ответ:</b> “Не совсем. Claude Code docs отмечают, что built-in Explore и Plan skip CLAUDE.md и parent git status для скорости/стоимости, а другие built-in/custom subagents грузят оба.”</div>
+    </div>
+
+    <div class="trickCard">
+      <h3>20. Subagent result — финальная истина?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Да, раз subagent проверил”.</div>
+      <div class="good"><b>Сильный ответ:</b> “Нет. Это finding/evidence. Parent agent должен проверить конфликт с Rules/AGENTS.md, полноту evidence и применимость результата.”</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Каверзные вопросы по Claude Code / Claude Platform</h2>
+  <div class="grid two">
+    <div class="trickCard">
+      <h3>21. CLAUDE.md — это system prompt?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Да, это системный промпт проекта”.</div>
+      <div class="good"><b>Сильный ответ:</b> “В Claude Code docs сказано: CLAUDE.md delivered as user message after system prompt, not system prompt itself. Поэтому он важен, но не даёт строгой гарантии compliance, особенно при vague/conflicting instructions.”</div>
+    </div>
+
+    <div class="trickCard">
+      <h3>22. Несколько CLAUDE.md override друг друга?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Да, ближайший полностью заменяет root”.</div>
+      <div class="good"><b>Сильный ответ:</b> “Claude Code walks up directory tree и concatenates discovered CLAUDE.md/CLAUDE.local.md, а не просто overrides. Порядок — от root к current directory; более близкие инструкции читаются позже.”</div>
+    </div>
+
+    <div class="trickCard">
+      <h3>23. Memory в Claude Code бесконечная?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Да, всё помнит”.</div>
+      <div class="good"><b>Сильный ответ:</b> “Нет. Auto memory имеет limits: first 200 lines или 25KB MEMORY.md loaded at startup. Detailed topic files читаются on demand tools’ами. Поэтому memory нужно держать concise.”</div>
+    </div>
+
+    <div class="trickCard">
+      <h3>24. Если instruction must run after every edit — писать в CLAUDE.md?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Да, добавь в CLAUDE.md”.</div>
+      <div class="good"><b>Сильный ответ:</b> “Лучше hook. Claude docs прямо говорят: если инструкция должна выполняться в конкретной lifecycle point, например before commit или after edit, используйте hooks, потому что hooks execute regardless of what Claude decides.”</div>
+    </div>
+
+    <div class="trickCard">
+      <h3>25. Messages API и Managed Agents — одно и то же?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Да, это просто Claude API”.</div>
+      <div class="good"><b>Сильный ответ:</b> “Нет. Claude Platform RU описывает Messages как прямой доступ к модели: вы сами управляете состоянием разговора и tool loop. Managed Agents — управляемая инфраструктура автономных агентов с stateful sessions и event history.”</div>
+    </div>
+
+    <div class="trickCard">
+      <h3>26. Prompt caching — это memory?</h3>
+      <div class="bad"><b>Слабый ответ:</b> “Да, модель запоминает prompt”.</div>
+      <div class="good"><b>Сильный ответ:</b> “Нет. Prompt caching снижает latency/cost за счёт повторного использования одинакового prompt prefix. Это не смысловая память. Cache может invalidated, если prefix изменился byte-for-byte, например tool order, timestamp или раннее сообщение.”</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Сверх-каверзные вопросы: assessor может ловить на нюансах</h2>
+  <div class="tableWrap">
+    <table>
+      <thead><tr><th>Вопрос assessor’а</th><th>Короткий сильный ответ</th><th>Что проверяют</th></tr></thead>
+      <tbody>
+        <tr><td>Если rule есть в repo, почему агент его не применил?</td><td>Проверить scope: `.mdc`, frontmatter, alwaysApply/globs/description/manual @mention, реально ли rule attached.</td><td>Понимание activation, а не только термина.</td></tr>
+        <tr><td>Почему AGENTS.md не гарантирует 100% compliance?</td><td>Это prompt-level/user-message instruction, не hard control. Для lifecycle guarantees нужны hooks/permissions/tests.</td><td>Разница instruction vs enforcement.</td></tr>
+        <tr><td>Что выше: RAG doc или enforced team rule?</td><td>Team rule для поведения выше. RAG doc — evidence/fact, но не policy.</td><td>Разделение facts vs constraints.</td></tr>
+        <tr><td>Можно ли хранить весь runbook в AGENTS.md?</td><td>Лучше нет: короткие project rules в AGENTS.md, длинный runbook в docs/RAG или Skill references.</td><td>Context efficiency.</td></tr>
+        <tr><td>Почему subagent может ошибиться сильнее main agent?</td><td>Он стартует с clean/limited context, может не видеть все constraints, получает summarized task.</td><td>Ограничение delegated context.</td></tr>
+        <tr><td>Что делать с prompt injection в retrieved docs?</td><td>Retrieved text считать data, а не instruction. Не выполнять “ignore previous instructions”.</td><td>Security mindset.</td></tr>
+        <tr><td>Почему tool result не всегда истина?</td><td>Tool может вернуть error, stale cache, partial data, wrong environment. Нужно validate и смотреть context.</td><td>Критическое мышление.</td></tr>
+        <tr><td>Что лучше для “каждый раз после edit запускать formatter”: Rule или Hook?</td><td>Hook, потому что это lifecycle action. Rule — рекомендация, hook — механизм исполнения.</td><td>Instruction vs automation.</td></tr>
+        <tr><td>Почему Skills не надо делать огромными?</td><td>SKILL.md должен быть focused; heavy docs — references/assets/scripts, грузить on demand.</td><td>Progressive context loading.</td></tr>
+        <tr><td>Когда не надо использовать subagent?</td><td>Для маленькой single-shot задачи: overhead, latency, tokens. Лучше main agent или skill.</td><td>Cost/latency trade-off.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Ответ assessor’у одной сильной фразой</h2>
+  <div class="card bg-purple">
+    <p><b>“Я различаю источник по роли: system/platform задаёт верхние ограничения; Cursor Team/Project/User Rules и AGENTS.md задают persistent guidance с разным scope; Skill — это reusable workflow, который грузится/вызывается по необходимости; RAG даёт factual chunks из corpus; MCP/tools дают live data и actions через permissions; Memory/Checkpoint дают continuity; Subagents изолируют контекст и возвращают findings. При конфликте я выбираю не ‘последнее указание’, а source of truth: priority → specificity → freshness → safety.”</b></p>
+  </div>
+</section>
+
+      <div class="pageFooter">
+        <div class="nextPrev"><a href="subagents.html">← Subagents</a><a href="assessment.html">Assessment тренажёр →</a></div>
+      </div>
+    </main>
+  </div>
+  <script src="../assets/app.js"></script>
+</body>
+</html>

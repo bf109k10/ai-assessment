@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>AGENTS.md / Rules / Skills — назначение, структура, best practices</title>
+  <link rel="stylesheet" href="../assets/style.css"/>
+  <style>
+    /* ── file tree (new structured design) ── */
+    .ftree{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff}
+    .ftree-head{padding:10px 16px;font-weight:900;font-size:14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}
+    .fh-cursor{background:#eff6ff;color:#1e40af}
+    .fh-claude{background:#fdf4ff;color:#6b21a8}
+    .fh-global{background:#f0fdf4;color:#166534}
+    .ftree-body{padding:8px 0}
+    .fi{display:flex;align-items:center;gap:0;padding:0;border-bottom:1px solid #f1f5f9;min-height:38px}
+    .fi:last-child{border-bottom:none}
+    .fi-indent{display:flex;flex-shrink:0}
+    .fi-line{width:20px;height:38px;border-right:1px dashed #e2e8f0;flex-shrink:0}
+    .fi-blank{width:20px;flex-shrink:0}
+    .fi-icon{width:32px;height:38px;display:grid;place-items:center;font-size:16px;flex-shrink:0}
+    .fi-name{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;font-weight:900;padding:0 4px;white-space:nowrap}
+    .fn-req{color:#dc2626}
+    .fn-dir{color:#2563eb}
+    .fn-rec{color:#16a34a}
+    .fn-opt{color:#94a3b8}
+    .fi-badges{display:flex;flex-wrap:wrap;gap:4px;padding:0 10px}
+    .fi-desc{font-size:12px;color:#64748b;padding:0 6px;white-space:nowrap}
+    .fb{display:inline-block;border-radius:999px;padding:2px 8px;font-size:11px;font-weight:900;white-space:nowrap}
+    .fb-must{background:#fee2e2;color:#dc2626;border:1px solid #fca5a5}
+    .fb-always{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+    .fb-globs{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+    .fb-skills{background:#f5f3ff;color:#6b21a8;border:1px solid #ddd6fe}
+    .fb-hooks{background:#fff1f2;color:#dc2626;border:1px solid #fecaca}
+    .fb-cas{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+    .fb-opt{background:#f8fafc;color:#64748b;border:1px solid #e2e8f0}
+    .fi-section{background:#f8fafc;padding:5px 12px 5px 16px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;border-bottom:1px solid #f1f5f9}
+
+    /* ── rule type pills ── */
+    .rule-type{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:900;border:1px solid;margin:3px 4px 3px 0}
+    .rt-always{background:#fff1f2;border-color:#fca5a5;color:#dc2626}
+    .rt-auto{background:#eff6ff;border-color:#93c5fd;color:#1e40af}
+    .rt-cond{background:#fefce8;border-color:#fde68a;color:#92400e}
+    .rt-manual{background:#f5f3ff;border-color:#d8b4fe;color:#6b21a8}
+
+    /* ── docs links grid ── */
+    .docs-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .doc-link{display:flex;gap:12px;text-decoration:none;border:1px solid var(--line);background:#fff;border-radius:16px;padding:14px;transition:.12s}
+    .doc-link:hover{border-color:#93c5fd;box-shadow:0 6px 18px rgba(37,99,235,.10);transform:translateY(-2px)}
+    .doc-ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+    .doc-link b{display:block;font-size:14px;color:#0f172a;margin-bottom:3px}
+    .doc-link span{font-size:12px;color:#64748b;line-height:1.35}
+
+    /* ── always-present checklist ── */
+    .check-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .check-card{border:2px solid var(--line);border-radius:20px;background:#fff;padding:18px}
+    .check-card.mandatory{border-color:#16a34a;background:#f0fdf4}
+    .check-card h4{margin:0 0 10px;font-size:17px}
+    .check-item{display:flex;gap:10px;margin:6px 0;font-size:14px;color:#334155}
+    .check-ico{width:22px;height:22px;border-radius:8px;display:grid;place-items:center;font-size:12px;flex-shrink:0;font-weight:900}
+    .ci-must{background:#dcfce7;color:#166534}
+    .ci-good{background:#dbeafe;color:#1e40af}
+    .ci-skip{background:#fee2e2;color:#dc2626}
+
+    /* ── schematic code block ── */
+    .sch{background:#0f172a;color:#e2e8f0;border-radius:14px;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.65;overflow:auto;margin:0}
+    .sch .k{color:#93c5fd}
+    .sch .v{color:#86efac}
+    .sch .s{color:#fcd34d}
+    .sch .c{color:#475569}
+    .sch .h{color:#c084fc;font-weight:900}
+
+    /* ── hierarchy band ── */
+    .hier-band{display:flex;flex-direction:column;gap:0;max-width:700px;margin:0 auto}
+    .hier-row{display:flex;align-items:stretch}
+    .hier-box{flex:1;padding:12px 16px;text-align:center;font-weight:900;font-size:14px;line-height:1.3;border:1px solid transparent}
+    .hier-arrow{display:flex;align-items:center;justify-content:center;width:36px;flex-shrink:0;font-size:20px;color:#94a3b8}
+
+    .priority-ladder{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff}
+    .pl-row{display:grid;grid-template-columns:44px 1fr auto;align-items:center;padding:12px 16px;border-bottom:1px solid #f1f5f9;gap:12px}
+    .pl-row:last-child{border-bottom:none}
+    .pl-rank{width:32px;height:32px;border-radius:999px;display:grid;place-items:center;font-weight:900;font-size:13px;color:#fff;flex-shrink:0}
+    .pl-name{font-weight:900;font-size:14px}
+    .pl-name small{display:block;font-weight:400;font-size:12px;color:#64748b}
+    .pl-badge{font-size:11px;font-weight:900;border-radius:999px;padding:3px 9px;border:1px solid;white-space:nowrap}
+
+    @media(max-width:900px){.docs-grid,.check-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="app">
+
+<aside class="sidebar">
+  <div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>
+    <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html" class="active"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div>
+  <div class="progressBox"><b>Приоритет</b><p class="sourceNote">Rules &gt; AGENTS.md &gt; Skills.<br>Rules нельзя обойти из чата.<br>Skills — рекомендации, не ограничения.</p></div>
+</aside>
+
+<main class="main">
+<!-- ─────────────────── HERO ─────────────────── -->
+<section class="hero">
+  <div class="kicker">Agent Context Academy</div>
+  <h2>AGENTS.md · Rules · Skills</h2>
+  <p>Зачем каждый артефакт существует, что в него класть, что обязательно иметь в каждом проекте, структура файлов, тонкости и ссылки на официальную документацию Cursor и Claude Code.</p>
+  <div class="heroActions">
+    <a class="btn primary" href="#file-tree">Файловое дерево ↓</a>
+    <a class="btn" href="assessment.html">К assessment</a>
+    <button class="markDone">Отметить страницу изученной</button>
+  </div>
+</section>
+
+<!-- ─────────────────── ЗАЧЕМ ─────────────────── -->
+<section class="section">
+  <h2>Зачем это всё — большая картинка</h2>
+  <p class="sectionIntro">Когда вы пишете агенту задачу в чате, он уже «знает» о проекте из трёх источников. Каждый решает свою задачу — и заменить один другим нельзя без потери гарантий.</p>
+  <div class="diagram">
+    <div class="hier-band">
+      <div class="hier-row">
+        <div class="hier-box" style="background:#fff1f2;border-color:#fca5a5;color:#dc2626;border-radius:14px 14px 0 0">
+          🔒 Rules <small style="font-weight:700;display:block;font-size:12px">Что НЕЛЬЗЯ / обязательно. Не переопределяется из чата.</small>
+        </div>
+      </div>
+      <div class="hier-row">
+        <div class="hier-box" style="background:#eff6ff;border-color:#93c5fd;color:#1e40af">
+          📄 AGENTS.md / CLAUDE.md <small style="font-weight:700;display:block;font-size:12px">Как работать в проекте. Stack, команды, workflow, DoD.</small>
+        </div>
+      </div>
+      <div class="hier-row">
+        <div class="hier-box" style="background:#f0fdf4;border-color:#86efac;color:#166534">
+          🧩 Current chat <small style="font-weight:700;display:block;font-size:12px">Текущая задача пользователя. Не отменяет Rules выше.</small>
+        </div>
+      </div>
+      <div class="hier-row">
+        <div class="hier-box" style="background:#f5f3ff;border-color:#d8b4fe;color:#6b21a8;border-radius:0 0 14px 14px">
+          ⚡ Skills / Commands <small style="font-weight:700;display:block;font-size:12px">Commands как делать задачу. Рекомендации, не ограничения.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid" style="margin-top:20px">
+    <div class="card bg-red">
+      <h3>Rules — политика</h3>
+      <p><b>Назначение:</b> зафиксировать что нельзя делать никогда — независимо от того, что попросил пользователь. Safety, compliance, архитектурные ограничения.</p>
+      <p style="margin-top:8px"><b>Ключевое свойство:</b> применяется автоматически, не обходится из чата (в норме).</p>
+    </div>
+    <div class="card bg-blue">
+      <h3>AGENTS.md — проектный контекст</h3>
+      <p><b>Назначение:</b> рассказать агенту кто он, в каком стеке работает, как запускать тесты, какой workflow ожидает команда. Загружается при каждом запросе.</p>
+      <p style="margin-top:8px"><b>Ключевое свойство:</b> постоянный контекст — агент «помнит» проект без @mention.</p>
+    </div>
+    <div class="card bg-purple">
+      <h3>Skills — playbooks</h3>
+      <p><b>Назначение:</b> сохранить шаги типовой задачи чтобы не объяснять каждый раз. Вызывается по имени или автоматически.</p>
+      <p style="margin-top:8px"><b>Ключевое свойство:</b> рекомендует как делать, не запрещает. Skill проигрывает Rule при конфликте.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────── FILE TREE ─────────────────── -->
+<section class="section" id="file-tree">
+  <h2>Файловое дерево — где лежит каждый артефакт</h2>
+  <p class="sectionIntro">
+    <span class="fb fb-must" style="font-size:12px;padding:4px 10px">⚠ обязательно</span>&nbsp;
+    <span class="fb fb-always" style="font-size:12px;padding:4px 10px">★ always-apply</span>&nbsp;
+    <span class="fb fb-globs" style="font-size:12px;padding:4px 10px">◈ globs</span>&nbsp;
+    <span class="fb fb-skills" style="font-size:12px;padding:4px 10px">⚡ skill</span>&nbsp;
+    <span class="fb fb-cas" style="font-size:12px;padding:4px 10px">↓ cascade</span>&nbsp;
+    <span class="fb fb-opt" style="font-size:12px;padding:4px 10px">○ опционально</span>
+  </p>
+
+  <div class="grid two" style="align-items:start">
+
+    <!-- ══ CURSOR ══ -->
+    <div class="ftree">
+      <div class="ftree-head fh-cursor">🖱 Cursor — my-project/</div>
+      <div class="ftree-body">
+
+        <div class="fi-section">Корень проекта</div>
+
+        <div class="fi">
+          <div class="fi-indent"><div class="fi-blank"></div></div>
+          <div class="fi-icon">📄</div>
+          <div class="fi-name fn-req">AGENTS.md</div>
+          <div class="fi-badges"><span class="fb fb-must">⚠ обязательно</span></div>
+          <div class="fi-desc">проектный контекст агента</div>
+        </div>
+
+        <div class="fi">
+          <div class="fi-indent"><div class="fi-blank"></div></div>
+          <div class="fi-icon">🙈</div>
+          <div class="fi-name fn-req">.cursorignore</div>
+          <div class="fi-badges"><span class="fb fb-must">⚠ обязательно</span></div>
+          <div class="fi-desc">фильтр AI-индекса</div>
+        </div>
+
+        <div class="fi-section">.cursor/rules/ — Rules</div>
+
+        <div class="fi">
+          <div class="fi-indent"><div class="fi-line"></div><div class="fi-blank"></div></div>
+          <div class="fi-icon">🔒</div>
+          <div class="fi-name fn-req">always-safety.mdc</div>
+          <div class="fi-badges"><span class="fb fb-must">⚠ обязательно</span><span class="fb fb-always">★ alwaysApply:true</span></div>
+        </div>
+
+        <div class="fi">
+          <div class="fi-indent"><div class="fi-line"></div><div class="fi-blank"></div></div>
+          <div class="fi-icon">🔒</div>
+          <div class="fi-name fn-req">no-tests-delete.mdc</div>
+          <div class="fi-badges"><span class="fb fb-must">⚠ обязательно</span><span class="fb fb-always">★ alwaysApply:true</span></div>
+        </div>
+
+        <div class="fi">
+          <div class="fi-indent"><div class="fi-line"></div><div class="fi-blank"></div></div>
+          <div class="fi-icon">🗄</div>
+          <div class="fi-name fn-rec">db-migrations.mdc</div>
+          <div class="fi-badges"><span class="fb fb-globs">◈ globs: "**.sql"</span></div>
+          <div class="fi-desc">DDL только через Liquibase</div>
+        </div>
+
+        <div class="fi">
+          <div class="fi-indent"><div class="fi-line"></div><div class="fi-blank"></div></div>
+          <div class="fi-icon">📡</div>
+          <div class="fi-name fn-rec">api-contract.mdc</div>
+          <div class="fi-badges"><span class="fb fb-globs">◈ globs: "openapi*"</span></div>
+          <div class="fi-desc">breaking changes → review</div>
+        </div>
+
+        <div class="fi">
+          <div class="fi-indent"><div class="fi-line"></div><div class="fi-blank"></div></div>
+          <div class="fi-icon">📦</div>
+          <div class="fi-name fn-rec">dependencies.mdc</div>
+          <div class="fi-badges"><span class="fb fb-globs">◈ globs: "pom.xml"</span></div>
+          <div class="fi-desc">новые зависимости → approval</div>
+        </div>
+
+        <div class="fi-section">.cursor/commands/ — Skills</div>
+
+        <div class="fi">
+          <div class="fi-indent"><div class="fi-line"></div><div class="fi-blank"></div></div>
+          <div class="fi-icon">⚡</div>
+          <div class="fi-name fn-opt">debug-ci.md</div>
+          <div class="fi-badges"><span class="fb fb-skills">⚡ /debug-ci</span></div>
+        </div>
+
+        <div class="fi">
+          <div class="fi-indent"><div class="fi-line"></div><div class="fi-blank"></div></div>
+          <div class="fi-icon">⚡</div>
+          <div class="fi-name fn-opt">weekly-report.md</div>
+          <div class="fi-badges"><span class="fb fb-skills">⚡ /weekly-report</span></div>
+        </div>
+
+        <div class="fi-section">Cascade (поддиректории)</div>
+
+        <div class="fi">
+          <div class="fi-indent"><div class="fi-blank"></div></div>
+          <div class="fi-icon">📄</div>
+          <div class="fi-name fn-opt">src/AGENTS.md</div>
+          <div class="fi-badges"><span class="fb fb-cas">↓ cascade: перекрывает корень</span></div>
+        </div>
+
+        <div class="fi">
+          <div class="fi-indent"><div class="fi-blank"></div></div>
+          <div class="fi-icon">📄</div>
+          <div class="fi-name fn-opt">features/AGENTS.md</div>
+          <div class="fi-badges"><span class="fb fb-cas">↓ cascade: для /features</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ CLAUDE CODE ══ -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+
+      <div class="ftree">
+        <div class="ftree-head fh-claude">🤖 Claude Code — my-project/</div>
+        <div class="ftree-body">
+
+          <div class="fi-section">Корень проекта</div>
+
+          <div class="fi">
+            <div class="fi-indent"><div class="fi-blank"></div></div>
+            <div class="fi-icon">📄</div>
+            <div class="fi-name fn-req">CLAUDE.md</div>
+            <div class="fi-badges"><span class="fb fb-must">⚠ обязательно</span></div>
+            <div class="fi-desc">проектный контекст + Rules-секция</div>
+          </div>
+
+          <div class="fi-section">.claude/ — конфигурация</div>
+
+          <div class="fi">
+            <div class="fi-indent"><div class="fi-line"></div><div class="fi-blank"></div></div>
+            <div class="fi-icon">⚙️</div>
+            <div class="fi-name fn-req">settings.json</div>
+            <div class="fi-badges"><span class="fb fb-hooks">🪝 Hooks: hard enforcement</span></div>
+            <div class="fi-desc">PostToolUse / PreToolUse</div>
+          </div>
+
+          <div class="fi">
+            <div class="fi-indent"><div class="fi-line"></div><div class="fi-blank"></div></div>
+            <div class="fi-icon">⚡</div>
+            <div class="fi-name fn-opt">commands/debug-ci.md</div>
+            <div class="fi-badges"><span class="fb fb-skills">⚡ /debug-ci</span></div>
+          </div>
+
+          <div class="fi">
+            <div class="fi-indent"><div class="fi-line"></div><div class="fi-blank"></div></div>
+            <div class="fi-icon">⚡</div>
+            <div class="fi-name fn-opt">commands/weekly-report.md</div>
+            <div class="fi-badges"><span class="fb fb-skills">⚡ /weekly-report</span></div>
+          </div>
+
+          <div class="fi-section">Cascade</div>
+
+          <div class="fi">
+            <div class="fi-indent"><div class="fi-blank"></div></div>
+            <div class="fi-icon">📄</div>
+            <div class="fi-name fn-opt">src/CLAUDE.md</div>
+            <div class="fi-badges"><span class="fb fb-cas">↓ cascade: merge к root</span></div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="ftree">
+        <div class="ftree-head fh-global">🌍 ~/.claude/ — глобальный уровень</div>
+        <div class="ftree-body">
+
+          <div class="fi">
+            <div class="fi-indent"><div class="fi-blank"></div></div>
+            <div class="fi-icon">📄</div>
+            <div class="fi-name fn-opt">CLAUDE.md</div>
+            <div class="fi-badges"><span class="fb fb-opt">○ личные предпочтения</span></div>
+            <div class="fi-desc">загружается всегда, первым</div>
+          </div>
+
+          <div class="fi">
+            <div class="fi-indent"><div class="fi-blank"></div></div>
+            <div class="fi-icon">⚡</div>
+            <div class="fi-name fn-opt">commands/…</div>
+            <div class="fi-badges"><span class="fb fb-skills">⚡ глобальные Skills</span></div>
+          </div>
+
+        </div>
+      </div>
+
+    </div><!-- /.claude column -->
+  </div><!-- /.grid two -->
+
+  <div class="callout warn" style="margin-top:14px">
+    <b>Cursor trap:</b> файлы в <code>.cursor/rules/</code> работают как Rules ТОЛЬКО если расширение <code>.mdc</code> и есть YAML frontmatter <code>---</code>. Plain <code>.md</code> игнорируется rules-системой — агент его не видит как ограничение.
+  </div>
+  <div class="callout" style="margin-top:10px">
+    <b>Claude Code:</b> project instructions — <code>CLAUDE.md</code> в корне репозитория (альтернатива у части команд — <code>.claude/CLAUDE.md</code>, не оба сразу). Отдельного формата <code>.mdc</code> нет: политика — секция MUST в CLAUDE.md + Hooks в <code>.claude/settings.json</code>.
+  </div>
+</section>
+
+<!-- ─────────────────── ИЕРАРХИЯ ПРИОРИТЕТОВ ─────────────────── -->
+<section class="section">
+  <h2>Иерархия приоритетов — что выше</h2>
+  <div class="priority-ladder">
+    <div class="pl-row" style="background:#fff1f2">
+      <div class="pl-rank" style="background:#dc2626">1</div>
+      <div class="pl-name">Hooks (Claude Code) / Team Rules (Cursor Business)
+        <small>Shell-скрипты до/после tool call. Нельзя обойти из промпта.</small>
+      </div>
+      <span class="pl-badge" style="background:#fee2e2;border-color:#fca5a5;color:#dc2626">enforcement</span>
+    </div>
+    <div class="pl-row" style="background:#fff7ed">
+      <div class="pl-rank" style="background:#ea580c">2</div>
+      <div class="pl-name">Rules (.cursor/rules/*.mdc с alwaysApply: true)
+        <small>Всегда в context. Нельзя переопределить из чата (но не системный уровень).</small>
+      </div>
+      <span class="pl-badge" style="background:#ffedd5;border-color:#fdba74;color:#c2410c">политика</span>
+    </div>
+    <div class="pl-row" style="background:#fefce8">
+      <div class="pl-rank" style="background:#ca8a04">3</div>
+      <div class="pl-name">AGENTS.md / CLAUDE.md (root)
+        <small>Project instructions. Workflow, stack, DoD. Cascade: global → root → subdir.</small>
+      </div>
+      <span class="pl-badge" style="background:#fef9c3;border-color:#fde047;color:#854d0e">workflow</span>
+    </div>
+    <div class="pl-row" style="background:#f0fdf4">
+      <div class="pl-rank" style="background:#16a34a">4</div>
+      <div class="pl-name">Rules (auto-attach / agent-requested)
+        <small>Применяются по globs или когда агент решает. Не всегда в context.</small>
+      </div>
+      <span class="pl-badge" style="background:#dcfce7;border-color:#86efac;color:#166534">контекстная политика</span>
+    </div>
+    <div class="pl-row">
+      <div class="pl-rank" style="background:#2563eb">5</div>
+      <div class="pl-name">Current task (chat)
+        <small>Что нужно сделать прямо сейчас. Не переопределяет Rules выше.</small>
+      </div>
+      <span class="pl-badge" style="background:#dbeafe;border-color:#93c5fd;color:#1e40af">задача</span>
+    </div>
+    <div class="pl-row">
+      <div class="pl-rank" style="background:#7c3aed">6</div>
+      <div class="pl-name">Skills / Commands
+        <small>Вызываются явно (/command). Рекомендации, не ограничения.</small>
+      </div>
+      <span class="pl-badge" style="background:#ede9fe;border-color:#c4b5fd;color:#5b21b6">playbook</span>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Cursor vs Claude Code — все артефакты</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Роль</th><th>Cursor</th><th>Claude Code</th><th>Формат</th><th>Когда активен</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>Project instructions</b></td>
+        <td><code>AGENTS.md</code></td>
+        <td><code>CLAUDE.md</code> (корень)</td>
+        <td>Markdown</td>
+        <td>Каждый запрос в Agent mode</td>
+      </tr>
+      <tr>
+        <td><b>Always-on policy</b></td>
+        <td><code>.cursor/rules/*.mdc</code><br><code>alwaysApply: true</code></td>
+        <td>Секция MUST в CLAUDE.md + Hooks</td>
+        <td>.mdc / Markdown</td>
+        <td>Каждый запрос</td>
+      </tr>
+      <tr>
+        <td><b>Context policy</b></td>
+        <td><code>.cursor/rules/*.mdc</code><br><code>globs: [...]</code></td>
+        <td>Нет аналога</td>
+        <td>.mdc</td>
+        <td>При совпадении файлов с globs</td>
+      </tr>
+      <tr>
+        <td><b>Hard enforcement</b></td>
+        <td>Team Rules (Cursor Business)</td>
+        <td><code>.claude/settings.json</code> Hooks</td>
+        <td>UI / JSON + shell</td>
+        <td>До/после каждого tool call</td>
+      </tr>
+      <tr>
+        <td><b>Commands</b></td>
+        <td><code>.cursor/commands/*.md</code></td>
+        <td><code>.claude/commands/*.md</code></td>
+        <td>Markdown (+ YAML в Claude)</td>
+        <td>/имя-команды</td>
+      </tr>
+      <tr>
+        <td><b>AI filter</b></td>
+        <td><code>.cursorignore</code></td>
+        <td><code>.claudeignore</code></td>
+        <td>gitignore-синтаксис</td>
+        <td>При индексации (RAG)</td>
+      </tr>
+      <tr>
+        <td><b>Global personal</b></td>
+        <td>Cursor Settings → Rules</td>
+        <td><code>~/.claude/CLAUDE.md</code></td>
+        <td>UI / Markdown</td>
+        <td>Всегда, ниже Project</td>
+      </tr>
+      <tr>
+        <td><b>Sub-dir context</b></td>
+        <td><code>src/AGENTS.md</code></td>
+        <td><code>src/CLAUDE.md</code></td>
+        <td>Markdown</td>
+        <td>Когда агент работает в этой папке</td>
+      </tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ─────────────────── ОБЯЗАТЕЛЬНЫЙ МИНИМУМ ─────────────────── -->
+<section class="section">
+  <h2>Обязательный минимум в каждом проекте</h2>
+  <p class="sectionIntro">Без этого минимума агент будет угадывать контекст и не иметь гарантий безопасности. Создайте при онбординге любого репо.</p>
+  <div class="check-grid">
+
+    <div class="check-card mandatory">
+      <h4>📄 AGENTS.md / CLAUDE.md</h4>
+      <p style="font-size:13px;color:#475569;margin:0 0 10px">Создать в корне проекта. Без него агент не знает стек и правила команды.</p>
+      <div class="check-item"><div class="check-ico ci-must">✓</div><span>Роль агента ("You are a Java backend engineer…")</span></div>
+      <div class="check-item"><div class="check-ico ci-must">✓</div><span>Технологический стек (язык, фреймворк, DB)</span></div>
+      <div class="check-item"><div class="check-ico ci-must">✓</div><span>Команды сборки и тестирования (<code>mvn test</code>, <code>npm test</code>)</span></div>
+      <div class="check-item"><div class="check-ico ci-must">✓</div><span>Структура проекта — где что лежит</span></div>
+      <div class="check-item"><div class="check-ico ci-must">✓</div><span>Ключевые workflow-правила (DoD, PR format)</span></div>
+      <div class="check-item"><div class="check-ico ci-good">+</div><span>Архитектурные паттерны и принципы</span></div>
+      <div class="check-item"><div class="check-ico ci-good">+</div><span>Список MCP/tools доступных агенту</span></div>
+      <div class="check-item"><div class="check-ico ci-skip">✗</div><span>Secrets, credentials, пароли</span></div>
+      <div class="check-item"><div class="check-ico ci-skip">✗</div><span>Большие docs (→ RAG/docs)</span></div>
+      <div class="check-item"><div class="check-ico ci-skip">✗</div><span>Запреты типа "не делай X" (→ Rules)</span></div>
+    </div>
+
+    <div class="check-card mandatory">
+      <h4>🔒 Rules — минимум 2 файла</h4>
+      <p style="font-size:13px;color:#475569;margin:0 0 10px">Cursor: <code>.cursor/rules/</code>. Claude Code: секция в CLAUDE.md + Hooks. Без этого нет safety-гарантий.</p>
+      <div class="check-item"><div class="check-ico ci-must">✓</div><span><b>safety.mdc</b> — <code>alwaysApply: true</code><br><small>Не коммитить секреты, не делать destructive ops без approve, не логировать PII</small></span></div>
+      <div class="check-item"><div class="check-ico ci-must">✓</div><span><b>no-tests-delete.mdc</b> — <code>alwaysApply: true</code><br><small>Не удалять тесты, не понижать coverage</small></span></div>
+      <div class="check-item"><div class="check-ico ci-good">+</div><span><b>db-migrations.mdc</b> — <code>globs: ["**.sql"]</code><br><small>DDL только через Liquibase, DBA review</small></span></div>
+      <div class="check-item"><div class="check-ico ci-good">+</div><span><b>api-contract.mdc</b> — <code>globs: ["openapi*"]</code><br><small>Breaking changes → major version, review required</small></span></div>
+      <div class="check-item"><div class="check-ico ci-good">+</div><span><b>dependencies.mdc</b> — <code>globs: ["pom.xml","package.json"]</code><br><small>Новые зависимости только с approval</small></span></div>
+    </div>
+
+    <div class="check-card">
+      <h4>.cursorignore (Cursor)</h4>
+      <p style="font-size:13px;color:#475569;margin:0 0 10px">Фильтрует файлы из AI-индекса. Не добавить — секреты могут попасть в промпт.</p>
+      <div class="check-item"><div class="check-ico ci-must">✓</div><span><code>.env</code>, <code>.env.*</code> — секреты</span></div>
+      <div class="check-item"><div class="check-ico ci-must">✓</div><span><code>*.pem</code>, <code>*.key</code> — ключи</span></div>
+      <div class="check-item"><div class="check-ico ci-must">✓</div><span><code>target/</code>, <code>node_modules/</code> — build output</span></div>
+      <div class="check-item"><div class="check-ico ci-good">+</div><span><code>generated/</code> — сгенерированный код</span></div>
+      <div class="check-item"><div class="check-ico ci-good">+</div><span><code>*.log</code>, <code>*.jar</code> — бинарники и логи</span></div>
+    </div>
+
+    <div class="check-card">
+      <h4>⚡ Skills (по мере роста команды)</h4>
+      <p style="font-size:13px;color:#475569;margin:0 0 10px">Не обязательны с первого дня. Создавать когда одно и то же объясняешь агенту 3+ раз.</p>
+      <div class="check-item"><div class="check-ico ci-good">+</div><span>Triage CI failure (debug-ci)</span></div>
+      <div class="check-item"><div class="check-ico ci-good">+</div><span>Code review checklist (review)</span></div>
+      <div class="check-item"><div class="check-ico ci-good">+</div><span>Incident report template</span></div>
+      <div class="check-item"><div class="check-ico ci-good">+</div><span>PR description generator</span></div>
+      <div class="check-item"><div class="check-ico ci-skip">✗</div><span>Дублирование Rules в Skills</span></div>
+      <div class="check-item"><div class="check-ico ci-skip">✗</div><span>Megaskill 500+ строк (разбить)</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────── AGENTS.md BEST PRACTICES ─────────────────── -->
+<section class="section">
+  <h2>AGENTS.md / CLAUDE.md — best practices</h2>
+
+  <div class="grid two">
+    <div class="card">
+      <h3>Структура (7 секций)</h3>
+      <pre class="sch"><span class="h"># AGENTS.md</span>
+
+<span class="c">## 1. Role — кем является агент</span>
+You are a senior Java engineer
+at Netcracker, Order Management.
+
+<span class="c">## 2. Tech Stack</span>
+Java 21 · Quarkus 3 · PostgreSQL 15
+Kafka · Kubernetes · Helm
+
+<span class="c">## 3. Commands</span>
+build: mvn clean install -DskipTests
+test:  mvn test
+lint:  mvn checkstyle:check
+
+<span class="c">## 4. Project Structure</span>
+src/main/java/  — production code
+src/test/java/  — JUnit 5 tests
+docs/           — architecture, ADRs
+
+<span class="c">## 5. Workflow</span>
+Research → Plan → ✅ Approve → Code
+→ Test → Review → Docs
+
+<span class="c">## 6. DoD (Definition of Done)</span>
+- [ ] mvn test passes
+- [ ] No linter errors
+- [ ] CHANGELOG updated
+
+<span class="c">## 7. Agent Behaviour</span>
+If unsure — ask, don't guess.
+If risky — explain risk, request OK.</pre>
+    </div>
+    <div>
+      <div class="card bg-green" style="margin-bottom:14px">
+        <h3>Тонкости Cursor vs Claude Code</h3>
+        <div class="tableWrap" style="margin-top:10px"><table>
+          <thead><tr><th>Аспект</th><th>Cursor (AGENTS.md)</th><th>Claude Code (CLAUDE.md)</th></tr></thead>
+          <tbody>
+            <tr><td>Доставка</td><td>System context (до промпта)</td><td><b>User message</b> (после system)</td></tr>
+            <tr><td>Hard enforcement</td><td>Через Rules (.mdc)</td><td>Через Hooks (.claude/settings.json)</td></tr>
+            <tr><td>Cascade</td><td>Поддиректории перекрывают</td><td>Merge: дочерние добавляют</td></tr>
+            <tr><td>Глобальный</td><td>Cursor Settings → Rules</td><td>~/.claude/CLAUDE.md</td></tr>
+            <tr><td>Include</td><td>@filename в тексте</td><td>@filename в тексте</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="card bg-yellow">
+        <h3>Частые ошибки AGENTS.md</h3>
+        <ul>
+          <li><b>Секреты в файле</b> — никогда. Только env vars.</li>
+          <li><b>Устаревшие команды</b> — агент будет запускать неправильно.</li>
+          <li><b>Нет DoD</b> — агент сдаёт без тестов.</li>
+          <li><b>Нет workflow</b> — агент делает всё сразу без одобрения.</li>
+          <li><b>Запреты ("не делай X")</b> — должны быть в Rules, не здесь.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────── RULES BEST PRACTICES ─────────────────── -->
+<section class="section">
+  <h2>Rules — лучшие практики</h2>
+
+  <h3>4 типа Cursor Rules</h3>
+  <div class="grid" style="margin-bottom:18px">
+    <div class="card">
+      <span class="rule-type rt-always">Always Apply</span>
+      <pre class="sch" style="margin-top:10px"><span class="c">---</span>
+<span class="k">alwaysApply</span>: <span class="v">true</span>
+<span class="c">---</span>
+# Safety Core
+Never commit secrets.
+Never delete tests.</pre>
+      <p style="font-size:13px;margin-top:8px;color:#475569">Всегда в контексте, каждый запрос. Используйте для core safety и compliance. <b>Не перегружать</b> — только то что нужно всегда.</p>
+    </div>
+    <div class="card">
+      <span class="rule-type rt-auto">Auto-Attach (globs)</span>
+      <pre class="sch" style="margin-top:10px"><span class="c">---</span>
+<span class="k">globs</span>:
+  - <span class="s">"**.sql"</span>
+  - <span class="s">"**/migrations/**"</span>
+<span class="c">---</span>
+# DB Migration Rules
+DDL only via Liquibase.
+DBA review required.</pre>
+      <p style="font-size:13px;margin-top:8px;color:#475569">Применяется автоматически когда в контексте есть файл совпадающий с glob. Идеально для контекстно-зависимых правил (DB, API, auth).</p>
+    </div>
+    <div class="card">
+      <span class="rule-type rt-cond">Conditional (агент решает)</span>
+      <pre class="sch" style="margin-top:10px"><span class="c">---</span>
+<span class="k">description</span>: <span class="s">"Release process checklist"</span>
+<span class="k">alwaysApply</span>: <span class="v">false</span>
+<span class="c">---</span>
+# Release Checklist
+1. Tag git commit
+2. Update CHANGELOG
+3. Notify on-call</pre>
+      <p style="font-size:13px;margin-top:8px;color:#475569">Агент читает description и решает применять ли. Для workflow-специфичных правил. <code>description</code> критически важен — от него зависит точность выбора.</p>
+    </div>
+    <div class="card">
+      <span class="rule-type rt-manual">Manual</span>
+      <pre class="sch" style="margin-top:10px"><span class="c">---</span>
+<span class="c"># Нет globs и alwaysApply</span>
+<span class="c"># Пользователь пишет:</span>
+<span class="c"># @rule-name в чате</span>
+<span class="c">---</span>
+# Experimental Refactor
+Do X and Y only
+if user explicitly asks.</pre>
+      <p style="font-size:13px;margin-top:8px;color:#475569">Применяется только по явному вызову через @. Для редких сценариев, опытных пользователей.</p>
+    </div>
+  </div>
+
+  <h3>Правила написания Rules</h3>
+  <div class="grid two">
+    <div class="card bg-red">
+      <h3>Плохие Rules</h3>
+      <pre class="sch"><span class="c"># Слишком длинная — шум</span>
+This rule contains 200 lines of
+general advice about good coding
+practices that apply everywhere...
+
+<span class="c"># Без frontmatter — игнорируется!</span>
+# my-rule.md (не .mdc!)
+Don't commit secrets.
+
+<span class="c"># Дублирует AGENTS.md</span>
+Use Java 21 and Quarkus 3.
+Run mvn test before finishing.</pre>
+    </div>
+    <div class="card bg-green">
+      <h3>Хорошие Rules</h3>
+      <pre class="sch"><span class="c">---</span>
+<span class="k">description</span>: <span class="s">"Security constraints"</span>
+<span class="k">alwaysApply</span>: <span class="v">true</span>
+<span class="c">---</span>
+# Security Rules
+
+- Never log passwords/tokens
+- Parameterized queries only
+- Validate inputs at controller
+- No secrets in environment strings</pre>
+      <p style="font-size:13px;margin-top:8px">Короткий, конкретный, actionable. Без дублирования. Правильное расширение.</p>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top:14px">
+    <b>Rules в Claude Code:</b> нет формата .mdc. Альтернативы: 1) явная секция <code>## Rules (MUST follow)</code> в CLAUDE.md, 2) <b>Hooks</b> в <code>.claude/settings.json</code> для hard enforcement — они выполняются на lifecycle event независимо от решения модели.
+  </div>
+</section>
+
+<!-- ─────────────────── SKILLS BEST PRACTICES ─────────────────── -->
+<section class="section">
+  <h2>Skills / Commands — лучшие практики</h2>
+
+  <div class="grid two">
+    <div class="card">
+      <h3>Структура хорошего Skill</h3>
+      <pre class="sch"><span class="c">---                          (Claude Code)</span>
+<span class="k">name</span>: <span class="s">"triage-ci"</span>
+<span class="k">description</span>: <span class="s">"Analyse a failing CI</span>
+<span class="s">  job and propose a minimal fix"</span>
+<span class="c">---</span>
+
+<span class="h"># CI Failure Triage</span>
+
+<span class="c">## When to use</span>
+CI job is failing and root cause unknown.
+
+<span class="c">## Steps</span>
+1. Read failing job log: $ARGUMENTS
+2. Find failed stage (build/test/lint)
+3. Trace error to file:line
+4. Check recent commits in that area
+5. State root cause (1 paragraph)
+6. Propose minimal fix (≤5 files)
+
+<span class="c">## Output format</span>
+## Root Cause
+[paragraph]
+
+## Fix
+[code block with file:line refs]
+
+<span class="c">## Degrees of freedom</span>
+High: wording of explanation
+Low:  output format (must follow)</pre>
+    </div>
+    <div>
+      <div class="card bg-blue" style="margin-bottom:14px">
+        <h3>Ключевые принципы Skills</h3>
+        <ul>
+          <li><b>Description — критично.</b> Именно его читает агент чтобы решить когда применить skill. Начинать с глагола: "Analyse", "Generate", "Triage". Максимум 100 символов.</li>
+          <li><b>3-е лицо.</b> "Analyses a failing job" а не "I will analyse".</li>
+          <li><b>Degrees of freedom</b> — явно укажи что фиксировано (Low), что гибко (High).</li>
+          <li><b>$ARGUMENTS</b> — placeholder для параметров (Claude Code).</li>
+          <li><b>Один skill = одна задача.</b> Megaskill → разбить.</li>
+          <li><b>Constraints в конце</b> — что skill НЕ делает (не путать с Rules).</li>
+        </ul>
+      </div>
+      <div class="card bg-red">
+        <h3>Anti-patterns</h3>
+        <ul>
+          <li>"Help with code" — слишком размыто, агент не знает когда</li>
+          <li>Запреты в Skill ("never add deps") → это Rules</li>
+          <li>500+ строк → разбить на несколько</li>
+          <li>Нет output format → непредсказуемый результат</li>
+          <li>Описание в 1-м лице ("I will…") → не работает как ожидается</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────── COMPARISON TABLE ─────────────────── -->
+<section class="section">
+  <h2>Сравнение: что куда класть</h2>
+  <div class="tableWrap"><table>
+    <thead>
+      <tr>
+        <th>Информация</th>
+        <th>AGENTS.md</th>
+        <th>Rules (.mdc)</th>
+        <th>Skills</th>
+        <th>RAG/docs</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Tech stack (Java 21, Quarkus)</td><td>✅ Сюда</td><td>❌</td><td>❌</td><td>❌</td></tr>
+      <tr><td>Команды (mvn test, npm run)</td><td>✅ Сюда</td><td>❌</td><td>❌</td><td>❌</td></tr>
+      <tr><td>Структура проекта</td><td>✅ Сюда</td><td>❌</td><td>❌</td><td>❌</td></tr>
+      <tr><td>"Не коммитить секреты"</td><td>❌</td><td>✅ Сюда (always-apply)</td><td>❌</td><td>❌</td></tr>
+      <tr><td>"DDL только через Liquibase"</td><td>❌</td><td>✅ Сюда (globs: **.sql)</td><td>❌</td><td>❌</td></tr>
+      <tr><td>"Не добавлять deps без approval"</td><td>❌</td><td>✅ Сюда (globs: pom.xml)</td><td>❌</td><td>❌</td></tr>
+      <tr><td>Workflow triage CI failure</td><td>❌</td><td>❌</td><td>✅ Сюда</td><td>❌</td></tr>
+      <tr><td>Шаблон weekly report</td><td>❌</td><td>❌</td><td>✅ Сюда</td><td>❌</td></tr>
+      <tr><td>API reference / OpenAPI spec</td><td>❌</td><td>❌</td><td>❌</td><td>✅ Сюда</td></tr>
+      <tr><td>Архитектурные ADR</td><td>❌</td><td>❌</td><td>❌</td><td>✅ Сюда</td></tr>
+      <tr><td>Secrets / credentials</td><td>❌</td><td>❌</td><td>❌</td><td>❌ (env vars!)</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ─────────────────── DOCS LINKS ─────────────────── -->
+<section class="section">
+  <h2>Официальная документация</h2>
+  <p class="sectionIntro">Первоисточники — читать перед assessment и перед написанием AGENTS.md / Rules / Skills в реальном проекте.</p>
+  <div class="docs-grid">
+
+    <a class="doc-link" href="https://docs.cursor.com/context/rules" target="_blank" rel="noopener">
+      <div class="doc-ico" style="background:#eff6ff">📐</div>
+      <div>
+        <b>Cursor Rules — официальная документация</b>
+        <span>docs.cursor.com/context/rules — форматы .mdc, frontmatter, типы правил, примеры. Первоисточник для .cursor/rules/</span>
+      </div>
+    </a>
+
+    <a class="doc-link" href="https://docs.cursor.com/context/ignore-files" target="_blank" rel="noopener">
+      <div class="doc-ico" style="background:#eff6ff">🙈</div>
+      <div>
+        <b>Cursor: .cursorignore</b>
+        <span>docs.cursor.com/context/ignore-files — как работает фильтр AI-индекса, синтаксис, разница с .gitignore</span>
+      </div>
+    </a>
+
+    <a class="doc-link" href="https://docs.anthropic.com/en/docs/claude-code/memory" target="_blank" rel="noopener">
+      <div class="doc-ico" style="background:#fdf4ff">🧠</div>
+      <div>
+        <b>Claude Code: CLAUDE.md (Memory)</b>
+        <span>docs.anthropic.com — как Claude Code загружает CLAUDE.md, cascade, глобальный vs проектный, @-include</span>
+      </div>
+    </a>
+
+    <a class="doc-link" href="https://docs.anthropic.com/en/docs/claude-code/slash-commands" target="_blank" rel="noopener">
+      <div class="doc-ico" style="background:#fdf4ff">⚡</div>
+      <div>
+        <b>Claude Code: Slash Commands (Skills)</b>
+        <span>docs.anthropic.com — структура .claude/commands/, YAML frontmatter, $ARGUMENTS, глобальные команды</span>
+      </div>
+    </a>
+
+    <a class="doc-link" href="https://docs.anthropic.com/en/docs/claude-code/hooks" target="_blank" rel="noopener">
+      <div class="doc-ico" style="background:#fdf4ff">🪝</div>
+      <div>
+        <b>Claude Code: Hooks</b>
+        <span>docs.anthropic.com — как настроить PostToolUse/PreToolUse для hard enforcement, аналог enforced Rules</span>
+      </div>
+    </a>
+
+    <a class="doc-link" href="https://platform.claude.com/docs/ru/agents-and-tools/agent-skills/best-practices" target="_blank" rel="noopener">
+      <div class="doc-ico" style="background:#fdf4ff">🎓</div>
+      <div>
+        <b>Claude: Best Practices for Agent Skills</b>
+        <span>platform.claude.com — degrees of freedom, progressive disclosure, description quality, тестирование skills на разных моделях</span>
+      </div>
+    </a>
+
+    <a class="doc-link" href="https://docs.anthropic.com/en/docs/claude-code/settings" target="_blank" rel="noopener">
+      <div class="doc-ico" style="background:#fdf4ff">⚙️</div>
+      <div>
+        <b>Claude Code: Settings & Permissions</b>
+        <span>docs.anthropic.com — .claude/settings.json, permissions, allowedTools, blockedTools, policy enforcement</span>
+      </div>
+    </a>
+
+    <a class="doc-link" href="https://docs.cursor.com/agent/overview" target="_blank" rel="noopener">
+      <div class="doc-ico" style="background:#eff6ff">🤖</div>
+      <div>
+        <b>Cursor Agent: обзор и возможности</b>
+        <span>docs.cursor.com/agent — как Agent mode использует Rules/AGENTS.md/commands, context management</span>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<!-- ─────────────────── NUANCES ─────────────────── -->
+<section class="section">
+  <h2>Тонкости и нюансы</h2>
+  <div class="nuance-card nc-red">
+    <h4>Перегруженный AGENTS.md → агент игнорирует</h4>
+    <p>Если AGENTS.md длиннее ~200 строк, агент начинает игнорировать его части из-за эффекта «lost in the middle». Держи AGENTS.md кратким и конкретным — только то, что нужно агенту при каждом запросе.</p>
+  </div>
+  <div class="nuance-card nc-orange">
+    <h4>Rules vs AGENTS.md: не дублируй</h4>
+    <p>Если правило уже задано в Rules с <code>alwaysApply: true</code>, не повторяй его в AGENTS.md. Дублирование создаёт расхождения при обновлении: правишь в одном месте — забываешь обновить в другом.</p>
+  </div>
+  <div class="nuance-card nc-blue">
+    <h4>Skills не загружаются автоматически</h4>
+    <p>Skills нужно явно вызывать или упоминать в задаче. Агент не знает о skill, если его не упомянули в запросе или не сослались в AGENTS.md. Не рассчитывай что агент сам найдёт нужный skill.</p>
+  </div>
+  <div class="nuance-card nc-purple">
+    <h4>Порядок приоритетов: Rules &gt; AGENTS.md &gt; Skills</h4>
+    <p>При конфликте Rules всегда побеждает. AGENTS.md — рекомендации и workflow; Rules — политика, которую нельзя нарушить даже по просьбе пользователя. Skills — инструменты, не ограничения.</p>
+  </div>
+</section>
+
+<!-- ─────────────────── BEST PRACTICES ─────────────────── -->
+<section class="section">
+  <h2>Best practices — Делай / Не делай</h2>
+  <div class="grid two">
+    <div class="card good">
+      <h3>✅ Делай</h3>
+      <ul>
+        <li>Держи AGENTS.md кратким — до 150 строк максимум.</li>
+        <li>Используй Rules для жёсткой политики, AGENTS.md — для workflow и контекста.</li>
+        <li>Явно упоминай нужный Skill в задаче или в AGENTS.md.</li>
+        <li>Разделяй роли: AGENTS.md = кто я и как работаю; Rules = что нельзя; Skills = как делать конкретное.</li>
+      </ul>
+    </div>
+    <div class="card danger">
+      <h3>❌ Не делай</h3>
+      <ul>
+        <li>Не дублируй одно и то же в AGENTS.md и Rules — при рассинхроне Rule победит, но путаница останется.</li>
+        <li>Не добавляй в AGENTS.md всё подряд — только то, что агент должен знать при каждом запросе.</li>
+        <li>Не рассчитывай что агент сам найдёт нужный Skill — всегда указывай явно.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────── ASSESSMENT ─────────────────── -->
+<section class="section">
+  <h2>Вопросы по уровням</h2>
+
+  <div class="qlevel-group">Junior — 10 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Чем AGENTS.md отличается от Rules?</summary>
+  <div class="inside">AGENTS.md описывает "как работать в проекте" — это workflow, stack, команды, DoD, конвенции. Rules определяют "что нельзя" — ограничения, safety, compliance. AGENTS.md — это инструкция нового сотрудника; Rules — кодекс поведения. AGENTS.md агент соблюдает как рекомендацию; Rule с alwaysApply:true агент обязан соблюдать, даже если пользователь просит обратного. При конфликте Rule всегда побеждает AGENTS.md.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Чем Rules отличаются от Skills?</summary>
+  <div class="inside">Rules — политика: что агенту запрещено или обязательно. Они применяются автоматически и не обходятся из чата (alwaysApply). Skills (Commands) — рекомендации как делать задачу: пошаговый playbook для типового сценария. Skill вызывается явно или по решению агента; Rule всегда в фоне. Если Skill конфликтует с Rule — Rule побеждает. Skill проигрывает Rule при конфликте всегда.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Чем Skills отличаются от Commands?</summary>
+  <div class="inside">В Cursor они называются Commands (файлы в .cursor/commands/), в Claude Code — Slash Commands (файлы в .claude/commands/). По сути это одно: markdown-файлы с пошаговыми инструкциями для типовой задачи, вызываемые по имени через /command. "Skills" — обобщённый термин для обоих. Технически в Claude Code есть YAML frontmatter (name, description), в Cursor — plain markdown с заголовком.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Для чего используется каждый из трёх инструментов?</summary>
+  <div class="inside">AGENTS.md — "кто я и как работать здесь": постоянный project context, загружается при каждом запросе. Rules — "что запрещено или обязательно": safety и compliance, не обходятся из чата. Skills — "как делать эту задачу": playbook для повторяющихся сценариев (debug CI, write PR, triage incident). Каждый работает на своём уровне и не заменяет другие.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое policy vs workflow в контексте конфигурации агента?</summary>
+  <div class="inside">Policy (политика) — набор правил что нельзя нарушать: "не коммитить секреты", "DDL только через Liquibase". Это Rules. Workflow — описание процесса как делать задачи: "сначала Research, потом Plan, потом Code". Это AGENTS.md (как workflow-инструкция) или Skills (как конкретный playbook). Policy — жёстче и принудительнее; workflow — гибче и следуется "по возможности".</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Где физически хранится каждый артефакт: AGENTS.md, Rules, Skills?</summary>
+  <div class="inside">AGENTS.md: корень репо (Cursor) или CLAUDE.md в корне (Claude Code). Rules: .cursor/rules/*.mdc (Cursor, обязательно расширение .mdc) или секция в CLAUDE.md + .claude/settings.json Hooks (Claude Code). Skills: .cursor/commands/*.md (Cursor) или .claude/commands/*.md (Claude Code). Глобальные Skills в Claude Code: ~/.claude/commands/. Расположение принципиально — файлы не в нужном месте игнорируются системой.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Когда агент применяет каждый из трёх инструментов?</summary>
+  <div class="inside">AGENTS.md — при каждом запросе автоматически (загружается в context всегда). Rules с alwaysApply:true — при каждом запросе автоматически. Rules с globs — автоматически когда в context есть файлы совпадающие с glob-паттерном. Skills — только при явном вызове (/command) или когда агент решает что skill релевантен по description. Порядок приоритета: alwaysApply Rules > AGENTS.md > globs Rules > Skills.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что первично при конфликте между AGENTS.md и Rules?</summary>
+  <div class="inside">Rules первичны. Иерархия от высшего к низшему: Hooks (Claude Code) / Team Rules (Cursor Business) → alwaysApply Rules → AGENTS.md / CLAUDE.md → auto-attach Rules (globs) → текущая задача (чат) → Skills. AGENTS.md не может "отменить" Rule. Это фундаментальный принцип: policy (Rules) всегда выше workflow (AGENTS.md).</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое always-active vs on-demand применение правил?</summary>
+  <div class="inside">Always-active: AGENTS.md + Rules с alwaysApply:true всегда присутствуют в context при каждом запросе — агент не может их "не увидеть". On-demand: Rules с globs применяются только когда есть совпадение; Skills применяются только при вызове. Разница важна для token budget: always-active компоненты занимают токены при каждом запросе независимо от задачи. Поэтому alwaysApply Rules должны быть лаконичными.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Как все три инструмента работают вместе в одном проекте?</summary>
+  <div class="inside">Совместная работа: AGENTS.md задаёт контекст ("мы Java-проект, Quarkus, mvn test"); alwaysApply Rules гарантируют safety ("не коммитить секреты", "не удалять тесты"); globs Rules добавляют контекстные ограничения при работе с SQL или API-файлами; Skills предоставляют готовые playbooks для частых задач (/debug-ci, /write-pr). Агент использует все три одновременно, сохраняя иерархию приоритетов.</div></details>
+
+  <div class="qlevel-group">Middle — 10 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как построить матрицу выбора между AGENTS.md, Rules и Skills?</summary>
+  <div class="inside">Матрица решений: (1) Это постоянный контекст проекта (стек, команды, workflow)? → AGENTS.md. (2) Это запрет или обязательное требование которое нельзя обойти? → Rules (alwaysApply или globs). (3) Это пошаговая инструкция для повторяющейся задачи? → Skill. (4) Это применяется только к определённым типам файлов? → Rules с globs. (5) Это вызывается только при конкретном сценарии? → Skill. Если всё ещё не ясно: запрещает → Rules; рекомендует → AGENTS.md или Skills.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда стоит перенести инструкцию из AGENTS.md в Rules?</summary>
+  <div class="inside">Перенести в Rules когда: (1) инструкция является запретом или обязательным требованием ("не делай X", "всегда делай Y"); (2) агент периодически её нарушает (lost in the middle в длинных сессиях); (3) нарушение влечёт safety-риски или compliance-нарушения; (4) требование должно применяться при работе с конкретными файлами (globs). Остальное — в AGENTS.md. Правило: если добавляешь "никогда" или "всегда обязательно" — это признак Rule, не AGENTS.md.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда стоит перенести инструкцию из Rules в Skills?</summary>
+  <div class="inside">Перенести в Skill когда: (1) инструкция описывает пошаговый процесс, а не ограничение; (2) применяется только при конкретном сценарии (debug CI, write PR, triage incident); (3) слишком длинная для AGENTS.md но не является запретом; (4) разные пользователи нуждаются в разных вариантах одного процесса. Skill — это playbook, не policy. Если инструкция остаётся запретом ("не добавляй зависимости") — она в Rules, даже если звучит как процессная.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как избежать дублирования между AGENTS.md, Rules и Skills?</summary>
+  <div class="inside">Принцип единственного источника: каждое правило живёт ровно в одном месте. Признаки дублирования: "mvn test" и в AGENTS.md, и в Skill; "не коммитить секреты" и в AGENTS.md, и в Rule; одна и та же инструкция в нескольких Rules. Решение: AGENTS.md — постоянный контекст; Rules — ограничения; Skills — процессы. Если есть соблазн скопировать — это сигнал что нужно удалить из одного источника и оставить в правильном.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как организовать три артефакта для командной разработки?</summary>
+  <div class="inside">Организация для команды: (1) AGENTS.md — версионировать в git с review; назначить owner; обновлять при архитектурных изменениях. (2) Rules — хранить в .cursor/rules/ в git; alwaysApply Rules требуют строгого review (safety-critical); globs Rules — совместно согласованные. (3) Skills — командные Skills в .cursor/commands/ в git; личные Skills — в ~/.claude/commands/. Для всех трёх: изменения через PR, не прямой commit в main.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Каковы performance trade-offs использования каждого инструмента?</summary>
+  <div class="inside">AGENTS.md: токены при каждом запросе (всегда в context). alwaysApply Rules: токены при каждом запросе. globs Rules: токены только при совпадении. Skills: токены только при вызове. Итого: чем больше alwaysApply компонентов, тем выше постоянный token overhead. Оптимизация: держать AGENTS.md и alwaysApply Rules лаконичными (≤100 строк каждый), детальные playbooks — в Skills (on-demand). Prompt caching нивелирует часть overhead для стабильного контента.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как рефакторировать "God AGENTS.md" на три слоя?</summary>
+  <div class="inside">Признаки God AGENTS.md: файл >500 строк, содержит запреты ("не делай X"), пошаговые инструкции и постоянный контекст вперемешку. Шаги рефакторинга: (1) Извлечь все запреты и обязательные требования → создать Rules (.mdc с alwaysApply или globs); (2) Извлечь пошаговые процессы → создать Skills в .cursor/commands/; (3) Оставить в AGENTS.md только: роль, стек, команды, workflow-описание, references. Цель: AGENTS.md ≤100-200 строк. Результат: каждый слой работает эффективнее.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Какие типичные ошибки при смешивании AGENTS.md, Rules и Skills?</summary>
+  <div class="inside">Типичные ошибки: (1) Запреты в AGENTS.md вместо Rules — агент может проигнорировать при длинном контексте; (2) Workflow-инструкции в Rules вместо Skills — раздувает always-active context без пользы; (3) Дублирование stack info и в AGENTS.md, и в Skills — рассинхронизируется при изменениях; (4) alwaysApply Rule с 200+ строками общих советов — загрязняет context; (5) .md файл в .cursor/rules/ без frontmatter — игнорируется rules-системой полностью.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как тестировать каждый тип артефакта?</summary>
+  <div class="inside">Тестирование: AGENTS.md — спросить агента "каков стек проекта?" или "как запустить тесты?" — должен ответить верно из AGENTS.md без @mention. alwaysApply Rule — попросить агента нарушить правило ("закоммить .env") — должен отказаться. globs Rule — открыть файл подпадающий под glob и проверить что правило активно. Skill — вызвать /command-name и проверить что агент следует шагам из файла. Smoke test для всей системы: сессия с типовой задачей и проверка что все три слоя работают согласованно.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Какую version control стратегию применять для трёх артефактов?</summary>
+  <div class="inside">Стратегия: все три артефакта в git вместе с кодом. AGENTS.md — в корне repo, версионируется как любой документ; обновлять при архитектурных изменениях. Rules (.mdc файлы) — в .cursor/rules/, обновлять при изменении policy; alwaysApply Rules требуют особого review. Skills — в .cursor/commands/, обновлять при изменении процессов; командные Skills — в репо, личные — в ~/.claude не версионируются командой. Общий принцип: изменение конфигурации агента = изменение кодовой базы. Тот же review process.</div></details>
+
+  <div class="qlevel-group">Senior — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как спроектировать трёхуровневую архитектуру конфигурации агента?</summary>
+  <div class="inside">Архитектура трёх уровней: (1) Policy layer (Rules) — stateless, всегда активный, неизменяемый из чата. Отвечает на "что нельзя". Минимальный по токенам. (2) Context layer (AGENTS.md) — постоянный project context. Отвечает на "кто я и в чём работаю". Компактный, структурированный. (3) Workflow layer (Skills) — on-demand playbooks. Отвечает на "как делать конкретную задачу". Детальный, может быть большим. Правило слоёв: нижний не нарушает верхний. Skills не нарушают Rules. AGENTS.md не нарушает Rules.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как диагностировать конфликты между слоями AGENTS.md, Rules, Skills?</summary>
+  <div class="inside">Сценарии конфликтов: (1) Skill рекомендует "добавь зависимость" + Rule запрещает без approval → Rule побеждает, агент должен запросить approval; (2) AGENTS.md говорит "всегда TDD" + пользователь просит "без тестов" → пользователь может попросить, AGENTS.md — рекомендация; (3) alwaysApply Rule vs пользователь — Rule побеждает. Диагностика: если агент нарушает Rule — проверить что файл .mdc с frontmatter, alwaysApply:true установлен, файл не слишком большой. Если агент не следует Skill — проверить description файла (агент его читает для выбора).</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как оптимизировать token overhead от трёх слоёв конфигурации?</summary>
+  <div class="inside">Token optimization стратегия: (1) AGENTS.md + alwaysApply Rules — кандидаты для prompt caching (стабильный prefix); реальный overhead = 0 со 2-го запроса при неизменном контенте; (2) Минимизировать alwaysApply слой — только safety-critical rules; (3) Детальные инструкции → Skills (on-demand); (4) Subdirectory AGENTS.md — загружается только при работе в директории; (5) Мерить: log input tokens для задачи, постепенно убирать лишнее из always-active слоя, измерять качество. Цель: минимальный always-active overhead при максимальном покрытии задач.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Что такое composability паттерны для AGENTS.md/Rules/Skills?</summary>
+  <div class="inside">Composability — способность компонентов комбинироваться. Паттерны: (1) AGENTS.md @include ссылки — декомпозиция на модульные файлы; (2) Skills вызывающие другие Skills через инструкции в тексте; (3) globs Rules — контекстно-зависимая композиция (SQL файл → db-migration Rule активируется автоматически); (4) Base AGENTS.md + Subdirectory AGENTS.md — inheritance паттерн. Anti-pattern composability: Skills которые дублируют Rules (нарушают single-source); AGENTS.md который инклудит всё подряд превращаясь в "god file".</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Какой emergent behavior возникает от взаимодействия трёх слоёв?</summary>
+  <div class="inside">Emergent behavior: (1) Контекстная адаптация — глобальный AGENTS.md + subdirectory AGENTS.md + globs Rule = агент автоматически меняет behaviour в зависимости от директории и типа файла без явных инструкций в чате; (2) Защитное поведение — alwaysApply Rule + User request = агент объясняет почему нельзя, предлагает alternative; (3) Guided workflow — AGENTS.md workflow + Skill playbook = агент следует процессу команды при типовых задачах; (4) Непредвиденные конфликты — три слоя могут создавать contradictory instructions, которые LLM разрешает по своему усмотрению. Нужен регулярный audit.</div></details>
+
+  <div class="qlevel-group">Lead — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как выстроить team agreement на использование трёх инструментов?</summary>
+  <div class="inside">Team agreement: (1) Матрица решений — задокументировать когда что использовать (в AGENTS.md или wiki); (2) Naming conventions — единый стиль имён Rules и Skills (verb-noun: check-secrets.mdc, triage-ci.md); (3) Review process — кто и когда review'ит изменения в каждом слое; (4) Ownership — назначить ответственных за каждый слой (tech lead → Rules policy, team lead → AGENTS.md, devs → Skills); (5) Onboarding — раздел в документации о трёх инструментах для новых разработчиков. Agreement должен быть живым документом, обновляться по мере опыта команды.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как организовать governance изменений в AGENTS.md, Rules, Skills?</summary>
+  <div class="inside">Governance по уровням критичности: alwaysApply Rules — максимальный контроль: изменения требуют tech-lead approval, CI проверяет что ни один существующий тест не нарушается; AGENTS.md — team review, обновлять при архитектурных изменениях через PR checklist; Skills — более гибко, разработчики могут предлагать новые Skills, review от любого senior. Для всех трёх: CODEOWNERS в git, история изменений, запрет прямых commits в main для конфигурационных файлов агента.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как обучать команду правильному использованию трёх артефактов?</summary>
+  <div class="inside">Обучение в три этапа: (1) Концептуальный уровень — объяснить разницу между policy/context/workflow с примерами из проекта; (2) Практический уровень — workshop: команда создаёт минимальный набор (AGENTS.md + 2 Rules + 1 Skill) для реального проекта; (3) Review-based learning — code review изменений в конфигурации агента с объяснением почему "это должно быть Rule, а не AGENTS.md". Основная ловушка: разработчики интуитивно кладут всё в AGENTS.md — нужно явно показать когда это проблема (lost in the middle, bypassed safety).</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как проводить audit трёх компонентов конфигурации агента?</summary>
+  <div class="inside">Audit checklist раз в квартал: AGENTS.md — актуальны ли команды? Соответствует ли стек реальному? Нет ли устаревших ADR? Не слишком ли длинный (>200 строк — разбить)? Rules — все ли .mdc файлы имеют frontmatter? alwaysApply Rules — минимально необходимы? Нет ли конфликтующих rules? Skills — все ли Skills используются? Нет ли Skills которые дублируют Rules? Описания (description) актуальны? Дополнительно: test агента на нарушение каждой alwaysApply Rule, убедиться что не обходится.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как балансировать clarity vs flexibility в трёхуровневой архитектуре?</summary>
+  <div class="inside">Баланс clarity/flexibility: строгие Rules дают clarity (предсказуемое поведение) но снижают flexibility (агент не может адаптироваться). Мягкий AGENTS.md даёт flexibility но снижает reliability (агент может нарушить workflow). Стратегия: alwaysApply Rules — только для safety/compliance (высокая clarity, низкая flexibility); AGENTS.md — workflow рекомендации (средняя clarity, гибкость для задач); Skills — детальные playbooks (высокая clarity в конкретном сценарии, вызываются по потребности). Правило: чем выше риск нарушения — тем жёстче enforcement. Остальное — гибко.</div></details>
+
+  <div class="qlevel-group">Architect — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как трёхуровневая архитектура AGENTS.md/Rules/Skills соотносится с паттернами проектирования?</summary>
+  <div class="inside">Аналогии: (1) Policy/Context/Workflow напоминает разделение concerns в чистой архитектуре (policy = domain rules, context = application layer, workflow = use cases); (2) alwaysApply Rules = Immutable invariants (не нарушаются никогда); AGENTS.md = Configuration (environment-specific); Skills = Strategy pattern (алгоритм делегирован); (3) Каскадный AGENTS.md = Template Method: базовый класс (root AGENTS.md) + конкретизация (subdirectory). Знание паттернов помогает принимать архитектурные решения: когда нужна жёсткость (invariants), когда гибкость (strategy).</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как применить трёхуровневую архитектуру в enterprise контексте?</summary>
+  <div class="inside">Enterprise паттерн: (1) Organization-level Rules — shared policy для всей организации (security, compliance, regulatory); управляются центральной командой; распространяются через CI template или Cursor Team Rules; (2) Team-level AGENTS.md — специфика команды/продукта; управляется team lead; (3) Project-level Skills — конкретные playbooks проекта; управляются разработчиками. Governance: изменения в org-level Rules — архитектурный review board. Трёхуровневая иерархия позволяет scale: org policy строгий, team context гибкий, project workflows итеративные.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как выстроить cross-team стандарты конфигурации агентов?</summary>
+  <div class="inside">Cross-team стандарты: (1) Shared Rules template — git-репозиторий с организационными Rules (.mdc файлы), каждая команда копирует через CI или submodule; (2) AGENTS.md skeleton — шаблон обязательных секций (Role, Stack, Build&amp;Test, Workflow), команды заполняют специфику; (3) Skills library — каталог общих Skills (triage-ci, write-pr, incident-report) доступных для всех команд; (4) Naming convention — единый стиль имён файлов; (5) Validation CI — проверяет что каждый проект имеет обязательный минимум. Cross-team стандарты = снижение cognitive load при переходе между командами.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Какую migration стратегию применить при переходе на новую архитектуру?</summary>
+  <div class="inside">Migration от "все в AGENTS.md" к трёхуровневой: (1) Audit — инвентаризировать текущий AGENTS.md; категоризировать строки: policy/context/workflow; (2) Strangler Fig pattern — постепенно выносить policy в Rules, оставляя AGENTS.md как "проксирующий" файл с @include; (3) Skill extraction — выделить повторяющиеся workflow-паттерны в Skills (начать с самых часто используемых); (4) Validate по-итогам каждого шага — агент всё ещё правильно работает? (5) Очистить AGENTS.md от вынесенного контента. Timeline: 2-4 спринта для среднего проекта. Риск: временное дублирование и неконсистентность.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как спроектировать архитектуру для масштабируемого AI-assisted development?</summary>
+  <div class="inside">Scalable AI-assisted архитектура: (1) Layered governance — org → team → project; каждый уровень имеет свои AGENTS.md/Rules/Skills, нижние не нарушают верхние; (2) Composable Skills library — общий каталог Skills с versioning; Skills могут импортироваться в проект; (3) Policy-as-code — Rules в git с CI validation и automated testing; (4) Context federation — глобальный AGENTS.md для org conventions + project AGENTS.md; (5) Observability — логировать какие Rules/Skills активировались, measure policy compliance rate. Цель: developer experience = consistent AI behaviour across all projects regardless of team.</div></details>
+
+</section>
+
+<!-- ─────────────────── NEXT ─────────────────── -->
+<section class="section">
+  <h2>Детальнее по артефактам</h2>
+  <div class="docs-grid">
+    <a href="agents-md.html" class="doc-link">
+      <div class="doc-ico" style="background:#eff6ff">📋</div>
+      <div><b>AGENTS.md / CLAUDE.md</b><span>Каскад, шаблоны, глобальный уровень</span></div>
+    </a>
+    <a href="rules.html" class="doc-link">
+      <div class="doc-ico" style="background:#fff1f2">🔒</div>
+      <div><b>Rules</b><span>4 типа, alwaysApply, примеры .mdc</span></div>
+    </a>
+    <a href="hooks.html" class="doc-link">
+      <div class="doc-ico" style="background:#fff7ed">🪝</div>
+      <div><b>Hooks</b><span>PreToolUse / PostToolUse, shell</span></div>
+    </a>
+    <a href="skills.html" class="doc-link">
+      <div class="doc-ico" style="background:#f5f3ff">⚡</div>
+      <div><b>Skills / Commands</b><span>SKILL.md, playbooks, YAML</span></div>
+    </a>
+  </div>
+</section>
+
+<div class="pageFooter"><div class="nextPrev">
+  <a href="checkpoints.html">← Checkpoint / Summary</a>
+  <a href="agents-md.html">AGENTS.md подробно →</a>
+</div></div>
+</main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

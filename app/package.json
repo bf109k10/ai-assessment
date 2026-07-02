@@ -1,0 +1,21 @@
+{
+  "name": "oral-ai-assessment",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:bank": "node scripts/extract-questions.mjs && node scripts/build-search-index.mjs",
+    "build:search": "node scripts/build-search-index.mjs",
+    "cap:sync": "npm run build:bank && npx cap sync",
+    "cap:open:android": "npx cap open android"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/cli": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
+    "cheerio": "^1.0.0"
+  },
+  "capacitor": {
+    "platforms": ["android", "ios"]
+  }
+}

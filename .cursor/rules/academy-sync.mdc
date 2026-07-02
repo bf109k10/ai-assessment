@@ -1,0 +1,179 @@
+---
+description: Sync nav, home.html, roadmap, and mental model when adding new pages to agent_context_academy
+globs: agent_context_academy/**/*.html
+alwaysApply: false
+---
+
+# Academy Page Sync Rule
+
+When adding or changing a **topic page** in `agent_context_academy/pages/`, ALWAYS update **every surface of the learning order** (см. §0). Nav + progress alone are **not** enough — типичная ошибка: страница есть в sidebar и `PAGES`, но **нет** в `VP_PHASES` на roadmap (пример: `permissions.html`).
+
+> ⚠️ **При ПЕРЕМЕЩЕНИИ страницы** (изменение шага/фазы) нужно обновить ВСЕ ЧЕТЫРЕ места одновременно:
+> 1. `home.html` — номер `step-badge` у карточки + позиция карточки в grid
+> 2. `roadmap.html` — номер `<td>N</td>` в таблице последовательности (часто забывают!)
+> 3. Nav sidebar во всех `.html` — позиция ссылки в списке
+> 4. `app.js PAGES` — порядок в массиве (влияет на прогресс)
+>
+> После любого перемещения обязательно проверить roadmap.html таблицу — сверить что номер строки совпадает с `step-badge` в `home.html`.
+
+## 0. Порядок обучения — четыре связанных места
+
+Любая тема с отдельным `pages/<topic>.html` в учебном треке должна появиться **везде** с **одним и тем же номером шага** `n` и `href`:
+
+| # | Файл | Что обновить |
+|---|------|----------------|
+| A | `home.html` | `topicCard` + `step-badge` (порядок карточек в DOM = порядок шагов) |
+| B | `roadmap.html` | Таблица «Рекомендуемая последовательность» — строка `<tr><td>n</td>…` |
+| C | `roadmap.html` | Массив **`VP_PHASES`** — визуальный путь (фазы 1–4, блок `#visualPath`) |
+| D | `roadmap.html` | **`NODES` / `EDGES`** — интерактивный граф (если тема не сводится к существующему узлу) |
+
+Дополнительно: nav на всех страницах, `app.js` → `PAGES`, при Q&A — `cd app && npm run build:bank`.
+
+**Согласованность B и C обязательна:** каждый шаг из таблицы = один элемент `phase.steps[]` в `VP_PHASES` с тем же `{n, label, href}`. После добавления темы обнови счётчик в intro («22 шага» → фактическое число).
+
+**Выбор фазы в `VP_PHASES`:** та же фаза, что заголовок секции в таблице (A0 → `id:'a0'`, конфиг агента → `a1`, память/знания → `a2`, агентные системы → `a3`).
+
+**Self-check (перед завершением задачи):**
+
+```bash
+# href новой страницы должен быть в таблице, VP_PHASES и (обычно) home
+rg "new-topic\\.html" agent_context_academy/pages/roadmap.html agent_context_academy/pages/home.html
+```
+
+Сравни количество шагов: `VP_PHASES` (сумма `steps.length`) = число тематических строк в таблице (без строк-заголовков фаз).
+
+Исключения из трека (не в VP_PHASES): `home`, `roadmap`, `overall`, `overall-full`, служебные standalone в корне репо.
+
+## 1. Navigation (every .html file)
+
+Add the new `<a>` link to the `<div class="nav">` block in **all existing pages** and in `index.html`.
+
+Use a Python script for bulk updates — never edit each file manually.
+
+```python
+# Pattern: add link after the nearest logical neighbour
+OLD = '<a href="neighbour.html" ...'
+NEW = OLD + '\n    <a href="new-page.html"><span class="ico">EMOJI</span><span>Title</span></a>'
+```
+
+Sub-pages (like agents-md, rules, hooks, skills) go inside `<div class="nav-sub-wrap">`.
+
+## 2. home.html — learning map cards
+
+Add a numbered `<a class="card topicCard">` in the correct learning-sequence position.
+
+Required fields per card:
+- `<span class="step-badge">N</span>` — step number
+- `<span class="level-pill lp-aX">AX</span>` — level badge (a0/a1/a2/a3)
+- At least 2 `<span class="tag">` tags
+- Correct `href` relative to pages/ folder
+
+## 3. Mental Model (home.html)
+
+If the new page introduces a new **layer** (e.g. Hooks between Rules and AGENTS), add a `.mm-row` to the `.mental-model` table with:
+- number, name, small subtitle, description, role badge
+
+## 4. roadmap.html — четыре места (таблица, VP_PHASES, NODES, EDGES)
+
+### 4a. Sequence table
+
+Add a row to the "Рекомендуемая последовательность" table:
+`<tr><td>N</td><td>Topic</td><td>Level</td><td>Why first</td><td><a href="...">→ Page</a></td></tr>`
+
+### 4b. NODES and EDGES arrays (interactive graph)
+
+`roadmap.html` has a JavaScript `NODES` array and `EDGES` array that power the SVG dependency graph. **This step is MANDATORY and easy to miss — do NOT skip it.**
+
+Every new topic page MUST get at least one node in `NODES`. Past mistakes: `hooks` and `commands` pages existed for weeks without graph nodes — they were invisible in the roadmap graph.
+
+```js
+// In the NODES array — choose the right rank (0=A0, 1=A1-A2, 2=A3, 3=A4)
+{id:'new-concept', label:'Concept Title', level:'a1a2', rank:1, cat:'Category',
+ desc:'Short description shown in graph tooltip.'},
+
+// In the EDGES array — wire dependencies
+{from:'prerequisite-id', to:'new-concept'},
+{from:'new-concept',     to:'dependent-id'},
+```
+
+Level values: `'a0'` · `'a1a2'` · `'a3'` · `'a4'`
+Category examples: `'Config'` · `'Context'` · `'Retrieval'` · `'MCP'` · `'Agentic'` · `'Workflow'` · `'Patterns'` · `'IDE'`
+
+### 4c. VP_PHASES — визуальный путь (НЕ ПРОПУСКАТЬ)
+
+В конце `roadmap.html` массив `const VP_PHASES = […]` строит цветные фазы на странице Roadmap. **Не синхронизирован с таблицей = тема «исчезает» из карты обучения**, хотя nav и таблица уже обновлены.
+
+```js
+// Вставить step в нужную phase.steps[] — после логического соседа, перенумеровать ВСЕ n подряд
+{n:12, label:'Permissions', href:'permissions.html'},
+```
+
+При вставке шага **перенумеруй** все последующие `n` в таблице, `VP_PHASES`, `step-badge` на `home.html` и текст «N шагов» в intro roadmap.
+
+### 4d. NODES self-check
+
+After adding, count pages in nav vs nodes in NODES. Every non-utility page (home, assessment, tricky-questions, overall excluded) should have ≥1 matching node. If a new page covers an existing node, update that node's `desc` instead of duplicating.
+
+**Current NODES coverage** (as of last sync):
+- A0: llm, prompt, ctx-window, hallucination, cursor-modes, agent-loop
+- A1-A2: embeddings, rag, memory, agents-md, rules, cursorignore
+- A3: hooks, commands, mcp, mcp-sec, int-mcps, react, skills, hitl, workflow-7
+- A4: agent-card, subagents, approval-gates, wf-types
+
+**Pages in nav** (canonical order, must match all `.html` in `pages/` — шаблон в `html-code-blocks.mdc` §7):
+home → roadmap → prompting → context-engineering → context → agent-loop → model-variance → agents-rules-skills → [agents-md, rules, hooks, skills, agent-packages, commands] → memory → [memory-structure] → rag → mcp → caching → checkpoints → subagents → **permissions** → conflicts → tricky-questions → assessment
+
+**Порядок шагов обучения (VP_PHASES / таблица)** может включать подстраницы без отдельной карточки на home (например `agents-md.html`, `commands.html`); но любая страница из nav **обязана** быть в таблице и `VP_PHASES`.
+
+## 5. app.js PAGES array
+
+Add the new page key to the `PAGES` array in `assets/app.js` for progress tracking (порядок в массиве желательно совпадать с шагами обучения):
+```js
+const PAGES = ["pages/home.html", ..., "pages/new-page.html"];
+```
+
+## 6. Question bank (если на странице есть Q&A)
+
+```bash
+cd app && npm run build:bank
+```
+
+---
+
+## When REMOVING a page
+
+If a page is deleted, reverse ALL of the above:
+
+1. **Nav** — remove the `<a href="removed-page.html">` from every `.html` file
+2. **home.html** — remove the `topicCard`, renumber subsequent `step-badge` values
+3. **Mental model** — remove the `.mm-row` if the layer no longer has a dedicated page
+4. **roadmap.html table** — remove the row, renumber the N column
+5. **roadmap.html VP_PHASES** — remove the step; renumber all `n` and update step count in intro
+6. **roadmap.html NODES/EDGES** — remove the node entry; remove all edges `{from/to: 'removed-id'}` and rewire if needed
+7. **app.js PAGES** — remove the page key from the `PAGES` array
+
+---
+
+## Checklist — Adding a page
+
+- [ ] New page has correct nav (same as all others + own link as `active`)
+- [ ] home.html card added in sequence order with step-badge and level-pill
+- [ ] roadmap.html sequence **table** row added (correct phase header)
+- [ ] roadmap.html **VP_PHASES** step added (same `n`, `label`, `href` as table); all steps renumbered; intro «N шагов» updated
+- [ ] roadmap.html **NODES** array entry added (with correct rank/level/cat/desc)
+- [ ] roadmap.html **EDGES** wired (prerequisites → new node → dependents)
+- [ ] `rg` self-check: new `href` present in roadmap table + `VP_PHASES` + home (if topicCard)
+- [ ] Mental model `.mm-row` added if new concept layer
+- [ ] app.js PAGES array updated
+- [ ] All existing pages have nav link to new page
+
+## Checklist — Removing a page
+
+- [ ] Nav link removed from all `.html` files
+- [ ] home.html card removed, step-badges renumbered
+- [ ] roadmap.html table row removed
+- [ ] roadmap.html VP_PHASES step removed; steps renumbered
+- [ ] roadmap.html NODES entry removed
+- [ ] roadmap.html EDGES referencing removed node cleaned up
+- [ ] Mental model row removed if layer gone
+- [ ] app.js PAGES entry removed

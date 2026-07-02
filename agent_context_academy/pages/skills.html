@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Skills — SKILL.md, тонкости, Cursor vs Claude Code</title>
+  <link rel="stylesheet" href="../assets/style.css"/>
+  <style>
+    .schema-box{background:#0f172a;color:#e2e8f0;border-radius:16px;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.65;overflow:auto;margin:10px 0;white-space:pre-wrap}
+    .schema-box .h{color:#c084fc;font-weight:900}
+    .schema-box .c{color:#64748b}
+    .schema-box .k{color:#93c5fd}
+    .schema-box .v{color:#86efac}
+    .schema-box .s{color:#fcd34d}
+    .nuance-card{border-left:4px solid;border-radius:0 14px 14px 0;padding:12px 16px;margin:8px 0;background:#fff;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+    .nc-blue{border-left-color:#2563eb}
+    .nc-red{border-left-color:#dc2626}
+    .nc-orange{border-left-color:#f97316}
+    .nc-green{border-left-color:#16a34a}
+    .nc-purple{border-left-color:#7c3aed}
+    .skill-card{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff;margin:10px 0}
+    .skill-head{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);background:#f8fafc}
+    .skill-icon{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-size:18px}
+    .skill-head h4{margin:0;font-size:15px}
+    .skill-head p{margin:0;font-size:12px;color:#64748b}
+    .skill-body{padding:16px}
+    .trigger-pill{display:inline-block;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:900;border:1px solid;font-family:ui-monospace,Menlo,monospace}
+    .tp-claude{background:#fdf4ff;border-color:#d8b4fe;color:#6b21a8}
+    .tp-cursor{background:#eff6ff;border-color:#93c5fd;color:#1e40af}
+    .lifecycle{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff}
+    .lc-step{padding:16px 12px;text-align:center;border-right:1px solid var(--line)}
+    .lc-step:last-child{border-right:none}
+    .lc-num{width:34px;height:34px;border-radius:999px;background:#7c3aed;color:#fff;display:grid;place-items:center;font-weight:900;font-size:14px;margin:0 auto 10px}
+    .lc-step h4{font-size:13px;margin:0 0 5px}
+    .lc-step p{font-size:12px;color:#64748b;margin:0;line-height:1.4}
+    code{background:#f1f5f9;padding:2px 5px;border-radius:5px;font-family:ui-monospace,Menlo,monospace;font-size:12px}
+    @media(max-width:900px){.lifecycle{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>
+    <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub active"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div>
+  <div class="progressBox"><b>Правило</b><p class="sourceNote">Skills вызываются явно или автоматически по description. Не политика — инструкции. Skills &lt; Rules в иерархии.</p></div>
+</aside>
+
+<main class="main">
+<section class="hero">
+  <div class="kicker">Agent Context Academy · AGENTS / Rules / Skills</div>
+  <h2>Skills</h2>
+  <p>Переиспользуемые инструкции для конкретных типов задач. В Claude Code — <code>SKILL.md</code> с YAML frontmatter, агент может выбрать автоматически. В Cursor — <a href="commands.html">Commands</a> (<code>/command-name</code>). Сравнение в конце страницы.</p>
+  <div class="heroActions">
+    <a class="btn" href="hooks.html">← Hooks</a>
+    <a class="btn" href="agent-packages.html">Agent Package Manager</a>
+    <a class="btn" href="commands.html">Commands →</a>
+    <a class="btn" href="agents-rules-skills.html">Обзор</a>
+    <button class="markDone">Отметить страницу изученной</button>
+  </div>
+</section>
+
+<!-- ── Что такое Skills ── -->
+<section class="section">
+  <h2>Что такое Skills и зачем они нужны</h2>
+  <div class="grid">
+    <div class="card bg-purple">
+      <h3>Skills = переиспользуемые инструкции</h3>
+      <p>Не ограничения (это Rules), а пошаговые инструкции как выполнить конкретный тип работы. Code review, migration, debugging, onboarding — у каждого своя структура.</p>
+      <ul>
+        <li>Стандартизируют процессы команды</li>
+        <li>Вызываются явно или автоматически по description</li>
+        <li>Могут описывать как использовать MCP tools</li>
+        <li>Версионируются в репозитории</li>
+      </ul>
+    </div>
+    <div class="card bg-green">
+      <h3>Skills vs Rules vs AGENTS.md</h3>
+      <div class="tableWrap" style="margin-top:8px"><table style="font-size:13px">
+        <thead><tr><th></th><th>AGENTS.md</th><th>Rules</th><th>Skills</th></tr></thead>
+        <tbody>
+          <tr><td><b>Что</b></td><td>Workflow, контекст</td><td>Политика</td><td>Инструкция для задачи</td></tr>
+          <tr><td><b>Когда активен</b></td><td>Всегда</td><td>Всегда / по glob</td><td>При вызове</td></tr>
+          <tr><td><b>Обязательность</b></td><td>Рекомендация</td><td>Жёсткая</td><td>Рекомендация</td></tr>
+          <tr><td><b>Приоритет</b></td><td>Средний</td><td>Высокий</td><td>Низкий</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Файловая структура ── -->
+<section class="section">
+  <h2>Файловая структура (Claude Code)</h2>
+  <div class="grid two">
+    <div>
+      <h3 style="margin-bottom:8px">Project-level</h3>
+      <div class="schema-box">.claude/
+└── commands/
+    ├── code-review.md   <span class="c">← /code-review</span>
+    ├── db-migration.md  <span class="c">← /db-migration</span>
+    └── onboarding.md    <span class="c">← /onboarding</span></div>
+      <p style="font-size:13px;color:#475569;margin-top:8px">Версионируются в git. Доступны всей команде.</p>
+    </div>
+    <div>
+      <h3 style="margin-bottom:8px">Global-level</h3>
+      <div class="schema-box">~/.claude/
+└── commands/
+    ├── my-review.md     <span class="c">← личный стиль</span>
+    └── quick-debug.md</div>
+      <p style="font-size:13px;color:#475569;margin-top:8px">Личные skills. Работают во всех проектах. Не попадают в git.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Формат SKILL.md ── -->
+<section class="section">
+  <h2>Формат SKILL.md — полная структура</h2>
+  <div class="grid two">
+    <div>
+      <h3 style="margin-bottom:8px">Полный шаблон</h3>
+      <div class="schema-box"><span class="h">---</span>
+<span class="k">name</span>: <span class="s">"code-review"</span>
+<span class="k">description</span>: <span class="s">"Thorough code review:
+  correctness, security, design"</span>
+<span class="c"># ↑ ≤100 символов, 3rd person.
+# По description агент решает
+# применять ли skill автоматически.</span>
+<span class="k">version</span>: <span class="v">"1.2"</span>
+<span class="k">author</span>: <span class="s">"team"</span>
+<span class="h">---</span>
+
+<span class="h"># Code Review Skill</span>
+
+<span class="h">## Trigger</span>
+Use when reviewing code, checking PR,
+or auditing implementation quality.
+
+<span class="h">## Steps</span>
+1. Check correctness and edge cases
+2. Verify tests are meaningful
+3. Look for security issues
+4. Evaluate design and readability
+
+<span class="h">## Output format</span>
+**[Severity]** Issue — file:line
+Severity: Critical > Major > Minor > Suggestion
+End with top-3 priority fixes.
+
+<span class="h">## Constraints</span>
+- Do NOT change code, only review
+- If no issues — say so explicitly
+- List total count by severity</div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:8px">Поля frontmatter</h3>
+      <div class="tableWrap"><table style="font-size:13px">
+        <thead><tr><th>Поле</th><th>Обяз.</th><th>Описание</th></tr></thead>
+        <tbody>
+          <tr><td><code>name</code></td><td style="color:#dc2626;font-weight:900">✓</td><td>Slug для вызова. kebab-case, ≤50 символов.</td></tr>
+          <tr><td><code>description</code></td><td style="color:#dc2626;font-weight:900">✓</td><td>≤100 символов. <b>Агент читает для автовыбора.</b></td></tr>
+          <tr><td><code>version</code></td><td style="color:#94a3b8">—</td><td>Версионирование изменений.</td></tr>
+          <tr><td><code>author</code></td><td style="color:#94a3b8">—</td><td>Команда / автор.</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 style="margin:16px 0 8px">Как вызывать</h3>
+      <div class="schema-box"><span class="c"># Явный вызов</span>
+/code-review
+@.claude/commands/code-review.md
+
+<span class="c"># Из CLAUDE.md — список доступных</span>
+Available commands:
+@.claude/commands/code-review.md
+@.claude/commands/db-migration.md
+
+<span class="c"># Автовыбор (по description)</span>
+<span class="c"># Пользователь: "сделай review кода"</span>
+<span class="c"># Агент: видит description, применяет</span></div>
+
+      <div class="callout warn" style="margin-top:10px;font-size:13px">
+        <b>Description — ключевое поле.</b> По нему агент решает применять ли Skill. Размытый description → skill игнорируется. Начинай с глагола: "Perform...", "Analyse...", "Generate..."
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Platform Split ── -->
+<section class="section">
+  <h2>Cursor vs Claude Code — формат Skills</h2>
+  <div class="platform-split">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor — Skills</div>
+      <p style="font-size:13px">Файл <code>.cursor/skills/SKILL.md</code> или путь указанный в fullPath. Агент читает skill по команде или при упоминании. Вызов: явно в задаче или через <code>@skill-name</code>.</p>
+      <div class="schema-box" style="font-size:11px"># SKILL.md
+## Trigger
+When user asks to create a PR
+
+## Steps
+1. Run git status
+2. Create branch
+3. Commit changes
+4. Push and open PR
+
+## Output
+PR URL returned to user</div>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code — Skills</div>
+      <p style="font-size:13px">Файл <code>skills/SKILL.md</code> или в директории проекта. Загружается через <code>settingSources: ["project"]</code>. Агент вызывает skill по имени через <code>Skill tool</code>.</p>
+      <div class="schema-box" style="font-size:11px"># SKILL.md (Claude Code)
+## Trigger
+create-pr, open PR, push changes
+
+## Steps
+1. git status → check changes
+2. git checkout -b feature/name
+3. git commit -m "..."
+4. git push origin HEAD
+5. gh pr create --title "..." 
+
+## Return
+PR URL and branch name</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Lifecycle ── -->
+<section class="section">
+  <h2>Lifecycle вызова Skill</h2>
+  <div class="lifecycle">
+    <div class="lc-step" style="background:#f5f3ff">
+      <div class="lc-num">1</div><h4>Trigger</h4>
+      <p>Пользователь: /skill-name, или агент сам по description.</p>
+    </div>
+    <div class="lc-step" style="background:#eff6ff">
+      <div class="lc-num">2</div><h4>Load</h4>
+      <p>SKILL.md загружается в context к текущей задаче.</p>
+    </div>
+    <div class="lc-step" style="background:#fefce8">
+      <div class="lc-num">3</div><h4>Apply</h4>
+      <p>Агент следует steps. Может вызывать MCP tools согласно инструкциям.</p>
+    </div>
+    <div class="lc-step" style="background:#f0fdf4">
+      <div class="lc-num">4</div><h4>Output</h4>
+      <p>Результат строго в формате описанном в Skill.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Примеры ── -->
+<section class="section">
+  <h2>Примеры реальных Skills</h2>
+
+  <div class="skill-card">
+    <div class="skill-head">
+      <div class="skill-icon" style="background:#f5f3ff">🔍</div>
+      <div><h4>code-review</h4><p>Структурированный code review с severity levels</p></div>
+      <span class="trigger-pill tp-claude">/code-review</span>
+    </div>
+    <div class="skill-body">
+      <div class="schema-box" style="font-size:12px">name: "code-review"
+description: "Thorough code review: correctness, security, design"
+---
+Review provided code. For each issue:
+**[Severity]** Description — file:line
+Severity: Critical > Major > Minor > Suggestion
+End: Summary table + top-3 priority fixes.</div>
+    </div>
+  </div>
+
+  <div class="skill-card">
+    <div class="skill-head">
+      <div class="skill-icon" style="background:#fefce8">🗄️</div>
+      <div><h4>db-migration</h4><p>Безопасные миграции БД с rollback</p></div>
+      <span class="trigger-pill tp-claude">/db-migration</span>
+    </div>
+    <div class="skill-body">
+      <div class="schema-box" style="font-size:12px">name: "db-migration"
+description: "Safe database schema migration with rollback plan"
+---
+1. Backward-compatible changes ONLY in first deploy
+2. Separate PRs: add column → backfill → add constraint
+3. Include rollback SQL in migration file
+4. Use metrics-mcp to monitor after deploy</div>
+    </div>
+  </div>
+
+  <div class="skill-card">
+    <div class="skill-head">
+      <div class="skill-icon" style="background:#fdf4ff">🚀</div>
+      <div><h4>onboarding</h4><p>Онбординг нового разработчика</p></div>
+      <span class="trigger-pill tp-claude">/onboarding</span>
+    </div>
+    <div class="skill-body">
+      <div class="schema-box" style="font-size:12px">name: "onboarding"
+description: "New developer onboarding: structure, setup, ADRs, first tasks"
+---
+Walk the developer through:
+1. Repo structure overview
+2. Local setup: docker compose up -d
+3. Key ADRs (docs/adr/)
+4. Test strategy and commands
+5. First week tasks checklist</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Тонкости ── -->
+<section class="section">
+  <h2>Тонкости использования</h2>
+
+  <div class="nuance-card nc-purple">
+    <h4>Автовыбор агентом по description — и почему description критичен</h4>
+    <p>В Claude Code агент читает description всех доступных Skills и может применить подходящий <em>без явного вызова</em>. Пользователь пишет "сделай review" — агент находит Skill с <code>description: "code review..."</code> и применяет. Если description расплывчатый ("помоги с кодом") — агент его проигнорирует. Правило: начинай с глагола в 3-м лице, описывай конкретно что делает Skill.</p>
+  </div>
+
+  <div class="nuance-card nc-red">
+    <h4>Skills vs Rules — частая ошибка</h4>
+    <p>"Никогда не коммить секреты" — это <b>Rule</b>, не Skill. Skill описывает <em>как</em> выполнить задачу. Rule описывает <em>что нельзя</em>. Если кладёшь политику в Skill — она применится только при явном вызове. Критические ограничения безопасности должны быть в Rules (alwaysApply:true) или в Hooks.</p>
+  </div>
+
+  <div class="nuance-card nc-orange">
+    <h4>Context overhead при загрузке</h4>
+    <p>SKILL.md целиком загружается в context при вызове. Большой Skill (500+ строк) = много токенов = дорого + агент хуже следует. Держи Skills сфокусированными: один Skill — одна задача. Если задача большая — раздели на sub-skills или используй ссылки внутри.</p>
+  </div>
+
+  <div class="nuance-card nc-green">
+    <h4>Skills + MCP — стандартизация workflow</h4>
+    <p>Skill может содержать инструкции как использовать конкретные MCP tools. Это стандартизирует то как команда работает с реальными данными.</p>
+    <div class="schema-box" style="margin-top:8px"><span class="c"># В Skill для performance debug:</span>
+1. Use graylog-mcp: get errors last 24h
+2. Use metrics-mcp: check p95 response time
+3. Compare with baseline before the change</div>
+  </div>
+
+  <div class="nuance-card nc-blue">
+    <h4>Degrees of Freedom — явно указывай что фиксировано</h4>
+    <p>Лучшие Skills явно указывают что агент должен делать строго, а где может адаптировать:</p>
+    <div class="schema-box" style="margin-top:8px">## Degrees of freedom
+High:   tone and wording (агент свободен)
+Medium: level of detail per issue
+Low:    output format (строго по шаблону)</div>
+    <p style="margin-top:8px;font-size:13px">Без этого агент либо слишком жёсткий, либо игнорирует нужные части.</p>
+  </div>
+
+  <div class="nuance-card nc-purple">
+    <h4>Skill может ссылаться на другие файлы</h4>
+    <p>В Claude Code внутри Skill можно ссылаться на файлы через <code>@</code>. Агент прочитает их как дополнительный контекст при выполнении Skill.</p>
+    <div class="schema-box" style="margin-top:8px"><span class="c"># В SKILL.md:</span>
+Before reviewing, read:
+@docs/architecture.md
+@docs/coding-standards.md
+
+Then apply these review criteria...</div>
+  </div>
+</section>
+
+<!-- ── Best practices ── -->
+<section class="section">
+  <h2>Best practices</h2>
+  <div class="grid">
+    <div class="card bg-green">
+      <h3>Делай</h3>
+      <ul>
+        <li><b>Один Skill — одна задача:</b> code-review, pr-template, debug</li>
+        <li><b>Description с глагола</b> в 3-м лице, ≤100 символов</li>
+        <li><b>Output format</b> — покажи шаблон ответа внутри Skill</li>
+        <li><b>Constraints</b> — что агент НЕ должен делать</li>
+        <li><b>Degrees of Freedom</b> — что фиксировано, что гибко</li>
+        <li>Версионируй: <code>version: "1.0"</code></li>
+      </ul>
+    </div>
+    <div class="card bg-red">
+      <h3>Не делай</h3>
+      <ul>
+        <li>God Skill 500+ строк — разбей на несколько</li>
+        <li>Rules в Skills — политику пиши в .mdc, не здесь</li>
+        <li>Размытый description: "помоги с кодом"</li>
+        <li>Хранить данные — Skill это инструкции, не Memory</li>
+        <li>Дублировать AGENTS.md контент</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── Cursor vs Claude Code comparison ── -->
+<section class="section">
+  <h2>Cursor vs Claude Code — сравнение</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Аспект</th><th>Claude Code Skills</th><th>Cursor Commands</th></tr></thead>
+    <tbody>
+      <tr><td><b>Расположение</b></td><td><code>.claude/commands/*.md</code><br><code>~/.claude/commands/</code> (global)</td><td><code>.cursor/commands/*.md</code><br>Глобального нет</td></tr>
+      <tr><td><b>Формат</b></td><td>YAML frontmatter + Markdown</td><td>Plain Markdown (frontmatter необязателен)</td></tr>
+      <tr><td><b>Обязательные поля</b></td><td><code>name</code>, <code>description</code></td><td>Нет обязательных</td></tr>
+      <tr><td><b>Вызов пользователем</b></td><td><code>/command-name</code> или <code>@mention</code></td><td><code>/command-name</code></td></tr>
+      <tr><td><b>Автовыбор агентом</b></td><td>Да — по description при релевантной задаче</td><td>Нет — только явный вызов</td></tr>
+      <tr><td><b>Глобальный уровень</b></td><td>Да — <code>~/.claude/commands/</code></td><td>Нет — только project</td></tr>
+      <tr><td><b>Имя команды</b></td><td>Поле <code>name</code> в frontmatter</td><td>Имя файла без расширения</td></tr>
+      <tr><td><b>MCP интеграция</b></td><td>Через инструкции в тексте + Claude Code tools</td><td>Через инструкции в тексте</td></tr>
+      <tr><td><b>Документация</b></td><td><a href="https://docs.anthropic.com/en/docs/claude-code/agent-skills" target="_blank">docs.anthropic.com/claude-code/agent-skills ↗</a></td><td><a href="https://docs.cursor.com/context/commands" target="_blank">docs.cursor.com/context/commands ↗</a></td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout" style="margin-top:12px">
+    <b>Главное отличие:</b> Claude Code Skills могут применяться агентом <em>автоматически</em> по description. Cursor Commands — <em>всегда только явный</em> вызов через /command. Для команд которые должны срабатывать без напоминания пользователя — Claude Code Skills предпочтительнее.
+  </div>
+</section>
+
+<!-- ── Agent Package Manager (подраздел) ── -->
+<section class="section">
+  <h2>Пакеты и APM</h2>
+  <p class="sectionIntro">SDK, LangChain/LangGraph, MCP-библиотеки и observability (Langfuse, LangSmith, OTEL) — вынесены в подраздел сразу после Skills в навигации.</p>
+  <div class="heroActions" style="margin-top:12px">
+    <a class="btn primary" href="agent-packages.html">Открыть: Agent Package Manager →</a>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Вопросы по уровням</h2>
+
+  <div class="qlevel-group">Junior — 10 вопросов</div>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое Skill в Cursor / Claude Code?</summary>
+<div class="inside">Skill — SKILL.md файл с YAML frontmatter и Markdown инструкциями, описывающий repeatable workflow агента. Примеры: code review, DB migration, onboarding checklist. В отличие от Rule (политика) — Skill описывает <b>как выполнить</b> конкретный процесс. Агент может применять Skill автоматически (по description) или при явном вызове.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое SKILL.md файл?</summary>
+<div class="inside">Markdown файл с YAML frontmatter. Структура: <code>---\nname: code-review\ndescription: "Performs thorough PR code review..."\n---\n## Trigger\nWhen to apply...\n## Steps\n1. ...\n## Output\nWhat to return</code>. Frontmatter <code>description</code> — самое важное поле: агент использует его для автоматического выбора Skill.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Где хранятся Skills в проекте?</summary>
+<div class="inside">Project-level: <code>.claude/skills/skill-name/SKILL.md</code> или <code>.claude/commands/name.md</code> — версионируются в git, доступны всей команде. Global-level: <code>~/.claude/skills/</code> — личные Skills, работают во всех проектах, не попадают в git. В Cursor: Skills-подобное поведение через <code>.cursor/rules/</code> и Commands (<code>.cursor/commands/</code>).</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Как вызвать Skill явно?</summary>
+<div class="inside">В Claude Code: через <code>/команду</code> если Skill настроен как command, или описав задачу в чате — агент автоматически выберет подходящий Skill по description. В Cursor: Skill-подобные инструкции вызываются через <code>@rule-name</code> или <code>/command-name</code>. Явный вызов гарантирует применение конкретного Skill.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Чем Skill отличается от Rule?</summary>
+<div class="inside">Rule — <b>ограничение/политика</b>: «никогда не делай X», применяется автоматически. Skill — <b>инструкция/процесс</b>: «вот как выполнить Y шаг за шагом». Rule ограничивает поведение агента. Skill расширяет возможности — описывает как правильно делать задачу. При конфликте: Rule > Skill (ограничение имеет приоритет над способом выполнения).</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Чем Skill отличается от Command?</summary>
+<div class="inside">Skill (Claude Code): может применяться <b>автоматически</b> агентом по description без явного вызова пользователем. Command (Cursor/Claude Code): вызывается <b>только явно</b> через /имя — агент сам не инициирует. Skill = агент инициирует. Command = пользователь инициирует. Для задач которые должны срабатывать без напоминания — Skill предпочтительнее.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое skill trigger (автоматический вызов)?</summary>
+<div class="inside">Auto-trigger — механизм когда агент применяет Skill без явного вызова. Работает через semantic matching: агент читает description всех доступных Skills, сравнивает с текущей задачей, если совпадение — применяет Skill. Это ключевое преимущество Skills перед Commands: пользователю не нужно помнить имя команды.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Как агент находит и выбирает нужный Skill?</summary>
+<div class="inside">При получении задачи агент: (1) читает descriptions всех доступных SKILL.md файлов; (2) семантически сравнивает задачу с каждым description; (3) если description совпадает — применяет Skill как часть ответа. Качество description критично: чёткий, конкретный description = правильный выбор Skill; расплывчатый = неверный выбор или игнорирование.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что входит в структуру SKILL.md?</summary>
+<div class="inside">Обязательные элементы: <b>Frontmatter</b>: name, description (≤100 символов, когда применять). <b>Тело</b>: ## Trigger (условия применения), ## Steps (пошаговый процесс), ## Output (что вернуть пользователю). Опционально: ## Prerequisites, ## Examples, ## Announce (как агент сообщает о применении Skill).</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Как создать свой первый Skill?</summary>
+<div class="inside">1. Создай директорию <code>.claude/skills/my-skill/</code>. 2. Создай <code>SKILL.md</code> с frontmatter: <code>---\nname: my-skill\ndescription: "Use when..."\n---</code>. 3. Опиши ## Trigger (когда применять), ## Steps (что делать). 4. Тестируй: задай агенту задачу, совпадающую с description — агент должен применить Skill. 5. Уточни description если Skill применяется слишком широко или не применяется.</div></details>
+
+  <div class="qlevel-group">Middle — 10 вопросов</div>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда создавать Skill, а когда достаточно добавить инструкцию в AGENTS.md?</summary>
+<div class="inside">AGENTS.md: общий контекст, постоянные инструкции, «как устроен проект». Skill: конкретный повторяемый процесс с чёткими шагами, который нужен не всегда, а при определённых задачах. Правило: если инструкция используется для каждого запроса → AGENTS.md. Если это специфический workflow (code review, migration, deploy) который нужен только иногда → Skill.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как написать description который хорошо работает для автовыбора?</summary>
+<div class="inside">Требования к description: (1) ≤100 символов; (2) третье лицо или trigger-форма: «Use when reviewing PR or auditing code quality»; (3) конкретный trigger: не «Does code analysis» а «Performs thorough code review checking correctness, security, tests. Use when reviewing existing code or PR»; (4) добавь «NOT for» для исключения неверных trigger: «NOT for writing new code or tests»; (5) тестируй description с реальными задачами.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как Skills помогают стандартизировать повторяемые workflow команды?</summary>
+<div class="inside">Skills — «записанный процесс» команды. Вместо того чтобы каждый разработчик помнил 10-шаговый процесс code review или migration — Skill содержит эти шаги и агент выполняет их консистентно. Преимущества: новые разработчики мгновенно следуют командным процессам; процессы версионируются в git; изменение процесса = обновление SKILL.md.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда использовать Skill, а когда Command — trade-offs?</summary>
+<div class="inside">Skill: задача должна запускаться <b>автоматически</b> при определённых условиях, пользователь не хочет помнить команду, агент сам знает когда применить. Command: задача запускается <b>только по запросу</b> пользователя, нужен явный контроль когда выполняется. Skill лучше для: постоянных workflow. Command лучше для: одноразовых или редких задач с явным намерением.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как Skill влияет на context window при загрузке?</summary>
+<div class="inside">Agent-requested Skill загружается в context <b>только когда агент решает применить</b>. Он не присутствует в каждом запросе (в отличие от alwaysApply Rule). Если SKILL.md большой (2000+ токенов) — при загрузке он занимает место в window. Оптимизация: держи Steps лаконичными, Examples вынеси в отдельные файлы с ссылками, используй иерархическую структуру.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как организовать Skills по доменам для большой команды?</summary>
+<div class="inside">Структура директорий: <code>.claude/skills/\n├── code-quality/\n│ ├── code-review/SKILL.md\n│ └── refactoring/SKILL.md\n├── database/\n│ ├── migration/SKILL.md\n│ └── query-optimization/SKILL.md\n└── deployment/\n  └── release/SKILL.md</code>. Каждый домен — поддиректория. Ответственный за домен — владелец соответствующих SKILL.md файлов.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как версионировать Skills при изменении командных процессов?</summary>
+<div class="inside">Skills — living documents, не set-and-forget. Процесс обновления: (1) изменился process (новый security checklist) → PR обновляет SKILL.md; (2) reviewer проверяет что новые шаги отражают реальный process; (3) можно добавить version в frontmatter: <code>version: "2.1"</code>; (4) Skills review включать в retrospective или при architecture change. Stale Skill = агент выполняет устаревший процесс.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как организовать Skills в командном репозитории?</summary>
+<div class="inside">Project Skills → <code>.claude/skills/</code> в репо, версионируются в git. Доступны всей команде при клонировании. Global Skills → <code>~/.claude/skills/</code>, личные, не в git. Документирование в AGENTS.md: список ключевых Skills с описанием когда использовать. PR workflow для Skills: новый Skill — PR → review description и шаги → merge.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как Skills помогают в onboarding новых сотрудников?</summary>
+<div class="inside">Skills = encoded knowledge команды. Новый разработчик: клонирует репо → получает все процессы в <code>.claude/skills/</code>. Не нужно читать wiki — Skills применяются автоматически при нужных задачах. Специальный <code>onboarding/SKILL.md</code>: когда агент видит «я новый разработчик» — применяет гид по проекту. Результат: ускорение time-to-productivity нового члена команды.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как проверить что Skill работает и применяется корректно?</summary>
+<div class="inside">(1) Задай задачу точно совпадающую с description — Skill должен примениться. (2) Задай похожую но другую задачу — Skill не должен примениться. (3) Проверь каждый шаг: выполняет ли агент все ## Steps или пропускает. (4) Проверь Output: соответствует ли ## Output разделу. (5) Тест «граничный случай»: задача с неполными данными — Skill должен запросить недостающее.</div></details>
+
+  <div class="qlevel-group">Senior — 5 вопросов</div>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как спроектировать библиотеку Skills для большой организации?</summary>
+<div class="inside">Архитектура: (1) <b>Core Skills</b> — universal для всех команд: code-review, security-audit, documentation-update; в shared repo; (2) <b>Domain Skills</b> — специфичные для домена: billing-migration, ML-experiment-tracking; в domain repo; (3) <b>Team Skills</b> — локальные процессы команды: их .claude/skills/; (4) <b>Discovery механизм</b>: README.md в .claude/skills/ с каталогом; (5) Skills вреестре: какие Skills есть, кто owner, когда обновлены.</div></details>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как реализовать Skills composition — когда один Skill вызывает другой?</summary>
+<div class="inside">Прямого вызова Skill из Skill нет в Claude Code. Паттерны: (1) <b>Reference</b>: в ## Steps ссылка «Apply [security-audit Skill] for step 3»; (2) <b>Shared prerequisites</b>: выносить общие шаги в include-файл, ссылаться через @path; (3) <b>Conditional logic</b>: один Skill с ## If DB context / ## If API context; (4) <b>Orchestrator Skill</b>: высокоуровневый Skill описывает последовательность применения других Skills. Тест composition: agent должен выполнить полный workflow без потери шагов.</div></details>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как диагностировать ситуацию когда Skill не срабатывает когда должен?</summary>
+<div class="inside">Диагностика по порядку: (1) description слишком общий/специфичный? → Переформулируй; (2) задача пользователя не совпадает с description семантически? → Попробуй разные формулировки задачи; (3) Skill файл в правильной директории? (<code>.claude/skills/</code> vs <code>.claude/commands/</code>); (4) frontmatter валидный? → Проверь YAML синтаксис; (5) другой Skill перехватывает задачу? → Проверь descriptions на overlap; (6) Skill слишком большой? → Context window при загрузке может давить.</div></details>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как строить Skills для complex multi-step workflow?</summary>
+<div class="inside">Для сложных workflows: (1) <b>Numbered steps</b>: явная нумерация 1..N, агент не пропускает; (2) <b>Checkpoints</b>: в конце каждого блока шагов — «Verify: [список что должно быть готово] before proceeding»; (3) <b>Prerequisites section</b>: требования к tools, доступам, данным; (4) <b>Graceful degradation</b>: «If tool X unavailable — mark as MANUAL REQUIRED»; (5) <b>Announce section</b>: агент объявляет применение Skill и текущий шаг. Тест: выполни Skill на реальной задаче и проверь все N шагов.</div></details>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Чем Skills отличаются от fine-tuning модели?</summary>
+<div class="inside">Fine-tuning: изменяет веса модели, закодированные паттерны становятся частью «памяти» модели, дорого, требует данных и compute, постоянно. Skills: добавляют инструкции в context при конкретных задачах, модель не меняется, бесплатно обновить (edit SKILL.md), версионируются в git. Skills предпочтительнее для: team-specific процессов, часто меняющихся правил. Fine-tuning: для постоянного domain-specific знания встроенного в модель.</div></details>
+
+  <div class="qlevel-group">Lead — 5 вопросов</div>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как выстроить governance Skills в команде?</summary>
+<div class="inside">Framework: (1) <b>Owner per Skill</b> — кто отвечает за актуальность; (2) <b>PR review для SKILL.md</b> — новые Skills и изменения через PR; (3) <b>Skills catalog</b> в AGENTS.md — список с описанием когда использовать; (4) <b>Quarterly Skills review</b> — актуальны ли процессы, не стали ли stale; (5) <b>Approval для новых Skills</b>: кто может добавить в .claude/skills/ — только team lead или через PR vote.</div></details>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как Skills становятся knowledge base организации?</summary>
+<div class="inside">Skills = encoded organizational knowledge. Когда опытный разработчик документирует свой process в SKILL.md — знание перестаёт быть tribal. Стратегия: (1) onboarding: «задокументируй процессы которым тебя учили» → новые SKILL.md; (2) при уходе разработчика: обязательная передача знаний через Skills; (3) постмортемы: новые Skill шаги из каждого инцидента; (4) Skills как living documentation — актуальнее wiki.</div></details>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как использовать Skills в onboarding процессе?</summary>
+<div class="inside">Onboarding через Skills: (1) <code>project-onboarding/SKILL.md</code>: применяется автоматически когда агент видит запрос «помоги освоиться в проекте»; (2) domain-specific Skills объясняют команде как работать с конкретными системами; (3) первая неделя нового разработчика: работа с агентом активирует нужные Skills; (4) измерение: время до первого PR у нового разработчика; (5) feedback loop: нет Skills для типичной задачи → создай Skill.</div></details>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как поддерживать актуальность Skills со временем?</summary>
+<div class="inside">Skills rot prevention: (1) <b>Process change → Skill update</b>: чеклист при изменении процессов; (2) <b>Expiry dates</b>: frontmatter <code>reviewed: "2025-Q1"</code> — quarterly проверка; (3) <b>Owner accountability</b>: owner Skills отвечает за актуальность; (4) <b>Agent feedback</b>: когда агент обнаруживает что шаг Skill не работает — создаёт issue; (5) <b>CI check</b>: не обновлявшиеся 6+ месяцев Skills помечаются.</div></details>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как распределить Skills между командами в крупной организации?</summary>
+<div class="inside">Матрица ответственности: (1) <b>Platform team</b>: infrastructure Skills (deployment, monitoring, DB ops); (2) <b>Feature teams</b>: domain Skills (billing logic, user management); (3) <b>QA/Security</b>: testing Skills, security review Skills; (4) <b>Shared Skills repo</b>: cross-cutting Skills, владеет Platform; (5) Skills discoverability: каждая команда публикует свои Skills в organisational catalog — другие команды могут переиспользовать.</div></details>
+
+  <div class="qlevel-group">Architect — 5 вопросов</div>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как Skills реализуют концепцию reusable AI workflow components?</summary>
+<div class="inside">Skills как software components: Interface = description (когда применять), Implementation = ## Steps (как выполнять), Contract = ## Output (что вернуть). Reusability: один Skill используется несколькими командами (code-review Skill применяется для Java, Python, Go одинаково). Composability: Skills ссылаются друг на друга как модули. Versioning: SKILL.md в git = semantic versioning для AI workflows.</div></details>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как Skills library становится организационным активом?</summary>
+<div class="inside">Organizational skill asset: (1) Skills содержат уникальные знания организации — лучшие практики, domain knowledge; (2) при масштабировании команды: новые агенты сразу имеют доступ к Skills; (3) M&A scenario: Skills library = quick knowledge transfer; (4) ROI: время сэкономленное агентами, применяющими правильные Skills, vs время на написание процессов вручную; (5) competitive advantage: уникальные Skills = уникальная эффективность команды.</div></details>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как встроить Skills versioning в CI/CD pipeline?</summary>
+<div class="inside">CI/CD для Skills: (1) <b>Lint SKILL.md</b>: проверка YAML frontmatter, наличие обязательных секций; (2) <b>Description quality check</b>: длина ≤100 символов, наличие trigger clause; (3) <b>Skill testing</b>: sandbox запуск агента с тестовыми задачами, проверка применения нужных Skills; (4) <b>Breaking change detection</b>: diff Skill Steps → алерт если изменились; (5) <b>Distribution</b>: pipeline публикует обновлённые Skills в shared repo.</div></details>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как Skills обеспечивают cross-team knowledge sharing?</summary>
+<div class="inside">Knowledge sharing через Skills: (1) Platform team пишет deployment Skill — все feature teams используют без изучения infra; (2) Security team пишет security-audit Skill — агенты всех команд автоматически применяют security practices; (3) Skills API: Skill как public interface к экспертизе команды — другие команды «вызывают» экспертизу через Skill; (4) Inner source модель для Skills: любая команда может предложить PR к Skill другой команды.</div></details>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как спроектировать discoverable Skills ecosystem?</summary>
+<div class="inside">Discoverability requirements: (1) <b>Skills registry</b>: центральный index всех Skills с categorization, owner, last updated; (2) <b>Rich descriptions</b>: description + extended description в ## Overview; (3) <b>Tagging</b>: теги в frontmatter (domain, tool, language) для фильтрации; (4) <b>Auto-documentation</b>: CI генерирует Skills catalog из SKILL.md файлов; (5) <b>Recommendation engine</b>: агент предлагает релевантные Skills при onboarding или при задачах в новом домене.</div></details>
+
+</section>
+
+<div class="pageFooter"><div class="nextPrev">
+  <a href="hooks.html">← Hooks</a>
+  <a href="commands.html">Commands →</a>
+</div></div>
+</main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

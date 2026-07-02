@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Memory Bank: структура, форматы, best practices</title>
+  <link rel="stylesheet" href="../assets/style.css"/>
+  <style>
+    .mem-type-card{border:1px solid var(--line);border-radius:18px;background:#fff;padding:16px;display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start}
+    .mem-icon{width:40px;height:40px;border-radius:14px;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+    .mem-type-card h4{margin:0 0 4px;font-size:16px}
+    .mem-type-card p{margin:0;font-size:13px;color:#475569;line-height:1.45}
+    .mem-type-card .mem-tag{display:inline-block;border-radius:999px;padding:2px 8px;font-size:11px;font-weight:900;border:1px solid;margin-top:6px}
+
+    .schema-box{background:#0f172a;color:#e2e8f0;border-radius:16px;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.65;overflow:auto;white-space:pre-wrap}
+    .schema-box .k{color:#93c5fd}
+    .schema-box .v{color:#86efac}
+    .schema-box .s{color:#fcd34d}
+    .schema-box .c{color:#475569}
+    .schema-box .h{color:#c084fc;font-weight:900}
+
+    .lifecycle{display:grid;grid-template-columns:repeat(5,1fr);gap:0}
+    .lc-step{padding:14px 10px;text-align:center;border-right:1px solid #e2e8f0;position:relative}
+    .lc-step:last-child{border-right:none}
+    .lc-num{width:32px;height:32px;border-radius:999px;background:#0f172a;color:#fff;display:grid;place-items:center;font-weight:900;font-size:14px;margin:0 auto 8px}
+    .lc-step h4{font-size:13px;margin:0 0 4px}
+    .lc-step p{font-size:12px;color:#64748b;margin:0;line-height:1.4}
+    .lc-arrow{position:absolute;right:-10px;top:50%;transform:translateY(-50%);font-size:18px;color:#cbd5e1;z-index:1}
+
+    .compare-row{display:grid;grid-template-columns:160px 1fr 1fr 1fr 1fr;border-bottom:1px solid #f1f5f9;font-size:13px}
+    .compare-row:first-child{background:#f8fafc;font-weight:900}
+    .compare-row > div{padding:10px 12px;border-right:1px solid #f1f5f9}
+    .compare-row > div:last-child{border-right:none}
+    .compare-wrap{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff}
+
+    .bad{background:#fff1f2;border:1px solid #fecaca;border-radius:12px;padding:10px 12px;margin:6px 0;font-size:13px;color:#7f1d1d}
+    .good{background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:10px 12px;margin:6px 0;font-size:13px;color:#14532d}
+
+    @media(max-width:900px){.lifecycle{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+<div class="app">
+
+<aside class="sidebar">
+  <div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>
+    <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub active"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div>
+  <div class="progressBox"><b>Правило Memory</b><p class="sourceNote">Memory = долгосрочные факты.<br>Stale memory хуже чем отсутствие.<br>Актуальное — всегда через MCP/файл.</p></div>
+</aside>
+
+<main class="main">
+<section class="hero">
+  <div class="kicker">Agent Context Academy</div>
+  <h2>Memory Bank: структура и best practices</h2>
+  <p>Типы памяти, форматы хранения, где лежит Memory в Cursor и Claude Code, как правильно писать записи, lifecycle управления и тонкости отличия от RAG, Checkpoint и Prompt Cache.</p>
+  <div class="heroActions">
+    <a class="btn primary" href="memory.html">← Обзор Memory Bank</a>
+    <a class="btn" href="assessment.html">К assessment</a>
+    <button class="markDone">Отметить страницу изученной</button>
+  </div>
+</section>
+
+<!-- ── 5 типов памяти ── -->
+<section class="section">
+  <h2>5 типов памяти в AI-системах</h2>
+  <p class="sectionIntro">Не вся «память» одинакова. Каждый тип отвечает на свой вопрос и живёт в своём слое.</p>
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+
+    <div class="mem-type-card">
+      <div class="mem-icon" style="background:#eff6ff">💬</div>
+      <div>
+        <h4>In-context (session)</h4>
+        <p>Текущий чат и история диалога. Исчезает при compaction или новом чате. Самая «свежая» — приоритет при конфликте.</p>
+        <span class="mem-tag" style="background:#eff6ff;border-color:#93c5fd;color:#1e40af">Живёт: текущий чат</span>
+      </div>
+    </div>
+
+    <div class="mem-type-card">
+      <div class="mem-icon" style="background:#f0fdf4">📁</div>
+      <div>
+        <h4>External / Project memory</h4>
+        <p>Файлы в репо: <code>memory.md</code>, <code>.cursorrules/memory</code>. Постоянна между сессиями. Это и есть «Memory Bank».</p>
+        <span class="mem-tag" style="background:#f0fdf4;border-color:#86efac;color:#166534">Живёт: файл в проекте</span>
+      </div>
+    </div>
+
+    <div class="mem-type-card">
+      <div class="mem-icon" style="background:#f5f3ff">🔍</div>
+      <div>
+        <h4>Semantic (RAG)</h4>
+        <p>Векторное хранилище документов. Находит по смыслу, не хранит структурно. Это не Memory Bank — это retrieval.</p>
+        <span class="mem-tag" style="background:#f5f3ff;border-color:#d8b4fe;color:#6b21a8">Живёт: vector DB</span>
+      </div>
+    </div>
+
+    <div class="mem-type-card">
+      <div class="mem-icon" style="background:#fefce8">📌</div>
+      <div>
+        <h4>Episodic (Checkpoint)</h4>
+        <p>Структурный снимок состояния задачи: что сделано, решения, риски. Не общие знания, а конкретная задача.</p>
+        <span class="mem-tag" style="background:#fefce8;border-color:#fde68a;color:#92400e">Живёт: файл checkpoint</span>
+      </div>
+    </div>
+
+    <div class="mem-type-card">
+      <div class="mem-icon" style="background:#fff7ed">👤</div>
+      <div>
+        <h4>User / Preference</h4>
+        <p>Предпочтения разработчика: стиль ответа, язык, детальность. Хранится в глобальном AGENTS.md или Memory Bank.</p>
+        <span class="mem-tag" style="background:#fff7ed;border-color:#fdba74;color:#92400e">Живёт: глобальный Memory</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── Где лежит Memory ── -->
+<section class="section">
+  <h2>Где хранится Memory Bank — по платформам</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Платформа</th><th>Файл / Место</th><th>Формат</th><th>Уровень</th><th>Особенность</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>Cursor</b></td>
+        <td><code>memory.md</code> или <code>docs/memory.md</code> в корне репо</td>
+        <td>Markdown</td>
+        <td>Проект</td>
+        <td>Агент читает через @mention или MCP. Нет встроенного auto-load — нужно упомянуть в AGENTS.md.</td>
+      </tr>
+      <tr>
+        <td><b>Cursor (Memory feature)</b></td>
+        <td>Cursor Settings → Features → Memory (если включена)</td>
+        <td>Управляется IDE</td>
+        <td>User</td>
+        <td>Cursor сам добавляет memory в context. Пользователь может просматривать/удалять.</td>
+      </tr>
+      <tr>
+        <td><b>Claude Code</b></td>
+        <td><code>CLAUDE.md</code> секция или <code>memory.md</code> с @include</td>
+        <td>Markdown</td>
+        <td>Проект</td>
+        <td>Нет встроенного Memory — всё через файлы и CLAUDE.md. Глобальный: <code>~/.claude/CLAUDE.md</code>.</td>
+      </tr>
+      <tr>
+        <td><b>claude.ai (Projects)</b></td>
+        <td>Project Knowledge</td>
+        <td>Текст в UI</td>
+        <td>Project</td>
+        <td>Автоматически добавляется в context каждого чата проекта.</td>
+      </tr>
+    </tbody>
+  </table></div>
+  <div class="callout">
+    <b>Паттерн для Cursor + Claude Code:</b> создать <code>docs/memory.md</code> в корне репо и добавить в <code>AGENTS.md</code> строку <code>@docs/memory.md</code>. Тогда memory загружается автоматически как часть project context.
+  </div>
+</section>
+
+<!-- ── Папка memory-bank/ ── -->
+<section class="section" id="memory-bank-files">
+  <h2>Пример структуры Memory Bank — папка <code>memory-bank/</code></h2>
+  <p class="sectionIntro">Один файл <code>memory.md</code> достаточен для маленького проекта. Когда память растёт, её делят на роли: каждый файл отвечает за один тип знаний — агент подключает нужные через <code>@memory-bank/…</code> в AGENTS.md или по запросу.</p>
+
+  <div class="schema-box">memory-bank/
+├── projectbrief.md      <span class="c"># что строим (продукт, цели)</span>
+├── activeContext.md     <span class="c"># фокус прямо сейчас</span>
+├── progress.md          <span class="c"># сделано / в работе / блокеры</span>
+├── systemPatterns.md    <span class="c"># как принято писать код в репо</span>
+├── techContext.md       <span class="c"># стек, команды, окружение</span>
+└── roadmap.md           <span class="c"># планы (необязательно)</span></div>
+
+  <div class="tableWrap" style="margin-top:16px"><table>
+    <thead><tr><th>Файл</th><th>Для чего</th><th>Что писать</th><th>Как часто обновлять</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>projectbrief.md</code></td>
+        <td>Смысл продукта для агента: границы, пользователи, MVP, что <em>вне</em> скоупа</td>
+        <td>1–2 экрана: проблема, цели, ключевые ограничения; ссылка на полный PRD в <code>docs/</code></td>
+        <td>Редко (новый продукт / pivot)</td>
+      </tr>
+      <tr>
+        <td><code>activeContext.md</code></td>
+        <td>«Где мы сейчас»: ветка, задача, открытые вопросы, что нельзя трогать в этой итерации</td>
+        <td>Короткий список: current focus, next step, blockers; дата последнего обновления</td>
+        <td><strong>Часто</strong> — конец сессии или смена задачи</td>
+      </tr>
+      <tr>
+        <td><code>progress.md</code></td>
+        <td>Хронология работ: что завершено, что в процессе, известные долги</td>
+        <td>Done / In progress / Todo; можно по спринтам или по фичам</td>
+        <td>Регулярно; устаревшее — вычищать, не копить вечный лог</td>
+      </tr>
+      <tr>
+        <td><code>systemPatterns.md</code></td>
+        <td>Архитектурные и кодовые паттерны: слои, naming, error handling, типовые структуры модулей</td>
+        <td>«В этом репо X делаем так» + ссылка на ADR; не дублировать весь design doc</td>
+        <td>Средне — при новых ADR или рефакторинге стиля</td>
+      </tr>
+      <tr>
+        <td><code>techContext.md</code></td>
+        <td>Технический контекст: стек с версиями, build/test, env, внешние сервисы</td>
+        <td>Команды одной строкой; gotchas окружения; что поднимать локально</td>
+        <td>При смене стека, CI или зависимостей</td>
+      </tr>
+      <tr>
+        <td><code>roadmap.md</code> <small>(необязательно)</small></td>
+        <td>Ближайшие приоритеты релиза — чтобы агент не уезжал в «большую перестройку»</td>
+        <td>Квартал / 2–3 эпика; детальный roadmap — в issue tracker или <code>docs/</code></td>
+        <td>По планированию; не путать с учебным <a href="roadmap.html">Roadmap академии</a></td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="nuance-card nc-green" style="margin-top:14px">
+    <h4>Как подключить агенту</h4>
+    <p>В <code>AGENTS.md</code> перечисли обязательные файлы, например: <code>@memory-bank/projectbrief.md</code>, <code>@memory-bank/techContext.md</code>, <code>@memory-bank/activeContext.md</code>. Тяжёлые или редко нужные — только по @mention в задаче. Checkpoint и временное состояние задачи — отдельно, см. <a href="checkpoints.html">Checkpoint</a>, не смешивать с <code>projectbrief</code>.</p>
+  </div>
+
+  <div class="callout warn" style="margin-top:10px">
+    <b>Один memory.md vs папка:</b> до ~80–100 строк держи один файл. Дальше — разнеси по таблице выше; иначе срабатывает lost in the middle и агент «не видит» середину файла.
+  </div>
+</section>
+
+<!-- ── Структура memory файла ── -->
+<section class="section">
+  <h2>Структура memory.md — что и как писать</h2>
+  <div class="grid two">
+    <div class="card">
+      <h3>Хорошая структура</h3>
+      <div class="schema-box">
+<span class="h"># Project Memory — order-service</span>
+<span class="c">## Last updated: 2025-06-15</span>
+
+<span class="h">## Stack & Environment</span>
+- Java 21, Quarkus 3.x, JPA/Hibernate
+- PostgreSQL 15 (no raw SQL)
+- Kafka for events
+- K8s namespace: order-ns
+
+<span class="h">## Build & Test Commands</span>
+- Test: `mvn test -pl order-service`
+- Build: `mvn clean install -DskipTests`
+- IT: `mvn verify -Pit -pl order-service`
+
+<span class="h">## Architecture Decisions</span>
+<span class="c"># ADR-001: No raw SQL — use JPA only</span>
+<span class="c"># ADR-002: Kafka for cross-service events</span>
+<span class="c"># ADR-003: Circuit breaker via Quarkus fault tolerance</span>
+
+<span class="h">## Team Conventions</span>
+- PR summary: Problem → Fix → Tests → Risk
+- No dependency without tech-lead approval
+- Rollback plan required for DB migrations
+
+<span class="h">## Known Issues / Gotchas</span>
+<span class="c"># UserService.findById returns Optional, not null</span>
+<span class="c"># BillingModule has 30s timeout — don't mock it away</span>
+
+<span class="h">## User Preferences</span>
+- Respond in Russian
+- Show code examples for every explanation</div>
+    </div>
+    <div>
+      <div class="card bg-red" style="margin-bottom:14px">
+        <h3>Что НЕ класть в memory</h3>
+        <div class="bad"><b>Секреты:</b> пароли, токены, ключи → только env vars</div>
+        <div class="bad"><b>Краткоживущие статусы:</b> "сейчас сломан CI" → устареет</div>
+        <div class="bad"><b>Сырые логи / stack traces</b> → слишком шум</div>
+        <div class="bad"><b>Данные которые часто меняются</b> → лучше через MCP/RAG</div>
+        <div class="bad"><b>Большая документация</b> → это RAG, не Memory</div>
+      </div>
+      <div class="card bg-green">
+        <h3>Что всегда класть в memory</h3>
+        <div class="good"><b>Архитектурные решения</b> — почему выбрали X, а не Y</div>
+        <div class="good"><b>Стабильные команды</b> — mvn test, npm run, docker-compose</div>
+        <div class="good"><b>Team conventions</b> — PR format, naming, review rules</div>
+        <div class="good"><b>Gotchas проекта</b> — нюансы которые всегда забывают</div>
+        <div class="good"><b>Preferences</b> — стиль ответа, язык, детальность</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Lifecycle ── -->
+<section class="section">
+  <h2>Memory lifecycle — 5 шагов</h2>
+  <div class="diagram" style="padding:0;overflow:auto">
+    <div class="lifecycle">
+      <div class="lc-step" style="background:#eff6ff">
+        <div class="lc-num">1</div>
+        <h4>Capture</h4>
+        <p>Агент или разработчик выделяет факт / решение, которое будет полезно позже</p>
+        <div class="lc-arrow">→</div>
+      </div>
+      <div class="lc-step" style="background:#f0fdf4">
+        <div class="lc-num">2</div>
+        <h4>Curate</h4>
+        <p>Сжать, убрать шум, сформулировать устойчиво. Один факт — одна строка.</p>
+        <div class="lc-arrow">→</div>
+      </div>
+      <div class="lc-step" style="background:#fefce8">
+        <div class="lc-num">3</div>
+        <h4>Retrieve</h4>
+        <p>Подтянуть memory только когда релевантна. Не грузить весь файл всегда.</p>
+        <div class="lc-arrow">→</div>
+      </div>
+      <div class="lc-step" style="background:#fff7ed">
+        <div class="lc-num">4</div>
+        <h4>Validate</h4>
+        <p>Если факт мог измениться — проверить через MCP/файл/RAG. Memory может устареть.</p>
+        <div class="lc-arrow">→</div>
+      </div>
+      <div class="lc-step" style="background:#fff1f2">
+        <div class="lc-num">5</div>
+        <h4>Invalidate</h4>
+        <p>Удалить или обновить устаревшую запись. Stale memory хуже чем отсутствие.</p>
+      </div>
+    </div>
+  </div>
+  <div class="callout warn" style="margin-top:14px">
+    <b>Главная ловушка:</b> Memory никогда не обновляется автоматически. Если изменился стек, workflow или ADR — память устаревает молча. Результат: агент действует на основе старой информации. Добавьте в AGENTS.md: "если memory противоречит текущему файлу — доверяй файлу".
+  </div>
+</section>
+
+<!-- ── Memory vs всё остальное ── -->
+<section class="section">
+  <h2>Memory vs RAG vs Checkpoint vs Prompt Cache</h2>
+  <div class="compare-wrap">
+    <div class="compare-row">
+      <div>Критерий</div>
+      <div>Memory Bank</div>
+      <div>RAG</div>
+      <div>Checkpoint</div>
+      <div>Prompt Cache</div>
+    </div>
+    <div class="compare-row">
+      <div>Что хранит</div>
+      <div>Устойчивые знания и решения</div>
+      <div>Документы и код для поиска</div>
+      <div>Состояние конкретной задачи</div>
+      <div>KV-вычисления prefix'а</div>
+    </div>
+    <div class="compare-row">
+      <div>Вопрос</div>
+      <div>Что мы знаем/решили?</div>
+      <div>Что написано в источниках?</div>
+      <div>Где остановились?</div>
+      <div>Как сэкономить токены?</div>
+    </div>
+    <div class="compare-row">
+      <div>Живёт</div>
+      <div>Файл в репо / IDE</div>
+      <div>Vector DB + документы</div>
+      <div>Файл checkpoint в чате</div>
+      <div>Сервер провайдера (~5 мин)</div>
+    </div>
+    <div class="compare-row">
+      <div>Обновление</div>
+      <div>Вручную / агент пишет</div>
+      <div>Переиндексация</div>
+      <div>Обновляется вручную</div>
+      <div>Инвалидация при смене prefix</div>
+    </div>
+    <div class="compare-row">
+      <div>Semantic память</div>
+      <div style="color:#16a34a;font-weight:900">✓ Да</div>
+      <div style="color:#16a34a;font-weight:900">✓ Да</div>
+      <div style="color:#dc2626;font-weight:900">✗ Нет (task state)</div>
+      <div style="color:#dc2626;font-weight:900">✗ Нет (compute only)</div>
+    </div>
+    <div class="compare-row">
+      <div>Риск</div>
+      <div style="color:#dc2626">Устаревает молча</div>
+      <div style="color:#dc2626">Находит нерелевантное</div>
+      <div style="color:#dc2626">Нужно обновлять</div>
+      <div style="color:#dc2626">Инвалидация при изменении</div>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top:14px">
+    <b>Assessment trap:</b> "Prompt Caching — это тип Memory?" — Нет. Prompt cache — это saved compute (KV-state), не знания. После TTL пропадает, модель ничего не «помнит».
+  </div>
+</section>
+
+<!-- ── Когда что выбирать ── -->
+<section class="section">
+  <h2>Когда что выбирать — матрица решений</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Сценарий</th><th>Правильный механизм</th><th>Почему</th></tr></thead>
+    <tbody>
+      <tr><td>Команды сборки проекта</td><td><b>Memory Bank</b> или AGENTS.md</td><td>Стабильно, нужно всегда</td></tr>
+      <tr><td>Архитектурные ADR</td><td><b>Memory Bank</b></td><td>Устойчивые решения, не меняются часто</td></tr>
+      <tr><td>API спецификация (OpenAPI)</td><td><b>RAG</b></td><td>Большой объём, нужен поиск по содержимому</td></tr>
+      <tr><td>Текущий статус CI</td><td><b>MCP (graylog-mcp, CI API)</b></td><td>Меняется часто, нужны live данные</td></tr>
+      <tr><td>Состояние задачи "где остановились"</td><td><b>Checkpoint</b></td><td>Handoff, compaction recovery</td></tr>
+      <tr><td>Стиль ответа пользователя</td><td><b>Memory Bank</b> (user preferences)</td><td>Персональная константа</td></tr>
+      <tr><td>История ошибок/инцидентов</td><td><b>RAG</b> + ссылки в Memory</td><td>Много данных — RAG ищет, Memory хранит ключевые выводы</td></tr>
+      <tr><td>Снизить стоимость повторных вызовов</td><td><b>Prompt Caching</b></td><td>Стабильный prefix → cached tokens</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ── Best practices ── -->
+<section class="section">
+  <h2>Best practices управления Memory</h2>
+  <div class="grid">
+    <div class="card bg-blue">
+      <h3>Пишем правильно</h3>
+      <ul>
+        <li><b>Один факт — одна строка.</b> Краткость — залог читаемости.</li>
+        <li><b>Дата last-updated.</b> Без неё неизвестно насколько свежа память.</li>
+        <li><b>Секции по типу:</b> Stack, Commands, Decisions, Conventions, Gotchas.</li>
+        <li><b>Глагол + объект:</b> "Use JPA, not raw SQL" а не "database stuff".</li>
+        <li><b>ADR-ссылки:</b> почему, а не только что.</li>
+      </ul>
+    </div>
+    <div class="card bg-green">
+      <h3>Используем правильно</h3>
+      <ul>
+        <li><b>@memory.md</b> в запросе если нужен конкретный контекст.</li>
+        <li><b>Ссылка в AGENTS.md:</b> <code>@docs/memory.md</code> для автозагрузки.</li>
+        <li><b>Memory + MCP:</b> Memory хранит решение, MCP проверяет актуальное состояние.</li>
+        <li><b>Memory + Checkpoint:</b> Memory — общее, Checkpoint — конкретная задача.</li>
+        <li><b>При конфликте:</b> MCP/файл/RAG &gt; Memory (свежее побеждает).</li>
+      </ul>
+    </div>
+    <div class="card bg-orange">
+      <h3>Обновляем правильно</h3>
+      <ul>
+        <li><b>После смены стека</b> — первым делом обновить memory.</li>
+        <li><b>После ADR</b> — добавить решение в memory и дать ссылку на ADR файл.</li>
+        <li><b>Раз в спринт</b> — review: что устарело? Что удалить?</li>
+        <li><b>Pull request к memory.md</b> — как любой документ, через review.</li>
+        <li><b>Дата изменения</b> — обновлять в заголовке файла.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── Тонкости ── -->
+<section class="section">
+  <h2>Тонкости структуры Memory</h2>
+
+  <div class="nuance-card nc-red">
+    <h4>activeContext.md перезаписывается слишком часто → теряешь историю</h4>
+    <p>Если агент обновляет <code>activeContext.md</code> при каждом чеке, предыдущий контекст исчезает безвозвратно. Решение: использовать append-режим (добавлять запись с датой вниз) или версионировать через git-историю. Либо разделить файл на «текущее» и «последние N сессий».</p>
+  </div>
+
+  <div class="nuance-card nc-orange">
+    <h4>Слишком большой memory файл = не читается полностью</h4>
+    <p>При compaction или при загрузке агент может не прочитать весь файл — срабатывает эффект «lost in the middle». Держи каждый файл Memory Bank &lt; 100 строк. Всё что не помещается — выносить в специализированный файл (decisions.md, techStack.md) и добавлять в main-файл ссылку.</p>
+  </div>
+
+  <div class="nuance-card nc-blue">
+    <h4>projectBrief.md ≠ AGENTS.md</h4>
+    <p><code>projectBrief.md</code> описывает <em>что строим</em> — продукт, бизнес-цели, stakeholders. <code>AGENTS.md</code> описывает <em>как работает агент</em> — workflow, команды, conventions, процессы. Не мешай их в один файл: разные жизненные циклы и разные аудитории.</p>
+  </div>
+
+  <div class="nuance-card nc-purple">
+    <h4>Memory Bank не синхронизируется между сессиями автоматически</h4>
+    <p>Если несколько агентов или несколько параллельных сессий — каждый пишет в свои файлы без автоматического merge. Нет встроенного механизма reconciliation. Нужен явный протокол обновления: один «главный» агент как memory-coordinator, либо human-review перед слиянием изменений.</p>
+  </div>
+</section>
+
+<!-- ── Best practices ── -->
+<section class="section">
+  <h2>Best practices — Делай / Не делай</h2>
+  <div class="grid two">
+    <div class="card bg-green">
+      <h3>✅ Делай</h3>
+      <ul>
+        <li><b>Структурируй по файлам:</b> brief / context / progress / decisions — каждый файл отвечает за один тип знаний.</li>
+        <li><b>Держи файлы &lt; 100 строк:</b> агент читает их целиком; потеря середины при превышении лимита.</li>
+        <li><b>Обновляй activeContext в конце сессии:</b> зафиксируй текущий фокус, открытые нити, принятые решения.</li>
+        <li><b>Фиксируй решения с обоснованием:</b> не только «что», но и «почему» — в decisionLog с датой и альтернативами.</li>
+      </ul>
+    </div>
+    <div class="card bg-red">
+      <h3>❌ Не делай</h3>
+      <ul>
+        <li><b>Не смешивай всё в один файл:</b> god-memory.md с 500+ строками теряет эффективность и читабельность.</li>
+        <li><b>Не обновляй memory слишком часто внутри одной сессии:</b> overhead на запись превысит пользу; обновляй раз — в конце значимой сессии.</li>
+        <li><b>Не дублируй AGENTS.md и projectBrief:</b> разные документы, разные назначения — дублирование ведёт к расхождению при обновлении.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── Assessment ── -->
+<section class="section">
+  <h2>Вопросы по уровням</h2>
+
+  <div class="qlevel-group">Junior — 10 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Какие файлы обычно входят в Memory Bank?</summary>
+  <div class="inside">Типичный набор файлов Memory Bank: memory.md (основной файл с устойчивыми фактами) или структурированный набор: activeContext.md (текущее состояние и фокус), projectBrief.md (обзор проекта), progress.md (прогресс задач и завершённые этапы), decisions.md (архитектурные решения с обоснованием). Некоторые команды добавляют: techStack.md, conventions.md, gotchas.md. Минимальный вариант — один memory.md с секциями. Структурированный набор удобнее для больших проектов: каждый файл отвечает за свой тип знаний.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое activeContext.md и для чего он нужен?</summary>
+  <div class="inside">activeContext.md — файл с описанием текущего состояния работы: над чем ведётся работа прямо сейчас, какой контекст активен, текущие приоритеты, незавершённые нити. Он отвечает на вопрос "что происходит сейчас?" и обновляется чаще других файлов Memory Bank. Используется для continuity между сессиями: агент читает activeContext.md и сразу понимает на чём остановились. В отличие от progress.md (история завершённого), activeContext.md — про текущий момент.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое projectBrief.md?</summary>
+  <div class="inside">projectBrief.md — высокоуровневое описание проекта: что это, зачем, ключевые бизнес-требования, stakeholders, ограничения. Аналог executive summary. Обновляется редко — только при изменении бизнес-контекста. Читается агентом для понимания "зачем мы вообще это делаем" перед принятием технических решений. Отличие от AGENTS.md: AGENTS.md = "как работать"; projectBrief.md = "что и зачем". Полезен при onboarding и при принятии архитектурных решений с учётом бизнес-контекста.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое progress.md в Memory Bank?</summary>
+  <div class="inside">progress.md — журнал завершённых этапов и результатов: что было сделано, когда, с каким результатом. Отвечает на вопрос "что уже сделано?" Полезен при длительных проектах и при handoff между разработчиками. Структура: список завершённых задач с датами и ключевыми выводами. Отличие от activeContext.md: progress = история; activeContext = настоящее. Отличие от Checkpoint: Checkpoint создаётся внутри текущей задачи; progress.md накапливается долгосрочно.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Как правильно называть файлы Memory Bank?</summary>
+  <div class="inside">Нет жёсткого стандарта, но рекомендуемые конвенции: camelCase (activeContext.md, projectBrief.md) или kebab-case (active-context.md, project-brief.md) — выбрать один стиль для всего проекта. Имена должны быть описательными: что хранит файл, не где он используется. Избегать: memory1.md, notes.md (не понятно содержимое). Хорошие имена: decisions.md, gotchas.md, techStack.md. Разместить в одной директории (docs/memory/ или .memory/) для удобства навигации.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Каков минимальный набор файлов для Memory Bank?</summary>
+  <div class="inside">Минимальный набор: один файл memory.md со структурированными секциями — это достаточно для большинства проектов. Секции в минимальном memory.md: ## Stack (технологии, версии), ## Build &amp; Test (команды), ## Architecture Decisions (ключевые ADR), ## Conventions (стиль, PR format). Расширенный минимум (2-3 файла): memory.md + activeContext.md + decisions.md. Больше файлов нужно только когда один файл становится слишком большим (>100-150 строк) или когда разные файлы нужны разным агентам.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Как создать первый Memory Bank с нуля?</summary>
+  <div class="inside">Шаги создания: (1) Создать файл docs/memory.md в корне репо; (2) Добавить заголовок с датой: "# Project Memory — [Project Name]\n## Last updated: YYYY-MM-DD"; (3) Заполнить базовые секции: Stack, Build &amp; Test, Architecture Decisions, Conventions; (4) Добавить ссылку в AGENTS.md: @docs/memory.md; (5) Закоммитить в git. Начать с малого — 20-30 строк достаточно. Дополнять в процессе работы когда появляются новые факты достойные сохранения. Memory Bank улучшается использованием, а не идеальным планированием.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что писать в каждый файл Memory Bank?</summary>
+  <div class="inside">memory.md: устойчивые факты — стек, команды, ADR, конвенции. activeContext.md: текущий фокус, незавершённые нити, последние решения. projectBrief.md: бизнес-контекст, stakeholders, ограничения, цели проекта. progress.md: хронология завершённых этапов с результатами. decisions.md: ADR с датой, обоснованием, альтернативами. Общий принцип: один факт — одна строка; конкретно, не абстрактно; с датой если факт может устареть. Никогда: секреты, временные статусы, volatile данные.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Как файлы Memory Bank связаны между собой?</summary>
+  <div class="inside">Связи между файлами через markdown-ссылки и cross-references: memory.md может ссылаться на decisions.md для деталей ADR; activeContext.md ссылается на конкретные задачи или файлы кода; progress.md ссылается на решения принятые при завершении этапов. Пример: в memory.md запись "ADR-002: Kafka for events — подробнее в decisions.md#adr-002". Агент при необходимости может запросить конкретный файл через @mention. Разумная cross-reference стратегия: memory.md = index, детали = в специализированных файлах.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Где хранить Memory Bank в структуре репозитория?</summary>
+  <div class="inside">Рекомендуемые места: docs/memory/ (группирует с другой документацией), .memory/ (скрытая директория для AI-специфичного контента), или просто memory.md в корне (максимально просто). Cursor: добавить путь в AGENTS.md через @docs/memory.md. Claude Code: @include в CLAUDE.md. Избегать: node_modules, src, test — логически неправильно. Не добавлять в .gitignore — Memory Bank должен версионироваться вместе с кодом. Выбор места зависит от проекта: для маленьких — корень; для больших — docs/memory/.</div></details>
+
+  <div class="qlevel-group">Middle — 10 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Какова оптимальная структура Memory Bank для реального проекта?</summary>
+  <div class="inside">Оптимальная структура для среднего проекта (5-20 разработчиков): (1) memory.md — главный файл с сводкой (≤100 строк), содержит Stack, Build Commands, ключевые ADR, ссылки на детальные файлы; (2) decisions.md — полный список ADR с датами и обоснованием; (3) activeContext.md — текущий фокус и незавершённые нити; (4) techStack.md — детальное описание технологий; (5) conventions.md — coding style, PR format, review rules. Связующий AGENTS.md: @docs/memory/memory.md для автозагрузки главного файла. Агент подгружает детальные файлы по @mention когда нужно.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как разбить Memory Bank на файлы для удобного использования?</summary>
+  <div class="inside">Критерии разбивки: (1) По жизненному циклу — стабильные факты (techStack) vs изменчивые (activeContext); (2) По типу знаний — решения отдельно от состояния; (3) По доменам — billing-decisions.md, auth-gotchas.md для крупных модулей; (4) По аудитории — командные знания отдельно от модульных. Правило разбивки: разбивать когда файл >100-150 строк ИЛИ когда разным агентам нужны разные части. Не разбивать ради разбивки — сложность управления растёт. Минимально жизнеспособная структура: один файл пока проект позволяет.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Какие секции должны быть в activeContext.md?</summary>
+  <div class="inside">Рекомендуемые секции activeContext.md: ## Current Focus (над чем работаем сейчас, sprint goals), ## Open Threads (незавершённые исследования, открытые вопросы), ## Recent Decisions (решения принятые в последние 1-2 недели, пока не устоялись), ## Blockers (что мешает прогрессу), ## Next Steps (ближайшие действия). Обновлять в начале и конце рабочей сессии. Lifetime записи: до разрешения (Open Threads, Blockers) или переноса в decisions.md (Recent Decisions). activeContext.md — самый живой файл Memory Bank.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как структурировать decisions.md?</summary>
+  <div class="inside">Структура decisions.md: каждое решение как отдельная секция с шаблоном: ## ADR-NNN: [Краткое название] (дата). Status: Accepted/Deprecated/Superseded. Context: почему встала проблема. Decision: что решили. Rationale: почему именно так. Alternatives considered: что отвергли и почему. Consequences: что изменится, trade-offs. Нумерация ADR: последовательная, не переиспользовать номера устаревших. При изменении решения: добавить новый ADR со ссылкой "Supersedes ADR-XYZ", старый пометить Deprecated.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как писать компактные и информативные записи в Memory Bank?</summary>
+  <div class="inside">Принципы compact writing: (1) Verb + object: "Use JPA, not raw SQL" вместо "мы решили использовать JPA а не raw SQL по причине..."; (2) Include WHY: "не используем Redis (overhead для нашей нагрузки, Q1 2026)" — даёт контекст почему; (3) Числа вместо слов: "timeout: 30s" не "таймаут тридцать секунд"; (4) Ссылки на детали: "ADR-003 (см. decisions.md)" вместо полного описания; (5) Даты при возможной устарелости: "Java 21 (обновлено Jun 2026)". Цель: максимум информации на минимум токенов.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как обновлять Memory Bank в конце сессии?</summary>
+  <div class="inside">End-of-session update ритуал: (1) Обновить activeContext.md — текущий фокус, что сделано, открытые нити; (2) Если принято новое решение — добавить в decisions.md; (3) Если обнаружен gotcha — добавить в memory.md секцию Known Issues; (4) Если изменилась команда тестов/сборки — обновить соответствующую секцию; (5) Обновить дату "Last updated" в заголовке. Агент может предложить обновления сессии ("по результатам нашей сессии я предлагаю добавить в memory...") — человек review'ит и принимает решение. Не обновлять memory бесконтрольно.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Какой шаблон Memory Bank использовать для нового проекта?</summary>
+  <div class="inside">Минимальный шаблон memory.md для нового проекта: "# Project Memory — [Name]\n## Last updated: YYYY-MM-DD\n\n## Stack\n- [tech] [version]\n\n## Build &amp; Test\n- Test: `[command]`\n- Build: `[command]`\n\n## Architecture Decisions\n- ADR-001: [решение] — [почему]\n\n## Conventions\n- [главное соглашение]\n\n## Known Issues / Gotchas\n- (пока пусто)". Начать с заполнения Stack и Build &amp; Test — это немедленно полезно агенту. Остальные секции заполнять по мере появления знаний. Не пытаться заполнить идеально с первого раза.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как структурировать Memory Bank для API, frontend, full-stack проектов?</summary>
+  <div class="inside">Для API проекта: Stack (язык, фреймворк, DB), Endpoints convention, Auth approach, Error handling pattern, DB migration policy. Для Frontend: Stack (framework, state management), Component naming, Routing conventions, Build/Deploy команды, Accessibility rules. Для Full-stack: разделить на секции backend/frontend или отдельные файлы (backend-memory.md, frontend-memory.md) с общим memory.md как index. Для микросервисов: memory.md per-service в соответствующей директории, корневой memory.md содержит межсервисные соглашения и API contracts.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как избежать дублирования между файлами Memory Bank?</summary>
+  <div class="inside">Дублирование — главный враг Memory Bank: приводит к рассинхронизации. Стратегии: (1) Single source of truth — стек описывается только в memory.md, решения только в decisions.md; (2) Ссылки вместо копирования — "подробнее в decisions.md#adr-002"; (3) Регулярный дублирование-audit при PR review; (4) Четкое разграничение ответственности файлов — что в каком файле; (5) При обнаружении дублирования — немедленно удалить из одного источника. AGENTS.md и Memory Bank тоже не должны дублировать друг друга: AGENTS.md = workflow, Memory Bank = project facts.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Каковы guidelines по размеру каждого файла Memory Bank?</summary>
+  <div class="inside">Size guidelines: memory.md (главный) — ≤100 строк / ≤800 слов; агент читает целиком при каждом запросе, lost in the middle при превышении. decisions.md — может быть больше (до 300-500 строк) — читается по запросу через @mention, не всегда в context. activeContext.md — ≤50 строк; обновляется часто, должен быть компактным. techStack.md — ≤80 строк. Общий принцип: файл который всегда в context должен быть компактным; файлы которые читаются по запросу — могут быть объёмными. Мониторить: если агент игнорирует факты из середины файла — файл слишком длинный.</div></details>
+
+  <div class="qlevel-group">Senior — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как структурировать Memory Bank для monorepo?</summary>
+  <div class="inside">Monorepo Memory Bank архитектура: (1) Root memory.md — общее для всего monorepo: organization conventions, shared tooling, cross-service contracts, CI/CD; (2) Per-service memory — billing/docs/memory.md, auth/docs/memory.md — специфика каждого сервиса; (3) Cross-references — root memory ссылается на service memories для деталей; (4) Shared decisions.md — архитектурные решения затрагивающие несколько сервисов; (5) Service-specific decisions в subdirectory decisions.md. Агент при работе в billing/ читает root memory + billing/memory. Важно: не дублировать org-level знания в каждом сервисе.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как Memory Bank эволюционирует вместе с проектом?</summary>
+  <div class="inside">Эволюция Memory Bank через стадии: (1) Bootstrap (0-3 мес) — один memory.md с базовым стеком и командами; (2) Growth (3-12 мес) — добавляются decisions.md, activeContext.md; растёт список ADR; появляются gotchas; (3) Maturity (12+ мес) — разбивка на файлы по доменам; cleaning устаревших записей; появление deprecated ADR; (4) Large scale — federated memory с per-service файлами; automated validation; Memory Bank становится частью CI. Ключевое: не планировать сложную структуру заранее — она вырастает из потребностей. Сложность Memory Bank должна соответствовать сложности проекта.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как диагностировать и починить раздутый Memory Bank?</summary>
+  <div class="inside">Признаки раздутого Memory Bank: агент цитирует только начало и конец файла; memory.md >200 строк; много устаревших или временных записей; дублирование между файлами. Диагностика: (1) Проверить каждую запись — актуальна? Нужна агенту? (2) Найти дубликаты; (3) Найти volatile данные (статусы, временные решения). Починить: (1) Удалить явно устаревшее; (2) Перенести детальные ADR из memory.md в decisions.md, оставить только ссылки; (3) Volatile данные → убрать; (4) Большие документы → RAG corpus. Цель: вернуться к ≤100 строкам в главном файле.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как проектировать schema Memory Bank?</summary>
+  <div class="inside">Schema Memory Bank — формализованная структура записей для предсказуемого парсинга. Зачем нужна: автоматический validation, automated updates через CI, cross-referencing между файлами. Подходы: (1) Markdown conventions — зафиксировать формат ADR записей, naming conventions, обязательные секции в каждом файле; (2) YAML frontmatter — добавить структурированные метаданные к каждому ADR; (3) JSON sidecar — отдельный memory-schema.json описывает структуру. CI validation: проверять что все файлы соответствуют schema, обязательные секции присутствуют, ADR имеют номера и даты. Schema делает Memory Bank machine-readable, не только human-readable.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как организовать cross-reference стратегию между файлами Memory Bank?</summary>
+  <div class="inside">Cross-reference стратегия: (1) Anchor links — "#adr-002" в decisions.md для точного указания; (2) Bidirectional references — если memory.md ссылается на decisions.md, decisions.md должен содержать тег для обратной навигации; (3) Dependency tracking — "ADR-005 depends on ADR-002" — при изменении ADR-002 проверить ADR-005; (4) File index — memory.md содержит раздел "## References" со ссылками на все специализированные файлы; (5) Agents — в activeContext.md ссылки на конкретные файлы кода которые релевантны текущей работе. Anti-pattern: circular references; undefined references (битые ссылки); reference на временные файлы.</div></details>
+
+  <div class="qlevel-group">Lead — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как стандартизировать структуру Memory Bank для всей команды?</summary>
+  <div class="inside">Стандартизация: (1) Team template — создать memory-template/ в shared репо с skeleton файлами; новые проекты копируют при старте; (2) Required sections checklist — задокументировать что обязательно в каждом файле; (3) CI validation — automated check что обязательные секции присутствуют; (4) Naming convention — зафиксировать camelCase vs kebab-case, не смешивать; (5) Size limits — договориться о max размерах каждого файла; (6) Update triggers — список событий при которых каждый файл обновляется. Документировать стандарт в AGENTS.md: "Memory Bank located in docs/memory/, структура — см. docs/memory/README.md".</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как организовать governance файлов Memory Bank?</summary>
+  <div class="inside">Governance: (1) Git workflow — все изменения через PR, не прямой commit в main; (2) CODEOWNERS — назначить owner для каждого файла Memory Bank; memory.md → tech lead, decisions.md → architect или tech lead; (3) Review criteria — что проверять при review Memory Bank PR: актуальность, корректность, отсутствие дублирования, наличие дат; (4) Automated checks — CI lint проверяет size limits, required sections, ADR numbering; (5) Quarterly audit — scheduled review всего Memory Bank на устаревшее; (6) Incident process — при ошибке агента основанной на stale memory → post-mortem и обновление Memory Bank.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Что коммитить в git из Memory Bank?</summary>
+  <div class="inside">Всё коммитить: memory.md, decisions.md, activeContext.md, progress.md — все файлы Memory Bank в git. Обоснование: (1) История изменений = история архитектурных решений; (2) Reproducibility — новый разработчик получает полный контекст; (3) Rollback — можно вернуться к предыдущему состоянию знаний; (4) Collaboration — команда работает с одной версией контекста. НЕ коммитить: локальные personal notes которые не готовы для команды (держать в ~/.claude/ или gitignore); секреты которые случайно попали (немедленно удалить из истории). Правило: если знание нужно команде — в git; если только тебе — в личный ~/.claude/.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> В чём разница между team Memory Bank и individual Memory Bank?</summary>
+  <div class="inside">Team Memory Bank (в репо, git) — командные знания: архитектурные решения, team conventions, project-specific gotchas. Версионируется, review, доступен всем. Individual Memory Bank (в ~/.claude/ или gitignored) — личные предпочтения: стиль ответа агента, личные shortcuts, эксперименты. Не нужен команде. Когда переносить из individual в team: факт стал релевантен для всей команды ("обнаружил что модуль X имеет timeout 30s — всем нужно знать") → переносить в командный memory. Граница размытая: при сомнении спросить себя "это нужно агенту коллеги?" — если да, в командный.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как создать шаблоны Memory Bank для разных типов проектов?</summary>
+  <div class="inside">Шаблоны по типам: API-only — акцент на endpoints conventions, auth pattern, error handling, DB migration policy, API versioning strategy. Frontend — компонентная архитектура, state management, routing, a11y rules, bundle optimization. Microservices — service mesh, event contracts, distributed tracing, circuit breaker patterns, inter-service communication. ML/AI — model versioning, dataset management, experiment tracking, deployment pipeline. CLI tool — argument conventions, output format, error codes. Для каждого шаблона: обязательные секции + типичные gotchas специфичные для типа проекта. Шаблоны хранить в organization shared репо и обновлять по мере накопления опыта.</div></details>
+
+  <div class="qlevel-group">Architect — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как Memory Bank реализует паттерн structured knowledge store?</summary>
+  <div class="inside">Memory Bank как structured knowledge store: явная структура (секции, markdown headers), curated content (только то что прошло human review), versioned (в git), contextually loaded (агент читает только релевантные файлы). В отличие от unstructured knowledge (wiki, конфлюенс) — Memory Bank оптимизирован под потребление LLM: компактный, structured, с высокой information density. Паттерны: (1) Hierarchical knowledge — summary → details через @include; (2) Domain partitioning — knowledge по доменам; (3) Temporal tagging — даты для staleness detection. Memory Bank реализует "knowledge as code" принцип: знания версионируются и проходят review как код.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как организовать linked files Memory Bank в multi-agent архитектуре?</summary>
+  <div class="inside">Multi-agent linked Memory: (1) Main agent — читает root memory.md (index), при необходимости запрашивает детальные файлы; управляет writes в Memory Bank; (2) Specialized agents — читают только релевантные файлы (billing-agent → billing-memory.md); readonly или restricted write к своему домену; (3) Coordination layer — main agent как memory coordinator: решает что и куда записать из findings subagents; предотвращает concurrent write conflicts; (4) Event-driven updates — subagent completion event триггерит предложение обновления Memory Bank; main agent или человек approve'ит. Ключевое: один writer per файл для предотвращения conflicts.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как управлять versioning схемы Memory Bank?</summary>
+  <div class="inside">Schema versioning для Memory Bank: (1) Semantic versioning файлов — YAML frontmatter: "schema_version: 2.1.0"; breaking changes → major version; (2) Migration scripts — при изменении schema, скрипт мигрирует существующие файлы к новому формату; (3) Backward compatibility — новая версия читает старый формат; (4) Git-based versioning — schema changes через PR с migration guide; (5) Schema registry — centralized definitions для organization. Когда нужен schema versioning: при automated processing Memory Bank (CI validation, LLM-based updates); для organization с множеством проектов использующих Memory Bank. Для small projects: human-managed schema без формального versioning.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как автоматически обновлять Memory Bank через Hooks и CI?</summary>
+  <div class="inside">Automated Memory Bank pipeline: (1) Change detection — git hooks или CI watch на ключевые файлы (pom.xml, package.json, Makefile); (2) Extraction — скрипт extract'ирует версии, команды, изменения из конфиг-файлов; (3) Memory update proposal — LLM генерирует предлагаемые изменения в Memory Bank на основе diff; (4) Human review gate — PR создаётся с proposed changes; merge только после approval; (5) Validation — CI проверяет что обновлённый Memory Bank соответствует schema. Что НЕ автоматизировать: WHY (обоснование решений) — требует human judgment; deprecated decisions — требует понимания контекста. Автоматизировать: WHAT (версии, команды) — можно извлечь из файлов.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как превратить Memory Bank в living documentation system?</summary>
+  <div class="inside">Living documentation система: (1) Automated freshness — CI периодически проверяет факты в Memory Bank против live sources; алертит при расхождении; (2) Definition of done integration — принятый ADR → автоматически попадает в decisions.md через template; (3) Code-Memory bidirectionality — аннотации в коде ("// see ADR-005 in decisions.md") + ссылки из decisions.md на соответствующий код; (4) Continuous validation — LLM агент как "memory auditor" запускается по расписанию, проверяет актуальность и предлагает обновления; (5) Living ADR — ADR могут менять статус (Proposed → Accepted → Deprecated → Superseded) с историей в git. Результат: Memory Bank который не устаревает потому что его обновление встроено в процесс разработки.</div></details>
+
+</section>
+
+<div class="pageFooter"><div class="nextPrev">
+  <a href="memory.html">← Memory Bank: обзор</a>
+  <a href="mcp.html">MCP / Tools →</a>
+</div></div>
+</main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

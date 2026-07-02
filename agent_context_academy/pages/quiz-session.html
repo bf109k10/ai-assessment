@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Интерактивный квиз</title>
+  <link rel="stylesheet" href="../assets/style.css"/>
+  <style>
+    .quiz-session-card{max-width:720px}
+    .quiz-field{margin:12px 0}
+    .quiz-field > label{display:block;font-weight:800;font-size:13px;margin-bottom:6px}
+    .quiz-field select,
+    .quiz-field input:not([type=checkbox]){width:100%;max-width:420px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit}
+    #quiz-topic-picks{margin-top:10px;max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff}
+    #quiz-topic-picks .quiz-topic-check{display:flex;align-items:flex-start;gap:8px;padding:5px 0;margin:0;font-size:13px;font-weight:600;cursor:pointer;width:100%}
+    #quiz-topic-picks .quiz-topic-check input[type=checkbox]{width:auto;max-width:none;margin:3px 0 0;padding:0;flex-shrink:0}
+    .quiz-progress-wrap{margin:16px 0 8px;background:#e2e8f0;border-radius:999px;height:10px;overflow:hidden}
+    .quiz-progress-fill{height:100%;background:linear-gradient(90deg,#2563eb,#7c3aed);width:0;transition:width .2s}
+    .quiz-q-meta{font-size:12px;color:var(--muted);font-weight:800;margin-bottom:8px}
+    .quiz-question{font-size:18px;font-weight:900;line-height:1.35;margin:0 0 14px}
+    #quiz-choices{display:flex;flex-direction:column;gap:10px}
+    .quiz-choice-btn{display:block;width:100%;text-align:left;padding:14px 16px;min-height:48px;border-radius:12px;border:1px solid var(--line);background:#fff;font:inherit;font-weight:700;cursor:pointer}
+    .quiz-choice-btn:hover:not(:disabled){border-color:#2563eb;background:#eff6ff}
+    .quiz-choice-btn:disabled{cursor:default;opacity:.95}
+    .quiz-choice-btn.correct{border-color:#16a34a;background:#f0fdf4}
+    .quiz-choice-btn.wrong{border-color:#dc2626;background:#fef2f2}
+    #quiz-explanation{margin-top:14px;padding:14px;border-radius:12px;background:#f8fafc;border:1px solid var(--line);font-size:14px;line-height:1.5;white-space:pre-wrap}
+    .quiz-level-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+    #quiz-settings-panel{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#f8fafc}
+    .quiz-count-row{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+    .quiz-count-row input[type=number]{width:100px;max-width:100px}
+    .quiz-count-row .quiz-topic-check input[type=checkbox]{width:auto;max-width:none;padding:0}
+    .quiz-play-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:16px}
+  </style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>
+  <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html" class="active"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+  <div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div>
+  <div class="progressBox"><b>Формула</b><p class="sourceNote">System → AGENTS/Rules → Current task → Memory/RAG/MCP/Skills → Subagent findings.</p></div>
+</aside>
+
+<main class="main">
+  <section class="hero">
+    <div class="kicker">Assessment</div>
+    <h2>Интерактивный квиз</h2>
+    <p>Источник вопросов: готовый банк академии или генерация ИИ по уровню и топику. MCQ с пояснением; после сессии из банка при успехе — дополнительный бонус-раунд ИИ.</p>
+    <div class="heroActions">
+      <a class="btn" href="assessment.html">← К assessment</a>
+      <button type="button" class="btn" id="quiz-toggle-settings">Настройки API</button>
+      <button class="markDone">Отметить страницу изученной</button>
+    </div>
+  </section>
+
+  <section class="section quiz-session-card" id="quiz-setup">
+    <p id="quiz-bank-info" class="sectionIntro">Загрузка банка…</p>
+    <div id="quiz-settings-panel" hidden>
+      <h3 style="margin-top:0">API для режима «ИИ» и бонус-раунда</h3>
+      <div class="quiz-field">
+        <label for="quiz-provider">Провайдер</label>
+        <select id="quiz-provider">
+          <option value="openrouter">OpenRouter</option>
+          <option value="openai">OpenAI</option>
+        </select>
+      </div>
+      <div class="quiz-field">
+        <label for="quiz-api-key">API key</label>
+        <input type="password" id="quiz-api-key" autocomplete="off" placeholder="sk-… или ключ OpenRouter"/>
+      </div>
+      <div class="quiz-field" id="quiz-or-model-row">
+        <label for="quiz-model-or">Модель OpenRouter</label>
+        <input type="text" id="quiz-model-or" value="openai/gpt-5.4"/>
+      </div>
+      <div class="quiz-field" id="quiz-oai-model-row" hidden>
+        <label for="quiz-model-oai">Модель OpenAI</label>
+        <input type="text" id="quiz-model-oai" value="gpt-5.4"/>
+      </div>
+      <p class="quiz-warn">Ключ хранится только в localStorage на этом устройстве. Не используйте корпоративные секреты без proxy.</p>
+      <button type="button" class="btn primary" id="quiz-save-settings">Сохранить настройки</button>
+    </div>
+
+    <h3>Параметры сессии</h3>
+    <div class="quiz-field">
+      <label for="quiz-source">Источник вопросов</label>
+      <select id="quiz-source">
+        <option value="bank" selected>Банк академии (question-bank.json)</option>
+        <option value="ai">ИИ — сгенерировать по уровню и топику</option>
+      </select>
+      <p id="quiz-source-hint" class="quiz-warn" style="margin-top:6px"></p>
+    </div>
+    <div class="quiz-field">
+      <label for="quiz-target-level">Целевой уровень (максимум)</label>
+      <select id="quiz-target-level">
+        <option value="junior">Junior</option>
+        <option value="middle" selected>Middle</option>
+        <option value="senior">Senior</option>
+        <option value="lead">Lead</option>
+        <option value="arch">Architect</option>
+      </select>
+    </div>
+    <div class="quiz-field">
+      <label for="quiz-level-mode">Охват уровней</label>
+      <select id="quiz-level-mode">
+        <option value="cumulative">От Junior до выбранного включительно</option>
+        <option value="exact">Только выбранный уровень</option>
+      </select>
+    </div>
+    <div class="quiz-field">
+      <label for="quiz-topic-mode">Топики</label>
+      <select id="quiz-topic-mode">
+        <option value="random_one" selected>Случайный один топик</option>
+        <option value="mix_all">Все топики вперемешку</option>
+        <option value="pick">Выбрать несколько (вперемешку)</option>
+      </select>
+      <div id="quiz-topic-picks" hidden></div>
+      <p id="quiz-topic-pick-hint" class="quiz-warn" style="margin-top:6px;font-size:12px"></p>
+    </div>
+    <div class="quiz-field">
+      <label for="quiz-count-num">Число вопросов в сессии</label>
+      <div class="quiz-count-row">
+        <input type="number" id="quiz-count-num" min="1" max="99" value="15"/>
+        <label class="quiz-topic-check" style="font-weight:700" id="quiz-count-all-wrap">
+          <input type="checkbox" id="quiz-count-all"/>
+          <span>Все из пула <span id="quiz-count-all-hint">(только банк)</span></span>
+        </label>
+      </div>
+    </div>
+    <button type="button" class="btn primary" id="quiz-start">Начать квиз</button>
+    <p id="quiz-generating" class="quiz-warn" hidden>Генерация вопросов ИИ…</p>
+    <button type="button" class="btn" id="quiz-cancel-gen" hidden>Отменить ожидание</button>
+  </section>
+
+  <section class="section quiz-session-card" id="quiz-play" hidden>
+    <div class="quiz-progress-wrap"><div class="quiz-progress-fill" id="quiz-progress"></div></div>
+    <div id="quiz-progress-text" style="font-size:13px;font-weight:800;color:var(--muted)"></div>
+    <div id="quiz-q-meta" class="quiz-q-meta"></div>
+    <h3 class="quiz-question" id="quiz-question-text"></h3>
+    <div id="quiz-choices"></div>
+    <div class="quizFeedback" id="quiz-feedback"></div>
+    <div id="quiz-explanation" hidden></div>
+    <div class="quiz-play-actions">
+      <button type="button" class="btn primary" id="quiz-next" hidden>Далее</button>
+      <button type="button" class="btn" id="quiz-cancel-session">Отменить квиз</button>
+    </div>
+  </section>
+
+  <section class="section quiz-session-card" id="quiz-results" hidden>
+    <h3>Результат</h3>
+    <p id="quiz-results-summary" style="font-size:20px;font-weight:900"></p>
+    <div id="quiz-results-levels"></div>
+    <p id="quiz-bonus-hint" class="quiz-warn"></p>
+    <div class="heroActions" style="margin-top:16px">
+      <button type="button" class="btn primary" id="quiz-bonus-start" hidden>Бонус-раунд</button>
+      <button type="button" class="btn" id="quiz-restart">Новая сессия</button>
+      <a class="btn" href="assessment.html">К assessment</a>
+    </div>
+  </section>
+</main>
+</div>
+<script src="../assets/question-bank.data.js"></script>
+<script src="../assets/app.js"></script>
+<script src="../assets/quiz-engine.js"></script>
+</body>
+</html>

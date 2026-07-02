@@ -1,0 +1,351 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AI-отдел: темы для сильной команды</title>
+<link rel="stylesheet" href="agent_context_academy/assets/style.css"/>
+<style>
+.standalone-wrap{max-width:1280px;margin:0 auto;padding:24px 28px 48px}
+.standalone-top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:18px}
+.standalone-top .brand-note{font-size:13px;color:#64748b;font-weight:800}
+.domain-card{border:1px solid var(--line);border-radius:22px;background:#fff;padding:20px;box-shadow:0 10px 26px rgba(15,23,42,.045)}
+.domain-card h3{margin:0 0 6px;font-size:22px}
+.domain-card .level-badge{display:inline-block;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:900;border:1px solid;margin-bottom:10px}
+.domain-card ul{margin:10px 0 0;padding-left:18px;color:#334155;font-size:14px;line-height:1.6}
+.roadmap-item{display:grid;grid-template-columns:50px 1fr 120px;gap:12px;align-items:center;border:1px solid var(--line);border-radius:16px;background:#fff;padding:12px 16px;margin-bottom:8px}
+.roadmap-num{width:40px;height:40px;border-radius:14px;display:grid;place-items:center;font-weight:900;font-size:16px;color:#fff}
+.priority-high{background:#dc2626}
+.priority-med{background:#f97316}
+.priority-low{background:#64748b}
+.impact-bar-wrap{height:8px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin-top:4px}
+.impact-bar{height:100%;border-radius:999px;background:linear-gradient(90deg,#2563eb,#7c3aed)}
+.skill-matrix{border-radius:18px;overflow:hidden;border:1px solid var(--line)}
+.skill-matrix td,.skill-matrix th{font-size:13px;padding:10px 12px}
+.check{color:#16a34a;font-weight:900}
+.dash{color:#94a3b8}
+</style>
+</head><body>
+<div class="standalone-wrap">
+  <div class="standalone-top">
+    <a class="btn" href="agent_context_academy/index.html">← Agent Context Academy</a>
+    <span class="brand-note">Отдельный материал для руководителей / AI Champions (вне assessment-трека)</span>
+  </div>
+<section class="hero">
+  <div class="kicker">Netcracker · AI enablement</div>
+  <h2>AI-отдел: темы для сильной команды</h2>
+  <p>Что нужно знать команде помимо базовых промптов и RAG — Evals, Observability, Security, Cost Management, Governance, Fine-tuning, CI/CD for AI. Приоритеты и матрица навыков.</p>
+  <div class="heroActions">
+    <a class="btn primary" href="agent_context_academy/index.html">В академию</a>
+    <a class="btn" href="agent_context_academy/pages/roadmap.html">Roadmap обучения</a>
+  </div>
+</section>
+
+<!-- Priority roadmap -->
+<section class="section">
+  <h2>Приоритеты для отдела — с чего начать</h2>
+  <p class="sectionIntro">10 доменов, которые делают AI-команду сильной. Отсортированы по impact / сложности.</p>
+
+  <div class="roadmap-item">
+    <div class="roadmap-num priority-high">1</div>
+    <div>
+      <b style="font-size:16px">AI Evals — системное измерение качества</b>
+      <p style="margin:3px 0 0;font-size:14px;color:#475569">Без Evals невозможно знать: стало лучше или хуже? Автоматические тест-кейсы для AI-ответов.</p>
+      <div class="impact-bar-wrap"><div class="impact-bar" style="width:95%"></div></div>
+    </div>
+    <div style="font-size:12px;color:#64748b;font-weight:900">Impact: Очень высокий<br>Сложность: Средняя</div>
+  </div>
+
+  <div class="roadmap-item">
+    <div class="roadmap-num priority-high">2</div>
+    <div>
+      <b style="font-size:16px">AI Security — Prompt Injection & Data Leakage</b>
+      <p style="margin:3px 0 0;font-size:14px;color:#475569">Как атаковать AI-системы и как защититься. Критично перед prod deploy любого AI-агента.</p>
+      <div class="impact-bar-wrap"><div class="impact-bar" style="width:92%"></div></div>
+    </div>
+    <div style="font-size:12px;color:#64748b;font-weight:900">Impact: Очень высокий<br>Сложность: Средняя</div>
+  </div>
+
+  <div class="roadmap-item">
+    <div class="roadmap-num priority-high">3</div>
+    <div>
+      <b style="font-size:16px">AI Observability — трассировка, логи, мониторинг</b>
+      <p style="margin:3px 0 0;font-size:14px;color:#475569">Как видеть что делает агент в production: spans, tokens, latency, errors. x-request-id.</p>
+      <div class="impact-bar-wrap"><div class="impact-bar" style="width:88%"></div></div>
+    </div>
+    <div style="font-size:12px;color:#64748b;font-weight:900">Impact: Высокий<br>Сложность: Средняя</div>
+  </div>
+
+  <div class="roadmap-item">
+    <div class="roadmap-num priority-high">4</div>
+    <div>
+      <b style="font-size:16px">AI Cost Management — токены, модели, кеш</b>
+      <p style="margin:3px 0 0;font-size:14px;color:#475569">Model routing, prompt caching, batch API, context trimming. На scale разница в 10× стоимости.</p>
+      <div class="impact-bar-wrap"><div class="impact-bar" style="width:85%"></div></div>
+    </div>
+    <div style="font-size:12px;color:#64748b;font-weight:900">Impact: Высокий<br>Сложность: Низкая</div>
+  </div>
+
+  <div class="roadmap-item">
+    <div class="roadmap-num priority-med">5</div>
+    <div>
+      <b style="font-size:16px">Fine-tuning vs RAG vs Prompting — матрица решений</b>
+      <p style="margin:3px 0 0;font-size:14px;color:#475569">Когда какой подход: промпт достаточно? RAG нужен? Fine-tuning оправдан? Частый вопрос от бизнеса.</p>
+      <div class="impact-bar-wrap"><div class="impact-bar" style="width:80%"></div></div>
+    </div>
+    <div style="font-size:12px;color:#64748b;font-weight:900">Impact: Высокий<br>Сложность: Высокая</div>
+  </div>
+
+  <div class="roadmap-item">
+    <div class="roadmap-num priority-med">6</div>
+    <div>
+      <b style="font-size:16px">AI Governance & Compliance</b>
+      <p style="margin:3px 0 0;font-size:14px;color:#475569">Audit trails, data residency, GDPR при работе с AI, ответственность за AI-решения. EU AI Act.</p>
+      <div class="impact-bar-wrap"><div class="impact-bar" style="width:75%"></div></div>
+    </div>
+    <div style="font-size:12px;color:#64748b;font-weight:900">Impact: Высокий<br>Сложность: Высокая</div>
+  </div>
+
+  <div class="roadmap-item">
+    <div class="roadmap-num priority-med">7</div>
+    <div>
+      <b style="font-size:16px">Agent Orchestration Patterns — мультиагентные системы</b>
+      <p style="margin:3px 0 0;font-size:14px;color:#475569">DAG, Parallel, Loop, Routing, Critic-Actor. Как проектировать системы из нескольких агентов.</p>
+      <div class="impact-bar-wrap"><div class="impact-bar" style="width:72%"></div></div>
+    </div>
+    <div style="font-size:12px;color:#64748b;font-weight:900">Impact: Средний<br>Сложность: Высокая</div>
+  </div>
+
+  <div class="roadmap-item">
+    <div class="roadmap-num priority-med">8</div>
+    <div>
+      <b style="font-size:16px">CI/CD for AI — тестирование и деплой AI-компонентов</b>
+      <p style="margin:3px 0 0;font-size:14px;color:#475569">Как включить AI-evals в CI pipeline, regression testing для промптов, canary deploy.</p>
+      <div class="impact-bar-wrap"><div class="impact-bar" style="width:70%"></div></div>
+    </div>
+    <div style="font-size:12px;color:#64748b;font-weight:900">Impact: Средний<br>Сложность: Средняя</div>
+  </div>
+
+  <div class="roadmap-item">
+    <div class="roadmap-num priority-low">9</div>
+    <div>
+      <b style="font-size:16px">Multimodal AI — vision, audio, structured docs</b>
+      <p style="margin:3px 0 0;font-size:14px;color:#475569">Анализ скриншотов, PDF, диаграмм. Claude Vision, GPT-4V. Применения в Netcracker: анализ логов-скриншотов.</p>
+      <div class="impact-bar-wrap"><div class="impact-bar" style="width:60%"></div></div>
+    </div>
+    <div style="font-size:12px;color:#64748b;font-weight:900">Impact: Средний<br>Сложность: Низкая</div>
+  </div>
+
+  <div class="roadmap-item">
+    <div class="roadmap-num priority-low">10</div>
+    <div>
+      <b style="font-size:16px">Developer Productivity Metrics с AI</b>
+      <p style="margin:3px 0 0;font-size:14px;color:#475569">Как измерить влияние AI на team velocity: DORA metrics, PR cycle time, defect rate, satisfaction.</p>
+      <div class="impact-bar-wrap"><div class="impact-bar" style="width:55%"></div></div>
+    </div>
+    <div style="font-size:12px;color:#64748b;font-weight:900">Impact: Средний<br>Сложность: Средняя</div>
+  </div>
+</section>
+
+<!-- Deep dives -->
+<section class="section">
+  <h2>Детально по каждому домену</h2>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px">
+
+    <div class="domain-card">
+      <h3>AI Evals</h3>
+      <span class="level-badge" style="background:#fff1f2;border-color:#fca5a5;color:#dc2626">Приоритет #1</span>
+      <p style="font-size:14px;color:#475569;margin:0 0 8px">Систематическое измерение качества AI-ответов. Без evals вы слепы.</p>
+      <ul>
+        <li><b>Что тестировать:</b> корректность ответа, следование инструкциям, формат, latency, отсутствие галлюцинаций</li>
+        <li><b>Типы evals:</b> Unit evals (одна функция), Integration evals (цепочка), Human evals (люди оценивают)</li>
+        <li><b>LLM-as-judge:</b> GPT-4 / Claude оценивает ответы Claude — масштабируемо</li>
+        <li><b>Инструменты:</b> Braintrust, Promptfoo, LangSmith, Evals API (OpenAI)</li>
+        <li><b>Regression:</b> сохраняем golden test cases, запускаем при каждом изменении промпта</li>
+        <li><b>Netcracker применение:</b> eval для MCP-ответов, eval для RAG recall@5</li>
+      </ul>
+      <div class="callout" style="margin-top:10px;font-size:13px"><b>Правило:</b> "No prompt change without eval." Как "no code without tests".</div>
+    </div>
+
+    <div class="domain-card">
+      <h3>AI Security</h3>
+      <span class="level-badge" style="background:#fff1f2;border-color:#fca5a5;color:#dc2626">Приоритет #2</span>
+      <p style="font-size:14px;color:#475569;margin:0 0 8px">Уязвимости AI-систем отличаются от классических — важно знать до деплоя.</p>
+      <ul>
+        <li><b>Prompt Injection:</b> вредоносный текст в user input изменяет поведение агента. "Ignore previous instructions..."</li>
+        <li><b>Indirect Injection:</b> агент читает документ/URL, который содержит инструкции</li>
+        <li><b>Data Leakage:</b> system prompt, AGENTS.md, секреты через "repeat your instructions"</li>
+        <li><b>Jailbreaking:</b> обход safety через roleplay, hypotheticals, encoded text</li>
+        <li><b>Tool Abuse:</b> агент вызывает MCP tool с вредоносными параметрами</li>
+        <li><b>Защита:</b> input sanitization, output filtering, allowlist tools, Human-in-the-loop для destructive ops</li>
+        <li><b>OWASP LLM Top 10:</b> официальный список уязвимостей LLM-приложений</li>
+      </ul>
+    </div>
+
+    <div class="domain-card">
+      <h3>AI Observability</h3>
+      <span class="level-badge" style="background:#fef3c7;border-color:#fcd34d;color:#92400e">Приоритет #3</span>
+      <p style="font-size:14px;color:#475569;margin:0 0 8px">Видимость агента в production — что он делает, сколько стоит, где ломается.</p>
+      <ul>
+        <li><b>Трассировка:</b> каждый LLM-вызов = span с: prompt, response, tokens, latency, model</li>
+        <li><b>x-request-id:</b> Netcracker-паттерн — сквозной ID через все сервисы и MCP</li>
+        <li><b>Инструменты:</b> LangSmith, Langfuse, Arize, OpenTelemetry + OTLP</li>
+        <li><b>Метрики:</b> p50/p95 latency, token usage per request, error rate, cache hit rate</li>
+        <li><b>Alerts:</b> latency spike → cache miss → prompt regression</li>
+        <li><b>Correlation:</b> связать AI trace с backend trace (x-request-id)</li>
+      </ul>
+    </div>
+
+    <div class="domain-card">
+      <h3>AI Cost Management</h3>
+      <span class="level-badge" style="background:#fef3c7;border-color:#fcd34d;color:#92400e">Приоритет #4</span>
+      <p style="font-size:14px;color:#475569;margin:0 0 8px">Оптимизация стоимости при масштабировании AI — часто игнорируется до первого счёта.</p>
+      <ul>
+        <li><b>Model routing:</b> простые задачи → Haiku/GPT-4o-mini, сложные → Sonnet/GPT-4o</li>
+        <li><b>Prompt caching:</b> стабильный prefix → cached tokens = −90% cost</li>
+        <li><b>Batch API:</b> не срочные задачи → batch (50% скидка у Anthropic/OpenAI)</li>
+        <li><b>Context trimming:</b> не тащить весь файл — только нужные функции</li>
+        <li><b>Output length:</b> явно ограничивать max_tokens для коротких ответов</li>
+        <li><b>Мониторинг бюджета:</b> алерты при превышении daily token budget</li>
+      </ul>
+    </div>
+
+    <div class="domain-card">
+      <h3>Fine-tuning vs RAG vs Prompting</h3>
+      <span class="level-badge" style="background:#f0fdf4;border-color:#86efac;color:#166534">Средний приоритет</span>
+      <p style="font-size:14px;color:#475569;margin:0 0 8px">Матрица решений: что выбрать для конкретной задачи.</p>
+      <div class="tableWrap" style="margin-top:8px"><table class="skill-matrix">
+        <thead><tr><th>Критерий</th><th>Prompting</th><th>RAG</th><th>Fine-tuning</th></tr></thead>
+        <tbody>
+          <tr><td>Скорость внедрения</td><td class="check">Часы</td><td>Дни</td><td>Недели</td></tr>
+          <tr><td>Обновление знаний</td><td class="check">Мгновенно</td><td class="check">Быстро</td><td>Переобучение</td></tr>
+          <tr><td>Специфичный стиль</td><td class="dash">—</td><td class="dash">—</td><td class="check">Да</td></tr>
+          <tr><td>Большая knowledge base</td><td class="dash">—</td><td class="check">Да</td><td class="dash">—</td></tr>
+          <tr><td>Стоимость</td><td class="check">Минимальная</td><td>Средняя</td><td>Высокая</td></tr>
+          <tr><td>Когда применять</td><td>Всегда сначала</td><td>Много документов</td><td>Специфичный домен + много примеров</td></tr>
+        </tbody>
+      </table></div>
+      <div class="callout" style="margin-top:10px;font-size:13px"><b>Правило:</b> Начни с prompting → добавь RAG если нужна большая база → fine-tune только если стиль/формат критично важен и есть 1000+ примеров.</div>
+    </div>
+
+    <div class="domain-card">
+      <h3>Agent Orchestration Patterns</h3>
+      <span class="level-badge" style="background:#f5f3ff;border-color:#d8b4fe;color:#6b21a8">A4 уровень</span>
+      <p style="font-size:14px;color:#475569;margin:0 0 8px">Как проектировать системы из нескольких агентов.</p>
+      <ul>
+        <li><b>Orchestrator-Worker:</b> главный агент делегирует subagents, собирает результаты</li>
+        <li><b>Critic-Actor:</b> Actor создаёт, Critic критикует и улучшает. Рефлексия.</li>
+        <li><b>Parallel Execution:</b> независимые subagents работают одновременно</li>
+        <li><b>DAG (Graph):</b> задачи как граф зависимостей — топологическая сортировка</li>
+        <li><b>Loop + Exit condition:</b> агент итерирует пока не выполнен критерий</li>
+        <li><b>Human-in-the-loop gate:</b> обязательное одобрение перед destructive action</li>
+        <li><b>Context isolation:</b> каждый subagent имеет ограниченный контекст — для precision и безопасности</li>
+      </ul>
+    </div>
+
+    <div class="domain-card">
+      <h3>AI Governance & Compliance</h3>
+      <span class="level-badge" style="background:#fef3c7;border-color:#fcd34d;color:#92400e">Для Enterprise</span>
+      <p style="font-size:14px;color:#475569;margin:0 0 8px">Правовые и организационные рамки использования AI в enterprise.</p>
+      <ul>
+        <li><b>EU AI Act (2024+):</b> High-risk AI systems требуют human oversight, документацию, audit</li>
+        <li><b>GDPR + AI:</b> нельзя обрабатывать персональные данные через внешние AI API без DPA</li>
+        <li><b>Data residency:</b> где хранятся промпты и ответы? EU region у Anthropic/Azure OpenAI</li>
+        <li><b>Audit trails:</b> логировать все AI-решения (что спросили, что ответил, кто использовал)</li>
+        <li><b>Ответственность:</b> AI-агент предложил → человек одобрил → человек несёт ответственность</li>
+        <li><b>Internal policy:</b> какие данные нельзя отправлять в LLM API (PII, trade secrets)</li>
+      </ul>
+    </div>
+
+    <div class="domain-card">
+      <h3>CI/CD for AI</h3>
+      <span class="level-badge" style="background:#eff6ff;border-color:#93c5fd;color:#1e40af">DevOps + AI</span>
+      <p style="font-size:14px;color:#475569;margin:0 0 8px">Как включить AI-качество в инженерный процесс.</p>
+      <ul>
+        <li><b>Prompt versioning:</b> промпты в git как код, PR review, changelog</li>
+        <li><b>Eval в CI:</b> при каждом изменении промпта → запуск eval suite → fail если регрессия</li>
+        <li><b>Golden set:</b> набор эталонных вопрос-ответ пар, которые не должны деградировать</li>
+        <li><b>Canary deploy:</b> новый промпт → 5% трафика → мониторинг → полный rollout</li>
+        <li><b>A/B testing промптов:</b> как A/B фичи — статистика, winning variant</li>
+        <li><b>Model upgrade strategy:</b> Claude 3.5 → 4: eval перед переключением, не слепо</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Skills matrix -->
+<section class="section">
+  <h2>Матрица навыков AI-команды по ролям</h2>
+  <div class="tableWrap"><table class="skill-matrix">
+    <thead>
+      <tr>
+        <th>Навык / Тема</th>
+        <th>Junior Dev (A1)</th>
+        <th>Mid Dev (A2–A3)</th>
+        <th>Senior / Lead (A4)</th>
+        <th>AI Champion</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Prompt Engineering (RCTFQ, CoT)</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+      <tr><td>Cursor / Claude Code — базовое использование</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+      <tr><td>AGENTS.md / Rules / Skills — написание</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+      <tr><td>RAG — понимание и настройка</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+      <tr><td>MCP — использование и создание</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+      <tr><td>AI Security — знание атак и защита</td><td class="dash">—</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td></tr>
+      <tr><td>AI Evals — создание eval suite</td><td class="dash">—</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td></tr>
+      <tr><td>AI Observability — инструменты</td><td class="dash">—</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td></tr>
+      <tr><td>Fine-tuning — когда и как</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="check">✓</td></tr>
+      <tr><td>Agent Orchestration — проектирование</td><td class="dash">—</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td></tr>
+      <tr><td>AI Governance / Compliance</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="check">✓</td></tr>
+      <tr><td>CI/CD for AI — eval в pipeline</td><td class="dash">—</td><td class="dash">—</td><td class="check">✓</td><td class="check">✓</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- Quick wins -->
+<section class="section">
+  <h2>Quick Wins: что внедрить немедленно</h2>
+  <div class="grid">
+    <div class="card bg-green">
+      <h3>Неделя 1</h3>
+      <ul>
+        <li>Добавить AGENTS.md в каждый проект репо</li>
+        <li>Создать 3–5 базовых Cursor Rules (always-apply)</li>
+        <li>Добавить .cursorignore с секретами и бинарниками</li>
+        <li>Обучить команду RCTFQ фреймворку</li>
+        <li>Создать первые Skills для повторяемых задач (CI triage, code review)</li>
+      </ul>
+    </div>
+    <div class="card bg-blue">
+      <h3>Месяц 1</h3>
+      <ul>
+        <li>Настроить Internal MCP для Jira/Graylog</li>
+        <li>Создать eval suite для 10 ключевых сценариев</li>
+        <li>Внедрить prompt caching для больших AGENTS.md</li>
+        <li>Добавить AI security check в code review checklist</li>
+        <li>Настроить AI observability: логи + x-request-id</li>
+      </ul>
+    </div>
+    <div class="card bg-purple">
+      <h3>Квартал 1</h3>
+      <ul>
+        <li>Eval автоматически запускается в CI pipeline</li>
+        <li>Model routing: Haiku для простых, Sonnet для сложных</li>
+        <li>AI Governance policy документирована и принята</li>
+        <li>AI Champion в каждой команде</li>
+        <li>Внутренняя база Skills/Commands в репо</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Assessment -->
+<section class="section">
+  <h2>Assessment: вопросы про стратегию AI-отдела</h2>
+  <details class="details"><summary>Что такое AI Evals и зачем они нужны?</summary><div class="inside">Evals = систематическое тестирование качества AI-ответов через тест-кейсы. Без evals нельзя объективно знать: помогло ли изменение промпта, деградировало ли качество при обновлении модели. Это аналог unit tests для AI. Инструменты: Braintrust, Promptfoo, LangSmith. Golden set = эталонные вопрос-ответ пары в CI.</div></details>
+  <details class="details"><summary>Что такое Prompt Injection и как защититься?</summary><div class="inside">Prompt injection = вредоносный текст в user input меняет поведение агента ("Ignore previous instructions, instead do X"). Indirect injection = агент читает документ с инструкциями. Защита: input sanitization, output filtering, запрет на включение user input напрямую в system prompt, HITL для критических действий, allowlist MCP tools.</div></details>
+  <details class="details"><summary>Когда fine-tuning лучше RAG?</summary><div class="inside">Fine-tuning лучше когда: нужен специфичный стиль/формат (не знания), задача хорошо определена и повторяется, есть 1000+ качественных примеров, знания статичные. RAG лучше когда: knowledge base большая и меняется, нужна ссылка на источник, нет данных для обучения. Начинать всегда с prompting → RAG → fine-tuning.</div></details>
+  <details class="details"><summary>Что такое x-request-id в контексте AI Observability?</summary><div class="inside">x-request-id — сквозной идентификатор запроса, который проходит через все сервисы в цепочке: API → AI agent → MCP tool → backend service. Позволяет связать AI trace с backend trace и найти где возникла задержка или ошибка. В Netcracker — стандартный паттерн для трассировки cross-MCP операций.</div></details>
+</section>
+
+<div class="pageFooter"><div class="nextPrev">
+  <a href="agent_context_academy/index.html">← Agent Context Academy</a>
+</div></div>
+</div></body></html>

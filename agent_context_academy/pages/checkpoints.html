@@ -1,0 +1,520 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Checkpoint / Summary / Compression</title><link rel="stylesheet" href="../assets/style.css"/></head><body><div class="app"><aside class="sidebar"><div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>  <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html" class="active"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div><div class="progressBox"><b>Формула</b><p class="sourceNote">System → AGENTS/Rules → Current task → Memory/RAG/MCP/Skills → Subagent findings.</p></div></aside><main class="main"><section class="hero"><div class="kicker">Agent Context Academy</div><h2>Checkpoint / Summary / Compression</h2><p>Как сохранять состояние длинной задачи, чем checkpoint лучше summary, и как не потерять важные решения при compaction.</p><div class="heroActions"><a class="btn primary" href="home.html">На главную</a><a class="btn" href="assessment.html">К assessment</a><button class="markDone">Отметить страницу изученной</button></div></section>
+<style>
+  .schema-box{background:#0f172a;color:#e2e8f0;border-radius:16px;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.65;overflow:auto;margin:10px 0;white-space:pre-wrap}
+  .schema-box .h{color:#c084fc;font-weight:900}
+  .schema-box .c{color:#64748b}
+  .schema-box .k{color:#93c5fd}
+  .schema-box .v{color:#86efac}
+  .schema-box .s{color:#fcd34d}
+  .schema-box .r{color:#f87171}
+  .nuance-card{border-left:4px solid;border-radius:0 14px 14px 0;padding:12px 16px;margin:8px 0;background:#fff;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .nc-blue{border-left-color:#2563eb}.nc-red{border-left-color:#dc2626}.nc-orange{border-left-color:#f97316}.nc-green{border-left-color:#16a34a}.nc-purple{border-left-color:#7c3aed}
+  .platform-split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:12px 0}
+  .ps-col{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff}
+  .ps-head{border-radius:10px;padding:7px 14px;font-weight:800;font-size:13px;margin-bottom:10px}
+  .ps-cursor{background:#eff6ff;color:#1e40af}
+  .ps-claude{background:#f0fdf4;color:#14532d}
+  .diff-split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:900px){.platform-split,.diff-split{grid-template-columns:1fr}}
+</style>
+
+<!-- ── С нуля: Compaction ── -->
+<section class="section">
+  <h2>С нуля: что такое Compaction / Compression — Claude Code / Cursor</h2>
+  <p class="sectionIntro">Прежде чем разбираться в Checkpoint — нужно понять зачем он нужен. А нужен он из-за <b>compaction</b>. Концепция одинакова в Claude Code и Cursor.</p>
+
+  <div class="nuance-card nc-blue">
+    <h4>Уровень 0 — простыми словами</h4>
+    <p>Представь что у тебя есть лист бумаги на котором ты записываешь разговор с агентом. Каждый вопрос, каждый ответ, каждый файл который агент прочитал — всё записывается. Лист конечный. Когда он заканчивается — агент берёт резинку и стирает старые записи, оставляя только краткий пересказ. Это и есть <b>compaction</b> — автоматическое сжатие старой истории. Проблема: в процессе стирания теряются детали. <b>Checkpoint</b> — это когда ты <em>сам</em> записываешь главное на отдельный лист перед тем как агент возьмётся за резинку.</p>
+  </div>
+
+  <div class="schema-box"><span class="h">Как растёт context window за время работы агента</span>
+
+<span class="c">Turn 1:   [System prompt 2k] [Task 0.5k]</span>
+<span class="c">          ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  2.5k / 200k</span>
+
+<span class="c">Turn 10:  [System 2k] [Диалог 15k] [Tool results 8k]</span>
+<span class="c">          ████████████░░░░░░░░░░░░░░░░░░░░░  25k / 200k</span>
+
+<span class="c">Turn 30:  [System 2k] [Диалог 50k] [Files read 40k] [Tool 20k]</span>
+<span class="c">          ██████████████████████████░░░░░░░  112k / 200k</span>
+
+<span class="c">Turn 45:  Приближаемся к лимиту...</span>
+<span class="c">          █████████████████████████████████  175k / 200k</span>
+         ↓
+<span class="r">   ⚠ COMPACTION TRIGGERED</span>
+         ↓
+<span class="v">  Старая история → Summary (5-10k токенов)</span>
+<span class="v">  System prompt остаётся (кешируется)</span>
+<span class="c">          ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~15k / 200k  (fresh start)</span>
+
+<span class="r">Детали принятых решений, конкретные строки,</span>
+<span class="r">отклонённые гипотезы — ПОТЕРЯНЫ навсегда</span></div>
+
+  <h3 style="font-size:15px;margin:16px 0 8px">Что именно теряется при compaction</h3>
+  <div class="diff-split">
+    <div>
+      <div style="font-weight:700;font-size:13px;color:#dc2626;margin-bottom:8px">❌ Теряется (не попадает в summary)</div>
+      <ul style="font-size:13px;line-height:1.8;margin:0;padding-left:18px;color:#475569">
+        <li>Конкретные строки кода которые смотрели</li>
+        <li>«Мы пробовали решение A — оно не работает»</li>
+        <li>Точные имена файлов и пути</li>
+        <li>Промежуточные команды и их вывод</li>
+        <li>Отклонённые гипотезы (агент проверит снова)</li>
+        <li>Почему выбрали подход B а не A</li>
+        <li>Конкретные номера портов, версии, URL</li>
+      </ul>
+    </div>
+    <div>
+      <div style="font-weight:700;font-size:13px;color:#16a34a;margin-bottom:8px">✅ Остаётся в summary</div>
+      <ul style="font-size:13px;line-height:1.8;margin:0;padding-left:18px;color:#475569">
+        <li>Общий смысл задачи</li>
+        <li>Высокоуровневые выводы</li>
+        <li>Текущий статус («работаем над auth»)</li>
+        <li>System prompt и AGENTS.md/CLAUDE.md (не compaction-ятся)</li>
+        <li>Rules (alwaysApply — перезагружаются)</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="font-size:15px;margin:16px 0 8px">Виды сжатия контекста</h3>
+  <div class="schema-box"><span class="h">1. Автоматический compaction</span>  <span class="c">(срабатывает сам)</span>
+   Триггер: context window > ~80% лимита
+   Что происходит: LLM суммаризирует старую историю
+   Контроль: минимальный (можно добавить инструкции в CLAUDE.md)
+   Сигнал: SystemMessage {subtype: "compact_boundary"} в Claude Code SDK
+
+<span class="h">2. Ручной /compact</span>  <span class="c">(ты вызываешь явно)</span>
+   Триггер: команда /compact в чате
+   Что происходит: то же суммаризирование, но в нужный момент
+   Контроль: высокий — ты выбираешь когда сжимать
+   Лучший момент: перед началом нового крупного этапа задачи
+
+<span class="h">3. Новая сессия</span>  <span class="c">(самое жёсткое сжатие)</span>
+   Что происходит: history = пуста, только system prompt
+   Контроль: полный — ты решаешь что передать в новую сессию
+   Инструмент: Checkpoint — передаёшь его в начало новой сессии</div>
+
+  <h3 style="font-size:15px;margin:16px 0 8px">Что НЕ compaction-ится — стабильный контекст</h3>
+  <div class="schema-box"><span class="v">Не теряются при любом compaction:</span>
+
+  CLAUDE.md / AGENTS.md   — перезагружается при каждом запросе
+  Rules (alwaysApply)     — всегда в context
+  Memory Bank файлы       — агент читает их явно в начале сессии
+  Checkpoint (в файле)    — агент читает его если ты передал
+
+<span class="c">→ Вывод: важные решения дублируй в CLAUDE.md / Memory Bank</span>
+<span class="c">→ Они переживут любое количество compaction'ов</span></div>
+
+  <div class="platform-split" style="margin-top:16px">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor — compaction</div>
+      <p style="font-size:13px;color:#334155;margin:0 0 8px">В Cursor compaction происходит автоматически когда context window заполняется. Прямого контроля меньше чем в Claude Code SDK.</p>
+      <ul style="font-size:12px;line-height:1.8;margin:0;padding-left:16px;color:#475569">
+        <li>Автоматический — без явного уведомления</li>
+        <li>Ручной — см. шаги ниже</li>
+        <li>Защита: AGENTS.md всегда в context (не compaction-ится)</li>
+        <li>Инструкции для summary: добавить в AGENTS.md секцию «Summary instructions»</li>
+      </ul>
+      <div style="margin-top:10px">
+        <div style="font-weight:700;font-size:12px;color:#1e40af;margin-bottom:6px">Как передать Checkpoint в новый чат (Cursor):</div>
+        <div class="schema-box" style="font-size:11px"><span class="c">Шаг 1: В текущем чате — попроси создать Checkpoint</span>
+Ты: "Создай checkpoint текущего состояния задачи.
+     Включи: что сделано, ключевые решения,
+     конкретные файлы, следующий шаг."
+
+Агент: возвращает структурированный текст ↓
+<span class="v">## Checkpoint
+Goal: fix auth session bug
+Done: api/auth.py:78 — root cause найден
+Decision: JWT (не sessions) — нужна stateless auth
+Next: implement refresh в api/auth/refresh.py</span>
+
+<span class="c">Шаг 2: Скопируй текст Checkpoint</span>
+Ctrl+C весь блок checkpoint
+
+<span class="c">Шаг 3: Открой новый чат (New Chat)</span>
+Cursor: Ctrl+Shift+L или кнопка «New Chat»
+
+<span class="c">Шаг 4: Вставь Checkpoint в начало нового чата</span>
+Ты: "Продолжи задачу. Вот checkpoint:
+[вставить скопированный текст]
+
+Начни с: прочитай Next step и выполни его."
+
+<span class="c">Агент читает checkpoint и продолжает с нужного места</span></div>
+      </div>
+      <div style="margin-top:8px;font-size:12px">📖 <a href="https://docs.cursor.com" target="_blank" style="color:#1e40af;text-decoration:underline">Cursor Docs</a></div>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code — compaction</div>
+      <p style="font-size:13px;color:#334155;margin:0 0 8px">Claude Code SDK даёт полный контроль через параметры и хуки.</p>
+      <ul style="font-size:12px;line-height:1.8;margin:0;padding-left:16px;color:#475569">
+        <li><code>/compact</code> — ручной вызов в любой момент</li>
+        <li>SDK эмитит <code>compact_boundary</code> событие</li>
+        <li><b>PreCompact hook</b> — архивировать историю до сжатия</li>
+        <li>Инструкции в CLAUDE.md: «When summarizing, always preserve: file paths, decisions»</li>
+        <li><code>settingSources: ["project"]</code> — CLAUDE.md не compaction-ится</li>
+      </ul>
+      <div class="schema-box" style="font-size:11px;margin-top:8px"><span class="c"># CLAUDE.md — инструкции для compactor</span>
+## Summary instructions
+When summarizing, always preserve:
+- Current task objective
+- File paths read or modified  
+- Decisions made + reasoning
+- Test results and errors</div>
+      <div style="margin-top:10px">
+        <div style="font-weight:700;font-size:12px;color:#14532d;margin-bottom:6px">Как передать Checkpoint в новую сессию (Claude Code):</div>
+        <div class="schema-box" style="font-size:11px"><span class="c">Вариант 1: через Memory Bank файл (рекомендуется)</span>
+<span class="c">Агент сохраняет checkpoint в файл:</span>
+memory-bank/checkpoint.md ← агент пишет сюда
+
+<span class="c">Новая сессия читает автоматически:</span>
+claude "Прочитай memory-bank/checkpoint.md
+       и продолжи задачу с Next step"
+
+<span class="c">Вариант 2: через resume сессии (Claude Code SDK)</span>
+<span class="c"># session_id из ResultMessage предыдущей сессии</span>
+claude --resume &lt;session_id&gt; \
+  "Продолжи с того места где остановился"
+
+<span class="c">Вариант 3: передать checkpoint текстом</span>
+claude "Контекст задачи:
+[вставить текст checkpoint]
+Выполни Next step."</div>
+      </div>
+      <div style="margin-top:8px;font-size:12px">📖 <a href="https://code.claude.com/docs/en/agent-sdk/agent-loop#automatic-compaction" target="_blank" style="color:#14532d;text-decoration:underline">Automatic compaction</a> · <a href="https://code.claude.com/docs/en/agent-sdk/sessions" target="_blank" style="color:#14532d;text-decoration:underline">Session resume</a></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Что такое Checkpoint, Summary и Compression</h2>
+
+  <div class="grid">
+    <div class="card bg-blue">
+      <h3>Checkpoint = точка возобновления</h3>
+      <p>Структурированная запись состояния задачи в конкретный момент: что сделано, какие решения приняты, что осталось и <em>конкретно</em> следующий шаг. Создаётся намеренно — человеком или агентом.</p>
+      <ul>
+        <li><b>Отвечает на:</b> «Откуда продолжать?»</li>
+        <li><b>Содержит:</b> Goal, Done, Decisions, Next step, Evidence</li>
+        <li><b>Создаётся:</b> явно, перед паузой или compaction</li>
+        <li><b>Аналог:</b> git commit с подробным описанием</li>
+      </ul>
+    </div>
+    <div class="card bg-orange">
+      <h3>Summary = краткий пересказ</h3>
+      <p>Сжатый пересказ того что происходило. Бывает ручным (агент по запросу) и автоматическим (генерируется при compaction). Теряет детали — это его природа.</p>
+      <ul>
+        <li><b>Отвечает на:</b> «Что происходило?»</li>
+        <li><b>Содержит:</b> общий смысл, высокоуровневые выводы</li>
+        <li><b>Создаётся:</b> автоматически при compaction или по запросу</li>
+        <li><b>Аналог:</b> краткое содержание главы книги</li>
+      </ul>
+    </div>
+    <div class="card bg-purple">
+      <h3>Compression / Compaction = сжатие</h3>
+      <p>Технический процесс уменьшения объёма context window. Старая история заменяется summary. Неизбежен при длинных задачах. Checkpoint — инструмент защиты от потерь при compaction.</p>
+      <ul>
+        <li><b>Триггер:</b> context window ~80% заполнен</li>
+        <li><b>Результат:</b> старые turns → summary (~5–10k токенов)</li>
+        <li><b>Потери:</b> конкретные детали, решения, отклонённые пути</li>
+        <li><b>Аналог:</b> старые письма уничтожены, остался только пересказ</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="font-size:15px;margin:18px 0 10px">Сравнение: чем отличаются</h3>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Понятие</th><th>Кто создаёт</th><th>Цель</th><th>Детализация</th><th>Выживает compaction?</th></tr></thead>
+    <tbody>
+      <tr><td><b>Checkpoint</b></td><td>Агент или пользователь — явно</td><td>Продолжить работу точно отсюда</td><td>Высокая — файлы, строки, решения</td><td>✅ Да — если сохранён в файл/Memory</td></tr>
+      <tr><td><b>Summary</b></td><td>Система — автоматически</td><td>Сжать историю и освободить context</td><td>Низкая — общий смысл</td><td>⚠️ Он и есть результат compaction</td></tr>
+      <tr><td><b>Compression</b></td><td>Система — автоматически</td><td>Не дать context overflow</td><td>—</td><td>— это сам процесс</td></tr>
+      <tr><td><b>Memory Bank</b></td><td>Агент по протоколу</td><td>Хранить устойчивые знания между сессиями</td><td>Средняя — структурированные факты</td><td>✅ Да — файл вне context</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="nuance-card nc-blue" style="margin-top:12px">
+    <h4>Ключевое отличие Checkpoint от Summary</h4>
+    <p><b>Summary</b> говорит «что было» — он описательный. <b>Checkpoint</b> говорит «откуда продолжать» — он операционный. Summary создаётся системой автоматически и оптимизирован для сжатия. Checkpoint создаётся намеренно и оптимизирован для возобновления работы. Плохой Checkpoint: «Мы работали над auth». Хороший Checkpoint: «Next: implement refresh token в <code>api/auth/refresh.py</code>, JWT secret в env, тест в <code>tests/test_auth.py:45</code>».</p>
+  </div>
+</section>
+<section class="section">
+  <h2>Checkpoint vs Compaction — как работают вместе</h2>
+  <p class="sectionIntro">Checkpoint и compaction — не одно и то же. Compaction — это проблема (потеря деталей). Checkpoint — это решение. Вот как они взаимодействуют.</p>
+
+  <div class="schema-box"><span class="h">Сценарий без Checkpoint — что происходит при compaction</span>
+
+Turn 1–40:  Агент работает, исследует, принимает решения...
+            «Выбрали PostgreSQL вместо MongoDB — потому что нужен JOIN»
+            «Файл api/auth.py строка 78 — тут root cause»
+            «Пробовали solution A — не работает из-за race condition»
+                      ↓
+<span class="r">COMPACTION: context → summary</span>
+                      ↓
+Summary: «Работали над auth, исследовали базу данных, что-то починили»
+
+Turn 41:  Агент не знает:
+          <span class="r">- почему PostgreSQL</span>  ← может предложить MongoDB снова
+          <span class="r">- где именно баг</span>    ← начнёт искать заново
+          <span class="r">- что уже пробовали</span>  ← повторит solution A
+
+
+<span class="h">Сценарий с Checkpoint — защита от потери</span>
+
+Turn 35:  <span class="v">Создаём Checkpoint (до того как context переполнится)</span>
+          Goal: fix auth session bug
+          Done: api/auth.py:78 root cause найден
+          Decision: PostgreSQL (нужен JOIN для sessions)
+          Tried + failed: solution A (race condition на line 92)
+          Next: implement fix в middleware.py
+                      ↓
+Turn 40:  <span class="r">COMPACTION</span> (summary теряет детали)
+                      ↓
+Turn 41:  Агент читает Checkpoint:
+          <span class="v">✓ знает где баг (api/auth.py:78)</span>
+          <span class="v">✓ знает почему PostgreSQL</span>
+          <span class="v">✓ не повторит solution A</span>
+          <span class="v">✓ знает следующий шаг</span></div>
+
+  <h3 style="font-size:15px;margin:16px 0 8px">Три стратегии работы с compaction</h3>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:10px 0">
+    <div class="ps-col" style="border-left:4px solid #2563eb">
+      <div style="font-weight:800;font-size:14px;color:#1e40af;margin-bottom:8px">🛡 Стратегия 1<br>Checkpoint before compaction</div>
+      <p style="font-size:13px;margin:0 0 8px">Создай Checkpoint <em>до</em> того как context переполнился. Лучшее время: когда context на 60–70%.</p>
+      <div class="schema-box" style="font-size:11px">Context 70% → создай Checkpoint
+         ↓
+Continue работу
+         ↓
+Compaction → summary потеряет детали
+         ↓
+Checkpoint в Memory Bank → читай его</div>
+    </div>
+    <div class="ps-col" style="border-left:4px solid #7c3aed">
+      <div style="font-weight:800;font-size:14px;color:#6d28d9;margin-bottom:8px">📋 Стратегия 2<br>CLAUDE.md как вечный checkpoint</div>
+      <p style="font-size:13px;margin:0 0 8px">Критичные решения дублируй прямо в CLAUDE.md — он перезагружается при каждом запросе и <em>никогда</em> не compaction-ится.</p>
+      <div class="schema-box" style="font-size:11px"># CLAUDE.md
+## Permanent decisions
+- DB: PostgreSQL (JOIN needed)
+- Auth: JWT not sessions
+- API: REST not GraphQL
+  
+← Это выживет любой compaction</div>
+    </div>
+    <div class="ps-col" style="border-left:4px solid #16a34a">
+      <div style="font-weight:800;font-size:14px;color:#15803d;margin-bottom:8px">🔄 Стратегия 3<br>PreCompact hook (Claude Code)</div>
+      <p style="font-size:13px;margin:0 0 8px">Через SDK: хук <code>PreCompact</code> архивирует полную историю до сжатия.</p>
+      <div class="schema-box" style="font-size:11px">hooks.json:
+{
+  "PreCompact": {
+    "command": "python archive.py"
+  }
+}
+← archive.py сохраняет
+  полный transcript в файл
+  до того как summary
+  заменит историю</div>
+    </div>
+  </div>
+
+  <div class="nuance-card nc-orange" style="margin-top:12px">
+    <h4>Когда делать Checkpoint — правило 60%</h4>
+    <p>Не жди когда context переполнится — к тому времени compaction уже может начаться. Практическое правило: если работаешь над задачей и уже прошло много turns → создай Checkpoint сейчас. В Claude Code SDK: следи за токенами в <code>ResultMessage.usage</code>. В Cursor: если чат уже очень длинный — пора создавать Checkpoint.</p>
+  </div>
+</section>
+
+<section class="section"><h2>Идеальный checkpoint template</h2><button class="btn" data-copy="checkpoint-template" onclick="copyText('checkpoint-template')">Скопировать шаблон</button><pre class="code" id="checkpoint-template"># Checkpoint
+
+## Goal
+Что хотим получить.
+
+## Current state
+Где сейчас находимся.
+
+## Done
+- Что уже проверено/сделано.
+- Какие команды запускали.
+- Какие файлы смотрели.
+
+## Decisions
+- Какие решения приняты.
+- Почему выбрали именно так.
+
+## Evidence
+- Логи, файлы, ссылки, результаты tools.
+
+## Risks / blockers
+- Что может быть не так.
+- Что требует approval.
+
+## Next steps
+1. Следующий шаг.
+2. Что проверить после него.
+3. Как понять, что задача завершена.</pre></section>
+<section class="section"><h2>Когда делать checkpoint</h2><div class="grid two"><div class="card good"><h3>Обязательно</h3><ul><li>Перед паузой.</li><li>Перед compaction.</li><li>Перед передачей subagent'у.</li><li>После важного решения.</li><li>Перед destructive action.</li></ul></div><div class="card warn"><h3>Желательно</h3><ul><li>После incident investigation.</li><li>После refactoring.</li><li>Перед PR summary.</li><li>Перед сменой гипотезы.</li></ul></div></div></section>
+<section class="section"><h2>Примеры</h2><div class="grid two"><div class="card danger"><h3>Плохой summary</h3><p>“Мы разбирали CI, там что-то падало, нужно дальше смотреть.”</p></div><div class="card good"><h3>Хороший checkpoint</h3><p>“Goal: найти причину job X. Done: проверены logs A/B. Decision: infra не причина. Next: проверить test Y после commit abc.”</p></div></div></section>
+<section class="section">
+<h2>Тонкости и нюансы Checkpoint / Summary</h2>
+<div class="nuance-card nc-orange">
+  <h4>Checkpoint ≠ полный backup</h4>
+  <p>Checkpoint сохраняет решения и прогресс, но не весь context window. При resume агент начинает с summary, а не с полной историей диалога. Детали, не попавшие в summary, теряются навсегда.</p>
+</div>
+<div class="nuance-card nc-red">
+  <h4>Слишком частые checkpoints убивают скорость</h4>
+  <p>Каждый checkpoint — это LLM-вызов для генерации summary. Для коротких задач overhead превышает пользу. Делай checkpoint только после реально значимых этапов, а не каждые 5 минут.</p>
+</div>
+<div class="nuance-card nc-blue">
+  <h4>Summary теряет детали</h4>
+  <p>LLM при compaction суммаризирует — конкретные строки кода, точные команды, имена файлов могут не попасть в summary. Решение: явно указывай «включи в summary: конкретные файлы и команды» при запросе checkpoint.</p>
+</div>
+<div class="nuance-card nc-purple">
+  <h4>Checkpoint не защищает от drift</h4>
+  <p>Если агент ушёл не туда до checkpoint — checkpoint зафиксирует неверный прогресс. Checkpoint полезен только при валидированном состоянии. Сначала убедись что прогресс правильный, затем делай checkpoint.</p>
+</div>
+<div class="nuance-card nc-green">
+  <h4>CLAUDE.md как персистентный checkpoint</h4>
+  <p>CLAUDE.md перезагружается при каждом запросе и не compaction-ится. Критичные решения, принятые однажды, лучше фиксировать в CLAUDE.md, а не только в summary — так они выживают любое количество сжатий контекста.</p>
+</div>
+</section>
+
+<section class="section">
+<h2>Best practices — Делай / Не делай</h2>
+<div class="grid two">
+  <div class="card good">
+    <h3>✅ Делай</h3>
+    <ul>
+      <li>Создавай checkpoint после каждого <strong>валидированного</strong> этапа.</li>
+      <li>Явно указывай что включить в summary (файлы, команды, решения).</li>
+      <li>Используй CLAUDE.md для персистентных решений — дублируй ключевые факты туда.</li>
+      <li>Делай checkpoint перед рискованными или необратимыми операциями.</li>
+      <li>Проси агента назвать что было сделано перед созданием checkpoint.</li>
+    </ul>
+  </div>
+  <div class="card danger">
+    <h3>❌ Не делай</h3>
+    <ul>
+      <li>Не делай checkpoint слишком часто — overhead перевешивает пользу на коротких задачах.</li>
+      <li>Не доверяй summary без проверки критичных деталей — всегда верифицируй.</li>
+      <li>Не используй checkpoint как единственное место для важных фактов — дублируй в CLAUDE.md.</li>
+      <li>Не создавай checkpoint если агент ушёл не туда — сначала откорректируй направление.</li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<section class="section">
+<h2>Вопросы по уровням</h2>
+<div class="qlevel-group">Junior — 10 вопросов</div>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое Checkpoint в контексте AI агентов?</summary>
+<div class="inside">Checkpoint — это структурированная запись текущего состояния задачи: что уже сделано, какие решения приняты, что осталось сделать и какой следующий шаг. Checkpoint создаётся в момент паузы в работе, чтобы продолжить с той же точки позже — без потери контекста. Аналог из разработки: commit с описанием что сделано. Разница с простой заметкой: Checkpoint структурирован так, чтобы агент мог по нему восстановить полный контекст задачи.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Зачем нужен Checkpoint — какую проблему он решает?</summary>
+<div class="inside">Checkpoint решает проблему потери контекста при compaction, паузах и передаче задачи. Без Checkpoint: агент сжимает длинный диалог (compaction) → теряет детали принятых решений и промежуточный прогресс. Новая сессия начинается с нуля. С Checkpoint: даже после compaction агент читает Checkpoint и знает: цель, что сделано, ключевые решения, что дальше. Checkpoint = survivor механизм для длинных задач.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Чем Checkpoint отличается от Summary?</summary>
+<div class="inside">Summary — краткое содержание: пересказывает что было. Checkpoint — структурная точка продолжения: фиксирует состояние достаточно детально для продолжения работы. Summary отвечает на 'что происходило', Checkpoint на 'откуда продолжать'. Пример: Summary — 'мы исследовали проблему с CI'. Checkpoint — 'Goal: fix CI job X. Done: проверены logs A/B (не причина). Decision: infra ok. Blocker: нужен access к test env Y. Next: запустить тест Z с флагом --verbose'.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Когда нужно делать Checkpoint?</summary>
+<div class="inside">Обязательно: перед любой паузой в работе, перед compaction (context window заполняется), перед передачей задачи subagent'у, после принятия важного архитектурного решения, перед destructive действием. Желательно: после завершения каждого значимого этапа задачи (investigation → implementation → testing), после incident investigation, перед PR submission. Правило: если ты делаешь паузу более 30 минут или задача переходит к другому агенту → Checkpoint обязателен.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что нужно писать в Checkpoint?</summary>
+<div class="inside">Структура эффективного Checkpoint: (1) Goal — что нужно достичь (одна строка). (2) Status — текущий статус (In Progress / Blocked / Done). (3) Done — что уже выполнено с конкретными фактами (файлы, commits, проверенные гипотезы). (4) Key decisions — принятые архитектурные/технические решения с обоснованием. (5) Current context — важные факты, открытия, аномалии. (6) Blockers — что мешает продолжить. (7) Next step — конкретное следующее действие. (8) References — ссылки на файлы, PR, tickets. Без этих полей Checkpoint неполный.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Как Checkpoint помогает при compaction контекста?</summary>
+<div class="inside">Compaction — автоматическое или ручное сжатие длинного диалога когда context window заполняется. При compaction: детали теряются, принятые решения могут исчезнуть, прогресс неочевиден. С Checkpoint: до compaction агент создаёт Checkpoint → после compaction читает его → восстанавливает полный контекст задачи. Checkpoint — 'страховочная сетка' перед compaction. Best practice: при длинных задачах делать Checkpoint каждые 30–50% context window — не ждать пока compaction случится.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что теряется без Checkpoint при compaction?</summary>
+<div class="inside">Без Checkpoint при compaction теряется: (1) Промежуточные решения (почему выбрали подход A, а не B). (2) Исследованные и отклонённые гипотезы (не придётся проверять снова). (3) Точный прогресс (что именно готово, что нет). (4) Контекст блокеров (что не работало и почему). (5) Важные открытия в процессе (например, найденный edge case). Агент начнёт заново или допустит те же ошибки. Summary от compaction не содержит этих деталей — он слишком общий.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Где хранить Checkpoint?</summary>
+<div class="inside">Опции хранения Checkpoint: (1) В чате — написать Checkpoint как сообщение, он будет в conversation history. Простой вариант, но потеряется при очистке чата. (2) В Memory Bank — memory-bank/checkpoint.md или memory-bank/task-name-checkpoint.md. Персистентно между сессиями. (3) В репозитории — docs/progress/feature-name-checkpoint.md. Хорошо для командной работы. (4) В issue/ticket — как comment в Jira/GitHub Issue. Рекомендация: для личных задач → чат. Для командных → репозиторий или ticket.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Как передать Checkpoint в новую сессию агента?</summary>
+<div class="inside">Передача Checkpoint: (1) Если Checkpoint в Memory Bank → новая сессия автоматически читает Memory Bank в начале. (2) Если Checkpoint в файле → включить файл через @mention или попросить агента прочитать его: 'Прочитай checkpoint в docs/progress/auth-feature.md и продолжи с него'. (3) Если в чате предыдущей сессии → скопировать текст Checkpoint в начало нового чата. Формат при передаче: 'Продолжи задачу. Checkpoint: [содержание]'. Агент должен начать с 'Я вижу что сделано X, следующий шаг Y. Начинаю с него.'</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое structured state в контексте Checkpoint?</summary>
+<div class="inside">Structured state — формализованное, машиночитаемое представление состояния задачи. Это когда Checkpoint оформлен не как свободный текст, а со стандартными полями (Goal, Done, Decisions, Next). Преимущества structured state: агент легче parsit и использует поля; команда имеет предсказуемый формат; можно автоматически обрабатывать (например, генерировать отчёт о прогрессе). Пример: вместо 'мы почти дошли до решения' → 'Status: 70% complete. Next: implement auth middleware (ref: backend/auth/middleware.py)'.</div></details>
+<div class="qlevel-group">Middle — 10 вопросов</div>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как структурировать эффективный Checkpoint для сложной технической задачи?</summary>
+<div class="inside">Эффективная структура Checkpoint для технической задачи: [# Checkpoint — <task name>] с полями: Goal (1 строка), Status (In Progress/Blocked/Done), Done (bulleted список с конкретными артефактами: файлы, commits, тесты, PR), Key Decisions (каждое решение + rationale: 'выбрали Redis вместо Memcached потому что TTL + persistence'), Current State (важные факты: 'auth service на порту 8080, DB на 5432'), Blockers (если есть: 'нет доступа к prod logs'), Next Step (одно конкретное действие с файлом и функцией если применимо), References. Объём: 200–400 слов — достаточно для полного восстановления контекста.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Когда лучше делать Checkpoint — в середине задачи или только в конце?</summary>
+<div class="inside">Checkpoint в конце задачи — неправильно: если задача не завершена, а compaction уже произошёл — поздно. Правильный подход: Progressive Checkpointing — создавай Checkpoint в конце каждого значимого этапа. Для трёхэтапной задачи: Checkpoint 1 после investigation (что нашли, что исключили), Checkpoint 2 после implementation (что изменили, какие решения), Checkpoint 3 перед deploy (полный статус, что протестировано). Плюс: обязательный Checkpoint при любой паузе >30 мин. Частые маленькие Checkpoints > один большой в конце.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как использовать паттерн Checkpoint + Memory Bank?</summary>
+<div class="inside">Паттерн: Checkpoint в Memory Bank = персистентный state между сессиями. Реализация: при конце рабочей сессии → агент создаёт/обновляет memory-bank/checkpoint.md. При начале новой сессии → агент читает Memory Bank и находит checkpoint.md → восстанавливает контекст → продолжает. Дополнительно: при завершении задачи → из checkpoint извлекаются устойчивые знания (решения, конвенции) → переносятся в memory-bank/decisions.md. Checkpoint = temporary state; Memory Bank decisions = permanent knowledge. Lifecycle: checkpoint создаётся → обновляется по ходу задачи → архивируется при завершении.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Чем Summary от compaction отличается от Checkpoint и как их использовать вместе?</summary>
+<div class="inside">Автоматический Summary от compaction: генерируется системой, общий, теряет детали, не структурирован под продолжение работы. Checkpoint: создаётся намеренно агентом/пользователем, структурирован, содержит всё необходимое для продолжения. Использование вместе: (1) Перед compaction → создать Checkpoint вручную. (2) После compaction → система создаёт автоматический Summary. (3) Если Checkpoint уже есть в Memory Bank → Summary менее критичен. (4) Если Checkpoint не был создан → Summary + дополнительные вопросы агенту для восстановления контекста. Правило: Checkpoint > Summary всегда. Автоматический Summary — последний резерв, не замена.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как различаются автоматические и ручные Checkpoint — когда каждый уместен?</summary>
+<div class="inside">Автоматический Checkpoint: триггерится системой по условию (context window > 80%, прошло 30 минут, компания сделала определённый шаг). Плюсы: не требует памяти пользователя. Минусы: может пропустить момент или иметь неполный контекст. Ручной Checkpoint: пользователь явно просит 'создай checkpoint'. Плюсы: точно в нужный момент, агент добавляет максимум контекста. Минусы: требует дисциплины. Рекомендация: установить автоматический Checkpoint как safety net (по объёму context), дополнять ручными Checkpoint перед критическими моментами (перед deploy, perед паузой). Гибрид: лучшая стратегия.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как использовать Checkpoint для multi-step задач с зависимыми этапами?</summary>
+<div class="inside">Multi-step Checkpoint strategy: (1) Task decomposition first — разбить задачу на этапы с чёткими milestone. (2) Checkpoint per milestone — каждый Checkpoint фиксирует: этап завершён, что стало известно, input для следующего этапа. (3) Dependency tracking — в Checkpoint явно указать что данный этап зависит от предыдущего решения. Пример: 'Checkpoint 2 depends on: decision from CP1 — use PostgreSQL'. (4) Branching — если в одном этапе две гипотезы → фиксировать обе в Checkpoint с результатом проверки. (5) Gate criteria — каждый Checkpoint содержит 'Definition of Done' для этого этапа.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Что включать в Checkpoint — решения, прогресс или следующий шаг?</summary>
+<div class="inside">Checkpoint должен содержать все три: Решения (наиболее критичны — без них агент повторит уже отклонённые пути), Прогресс (конкретные артефакты: файлы изменены, тесты пройдены — не 'мы много сделали') и Следующий шаг (один конкретный action — избегает неопределённости при resume). Приоритет включения при нехватке места: (1) Следующий шаг + key decisions (минимум для продолжения). (2) + Прогресс (что уже не нужно делать). (3) + Контекст и blocker. Плохой Checkpoint: 'мы работали над auth' — ничего конкретного. Хороший: 'реализован JWT middleware (auth/middleware.py), следующий: добавить refresh token endpoint'.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Чем Checkpoint отличается от обновления AGENTS.md?</summary>
+<div class="inside">AGENTS.md — постоянная документация: правила, конвенции, архитектурные решения проекта. Обновляется редко, когда принятое решение становится постоянной нормой. Checkpoint — временный state текущей задачи: прогресс, решения именно этой задачи, что дальше делать. Checkpoint для этой задачи, AGENTS.md для всего проекта. Flow: в ходе задачи → Checkpoint. После завершения → если решение стало конвенцией → обновить AGENTS.md. Пример: Checkpoint 'используем PostgreSQL для этой фичи' → после завершения → AGENTS.md 'проект использует PostgreSQL, prefer JSONField over separate tables for settings'.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как использовать Checkpoint для передачи задачи subagent'у?</summary>
+<div class="inside">Subagent handoff через Checkpoint: (1) Main agent создаёт Checkpoint с полным контекстом задачи. (2) В task description для subagent включить Checkpoint: 'Контекст задачи: [checkpoint содержание]'. (3) Subagent начинает работу с чтения Checkpoint: 'Вижу что сделано X, моя задача Y'. (4) Subagent создаёт свой mini-Checkpoint при завершении: что он сделал, что нашёл. (5) Main agent получает subagent Checkpoint + объединяет с общим Checkpoint. Best practice: не передавать весь длинный диалог subagent'у — только структурированный Checkpoint. Это экономит context window и даёт subagent'у чистый фокус.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Когда Checkpoint недостаточен и нужны дополнительные механизмы?</summary>
+<div class="inside">Checkpoint недостаточен при: (1) Очень длинных задачах (недели) — Checkpoint устаревает; нужны обновления Memory Bank и периодические review сессии. (2) Множественных параллельных задачах — один Checkpoint на задачу, нужен task registry. (3) Командных задачах — Checkpoint в личном чате не виден коллегам; нужен в git репозитории или ticket. (4) Audit requirements — регуляторные требования к трассировке решений; нужен формальный decision log, не только Checkpoint. (5) Когда задача по сути завершена — завершённая задача заслуживает документацию в AGENTS.md/docs, а не только Checkpoint.</div></details>
+<div class="qlevel-group">Senior — 5 вопросов</div>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как проектировать checkpoint систему для complex multi-agent workflow?</summary>
+<div class="inside">Multi-agent checkpoint architecture: (1) Hierarchical checkpoints — main agent имеет master checkpoint, каждый subagent имеет свой. При merge subagent findings → main checkpoint обновляется. (2) Checkpoint protocol — стандартный формат для всех агентов в workflow: одинаковые поля, одинаковые паттерны reference к артефактам. (3) Central checkpoint store — shared storage (Memory Bank файл или git repo) где все агенты могут читать/писать checkpoints. Конкуренция: optimistic locking или sequential writes. (4) Checkpoint events — при каждом критическом шаге → emit checkpoint event. Monitoring подписывается на эти события. (5) Checkpoint replay — возможность воспроизвести workflow от любого checkpoint (state machine semantics). (6) TTL для checkpoints — автоматически архивировать checkpoints для завершённых задач.</div></details>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как диагностировать потерю state в workflow без checkpoint?</summary>
+<div class="inside">Диагностика state loss: (1) Признаки — агент повторяет уже сделанные шаги, задаёт вопросы на которые уже был ответ, принимает противоречащие ранее принятым решения. (2) Root cause анализ — посмотреть conversation history: где произошёл compaction? Что было до и после? (3) Recovery — если есть Memory Bank → читать оттуда. Если есть файлы в repo → читать изменения через git log. Если нет → reconstruction через ручную беседу с агентом. (4) Postmortem — почему не было checkpoint? Добавить в workflow: (a) автоматический checkpoint trigger при context > 70%, (b) mandatory checkpoint перед любой паузой. Prevention > recovery.</div></details>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как выбрать granularity Checkpoint — слишком частые vs слишком редкие?</summary>
+<div class="inside">Checkpoint granularity trade-off: Too frequent → overhead, много времени на checkpoint вместо работы. Too rare → риск потери контекста. Оптимальная granularity зависит от: (1) Риска задачи — destructive операции (delete, prod deploy) → checkpoint перед каждым. Readonly операции → реже. (2) Сложности задачи — простая задача (1 час) → 1 checkpoint в конце. Сложная (несколько дней) → checkpoint per major milestone. (3) Context window usage — автоматически при 60–70% usage. (4) Reversibility — необратимые действия → checkpoint обязателен. Reversible → можно пропустить. Heuristic: если риск потери > 30 минут работы → делай checkpoint сейчас.</div></details>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как проектировать auto-resume workflow на основе Checkpoint?</summary>
+<div class="inside">Auto-resume design: (1) Checkpoint as entry point — каждый workflow run начинается с: 'есть ли checkpoint для этой задачи?' Если да → load и resume. Если нет → start fresh. (2) Idempotent steps — каждый шаг workflow проверяет 'уже ли сделано' перед выполнением (на основе checkpoint). Пример: 'PR создан? Если да в checkpoint → skip create_pr, move to review'. (3) State machine model — workflow = набор states. Checkpoint = current state + transition history. Resume = перейти в нужное state. (4) Checkpoint validation — при resume проверить что checkpoint не устарел (referenced artifacts still exist, decisions still valid). (5) Partial resume — если checkpoint частично невалиден → resume с последнего валидного state. Реализация: checkpoint.json в task directory с state field.</div></details>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как валидировать целостность Checkpoint перед использованием?</summary>
+<div class="inside">Checkpoint integrity validation: (1) Referenced artifacts check — все упомянутые файлы, PR, commits в checkpoint — существуют ли? Если файл удалён → checkpoint частично невалиден. (2) Decision consistency — решения в checkpoint не противоречат актуальному состоянию Rules/AGENTS.md? Если Rules изменились → требуется reconciliation. (3) Timestamp freshness — если checkpoint создан давно → верифицировать ключевые факты (порт, URL, version). (4) Completeness check — все обязательные поля заполнены? (Goal, Next Step обязательны). (5) Schema validation — если checkpoint имеет defined schema → validate против неё. При validation failure: не silent fail → явно сообщить user 'checkpoint устарел в части X, вот что нужно уточнить'.</div></details>
+<div class="qlevel-group">Lead — 5 вопросов</div>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Как ввести стандарты Checkpoint в командной разработке с AI агентами?</summary>
+<div class="inside">Командные стандарты Checkpoint: (1) Шаблон — единый Checkpoint template для команды (Goal, Status, Done, Decisions, Next). Хранится в репозитории как docs/templates/checkpoint.md. (2) When-to-checkpoint policy — документированные триггеры: перед паузой, перед compaction, при передаче задачи. (3) Storage convention — Checkpoint для командной задачи → в репозитории (docs/progress/) или в task tracker. Не в личном чате. (4) Review — для длинных задач → weekly sync включает review checkpoint (прогресс, blockers, решения). (5) Onboarding — новый engineer проходит практику: выполни задачу с Checkpoint per milestone. (6) Accountability — каждый Checkpoint имеет author и timestamp. Решения прослеживаемы.</div></details>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Когда руководителю требовать Checkpoint от команды — как это помогает управлению?</summary>
+<div class="inside">Checkpoint как management tool: (1) Требовать при: задача > 2 дней, задача блокирует других, задача в prod без rollback. (2) Standup replacement для async работы — вместо ежедневного standup: обновлённый checkpoint = статус. (3) Transparency — руководитель видит реальный прогресс, принятые решения, blocker — без долгих встреч. (4) Risk early warning — если checkpoint показывает blocker или нет Next Step → поговорить сразу. (5) Knowledge transfer — при болезни/отпуске инженера → другой продолжает по checkpoint. (6) Post-mortem material — checkpoint истории = timeline того что происходило в задаче. Checkpoint как management artifact: требовать в Definition of Done для сложных задач.</div></details>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Как использовать Checkpoint как project management инструмент для long-running AI задач?</summary>
+<div class="inside">Checkpoint в project management: (1) Milestone tracking — Checkpoint per milestone = реальный progress indicator, не '%complete'. (2) Decision log — из checkpoints извлекаются ключевые решения → ADR (Architecture Decision Records). (3) Retrospective data — checkpoint история = что заняло больше времени чем ожидалось, где были blockers → для оценки будущих задач. (4) Handoff documentation — при смене assignee → checkpoint = onboarding документ для нового. (5) Stakeholder reporting — выжимка из checkpoint = status report (без технических деталей). (6) Resource planning — если checkpoint показывает много blockers → нужна помощь/ресурсы. Integration: checkpoint → автоматически обновляет ticket status в Jira/GitHub Issues.</div></details>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Как обучать команду Checkpoint практикам — какой план?</summary>
+<div class="inside">Training plan: (1) Theory (30 мин) — зачем checkpoint, что теряется без него, разница checkpoint vs summary. Реальный пример: потеря 4 часов работы без checkpoint. (2) Template walkthrough — разбор шаблона поле за полем, что писать в каждое. (3) Практика 1 — взять реальную завершённую задачу и ретроспективно написать checkpoint как будто в середине задачи. (4) Практика 2 — выполнить небольшую задачу с агентом, делая checkpoint каждые 30 минут. (5) Peer review — поменяться checkpoints, оценить: можно ли продолжить работу по этому checkpoint? (6) Integration в process — checkpoint добавляется в Definition of Done. Metric: % задач с checkpoint.</div></details>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Как использовать Checkpoint в SLA для long-running AI задач?</summary>
+<div class="inside">Checkpoint в SLA контексте: (1) Checkpoint frequency SLA — для задач > 4 часов: checkpoint каждые 2 часа или при каждом milestone. Нарушение SLA → эскалация. (2) Checkpoint completeness — checkpoint должен содержать все обязательные поля. Incomplete checkpoint = не checkpoint. (3) Recovery SLA — при потере context (compaction без checkpoint) → время на восстановление из checkpoint ≤ 15 минут. (4) Knowledge transfer SLA — по checkpoint другой engineer должен уметь продолжить задачу без дополнительных объяснений. (5) Audit SLA — checkpoint хранятся N лет для соответствия compliance требованиям. Enforcement: automated check — есть ли свежий checkpoint при PR creation для long-running задач.</div></details>
+<div class="qlevel-group">Architect — 5 вопросов</div>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как рассматривать Checkpoint как state machine snapshot для reliable agent systems?</summary>
+<div class="inside">State machine perspective: AI workflow = state machine. States: (Started, Investigation, Implementation, Testing, Review, Done). Transitions: triggered by milestones, decisions, results. Checkpoint = snapshot конкретного state: все переменные, решения, что привело к этому состоянию. Architectural implications: (1) Explicit state definition — задокументировать какие states возможны и что означает checkpoint в каждом из них. (2) Transition guards — transition из одного state в другой → automatic checkpoint creation. (3) State validation — при resume из checkpoint → validate что referenced state still valid. (4) Replay capability — из начального state, применив sequence of transitions из checkpoints, воспроизвести весь workflow. Это дает observability, auditability и reproducibility.</div></details>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как проектировать Checkpoint архитектуру для distributed multi-agent системы?</summary>
+<div class="inside">Distributed checkpoint architecture: (1) Distributed state problem — несколько агентов работают параллельно, у каждого свой context. Нужен механизм для создания global consistent checkpoint (Chandy-Lamport algorithm из distributed systems). (2) Coordinator pattern — designated coordinator agent отвечает за global checkpoint: запрашивает local checkpoints у всех агентов, объединяет. (3) Vector clocks — для упорядочивания checkpoint событий в distributed system. (4) Checkpoint store — shared storage (git repo, S3, Redis) с concurrency control. (5) Partial failure handling — если один агент недоступен при checkpoint → либо wait, либо checkpoint без него с пометкой 'partial'. (6) Recovery protocol — при failure агента → другой агент читает его последний checkpoint и берёт на себя задачу.</div></details>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как интегрировать Checkpoint с event sourcing паттерном?</summary>
+<div class="inside">Checkpoint + Event Sourcing: Event sourcing — хранить не текущий state, а sequence of events, из которых state восстанавливается. Синергия с Checkpoint: (1) Events = каждое действие агента (tool call, decision, file change) логируется как event. (2) Checkpoint = snapshot state в определённый момент для быстрого restore (без replay всех events от начала). (3) Hybrid approach: sparse checkpoints + dense event log. Restore = load последний checkpoint + replay events после него. (4) Audit trail = event log + checkpoints = полная история + быстрый restore. (5) Time travel debugging — восстановить state на любой момент времени: load checkpoint before X + replay events up to X. Implementation: каждое agent action → append-only event log. Checkpoint → snapshot current state hash.</div></details>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как строить fault-tolerant AI workflow с Checkpoint механизмом?</summary>
+<div class="inside">Fault-tolerant workflow design: (1) Checkpoint before every risky operation — перед любым destructive или long-running действием → checkpoint. При failure → restore и retry или rollback. (2) At-least-once semantics — некоторые operations могут выполниться дважды (при retry) → idempotent operations обязательны. Checkpoint отслеживает что уже выполнено → skip on retry. (3) Saga pattern — длинная distributed transaction = series of local transactions. Каждая local transaction → checkpoint. При failure → compensating transaction + restore from checkpoint. (4) Circuit breaker — если workflow часто падает на одном шаге → checkpoint + circuit breaker → не retry бесконечно, эскалируй. (5) Dead letter queue — failed checkpoints → для анализа почему workflow упал. (6) Health checks — периодически verify checkpoint integrity → alerting при corruption.</div></details>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как проектировать Checkpoint versioning для эволюционирующегося workflow?</summary>
+<div class="inside">Checkpoint versioning: (1) Schema versioning — checkpoint format версионируется: v1, v2. При migration: старые checkpoints читаются через compatibility layer. (2) Backward compatibility — новая версия workflow может читать checkpoints старой версии (с migration если нужно). (3) Migration strategy — при schema change: автоматическая миграция checkpoint при first read. Или: explicit migration run для всех существующих checkpoints. (4) Version field — каждый checkpoint содержит schema_version поле. (5) Deprecation — старые schema versions поддерживаются N месяцев, потом forced migration или rejection. (6) Breaking changes — если workflow structure радикально изменилась → старые checkpoints невалидны → explicit handling (start fresh или manual recovery). Реализация: checkpoint.schema.json + version registry + migration scripts.</div></details>
+</section>
+<div class="pageFooter"><div class="nextPrev"><a href='../pages/mcp.html'>← MCP / Tools</a><a href='../pages/agents-rules-skills.html'>AGENTS.md / Rules / Skills →</a></div></div></main></div><script src="../assets/app.js"></script></body></html>

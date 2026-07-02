@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Explore → Plan → Code — процесс работы с агентом (Cursor и Claude Code)</title>
+  <link rel="stylesheet" href="../assets/style.css"/>
+  <style>
+    .schema-box{background:#0f172a;color:#e2e8f0;border-radius:16px;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.65;overflow:auto;margin:10px 0;white-space:pre-wrap}
+    .schema-box .h{color:#c084fc;font-weight:900}
+    .schema-box .c{color:#64748b}
+    .schema-box .k{color:#93c5fd}
+    .schema-box .v{color:#86efac}
+    .schema-box .s{color:#fcd34d}
+    .schema-box .r{color:#fca5a5}
+    .nuance-card{border-left:4px solid;border-radius:0 14px 14px 0;padding:12px 16px;margin:8px 0;background:#fff;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+    .nc-blue{border-left-color:#2563eb}
+    .nc-red{border-left-color:#dc2626}
+    .nc-orange{border-left-color:#f97316}
+    .nc-green{border-left-color:#16a34a}
+    .nc-purple{border-left-color:#7c3aed}
+    .platform-split{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:#fff}
+    .ps-col{padding:18px}
+    .ps-col:first-child{border-right:1px solid var(--line)}
+    .ps-head{font-weight:900;font-size:15px;padding:10px 12px;border-radius:12px;margin:0 0 14px}
+    .ps-cursor{background:#eff6ff;color:#1e40af}
+    .ps-claude{background:#fdf4ff;color:#6b21a8}
+    .diff-split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media(max-width:900px){.diff-split{grid-template-columns:1fr}}
+    .req-yes{color:#dc2626;font-weight:900}
+    .req-no{color:#64748b}
+    .trigger-pill{display:inline-block;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:900;border:1px solid;font-family:ui-monospace,Menlo,monospace}
+    .tp-cursor{background:#eff6ff;border-color:#93c5fd;color:#1e40af}
+    .tp-claude{background:#fdf4ff;border-color:#d8b4fe;color:#6b21a8}
+    .cmd-card{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff;margin:10px 0}
+    .cmd-head{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);background:#f8fafc}
+    .cmd-icon{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-size:18px}
+    .cmd-head h4{margin:0;font-size:15px}
+    .cmd-head p{margin:0;font-size:12px;color:#64748b}
+    .cmd-body{padding:16px}
+    .lifecycle{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff}
+    .lc-step{padding:16px 12px;text-align:center;border-right:1px solid var(--line)}
+    .lc-step:last-child{border-right:none}
+    .lc-num{width:34px;height:34px;border-radius:999px;background:#2563eb;color:#fff;display:grid;place-items:center;font-weight:900;font-size:14px;margin:0 auto 10px}
+    .lc-step h4{font-size:13px;margin:0 0 5px}
+    .lc-step p{font-size:12px;color:#64748b;margin:0;line-height:1.4}
+    code{background:#f1f5f9;padding:2px 5px;border-radius:5px;font-family:ui-monospace,Menlo,monospace;font-size:12px}
+    .platform-badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:900;border:1px solid}
+    .pb-cursor{background:#eff6ff;border-color:#93c5fd;color:#1e40af}
+    .pb-claude{background:#fdf4ff;border-color:#d8b4fe;color:#6b21a8}
+    @media(max-width:900px){.platform-split{grid-template-columns:1fr}.lifecycle{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>
+    <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html" class="active"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div>
+  <div class="progressBox"><b>Правило</b><p class="sourceNote">Explore → Plan → Code. Сначала контекст и план, потом код с проверкой (verify/commit внутри Code). Параллель — после темы Subagents.</p></div>
+</aside>
+
+<main class="main">
+<section class="hero">
+  <div class="kicker">Agent Context Academy · Фундамент (после Agent Loop)</div>
+  <h2>Explore → Plan → Code</h2>
+  <p>Три шага процесса работы с агентом: <b>Explore</b> (разобраться в контексте) → <b>Plan</b> (согласовать план) → <b>Code</b> (писать код маленькими шагами с проверкой и коммитом). Это не «как писать код на языке», а <em>в каком порядке</em> вести задачу после <a href="agent-loop.html">Agent Loop</a>. Best practices — <a href="https://docs.cursor.com" target="_blank">Cursor</a> и <a href="https://code.claude.com/docs" target="_blank">Claude Code</a>; параллельные сценарии — в связке с <a href="subagents.html">Subagents</a>.</p>
+  <div class="heroActions">
+    <a class="btn" href="agent-loop.html">← Agent Loop</a>
+    <a class="btn" href="roadmap.html">Roadmap</a>
+    <a class="btn" href="model-variance.html">Почему модель ≠ модель →</a>
+    <button class="markDone">Отметить страницу изученной</button>
+  </div>
+</section>
+
+<!-- ── Что такое workflow ── -->
+<section class="section">
+  <h2>Что такое Explore → Plan → Code и зачем это нужно</h2>
+  <div class="grid">
+    <div class="card bg-blue">
+      <h3>Explore → Plan → Code = рецепт, а не импровизация</h3>
+      <p>Представь повара: без рецепта — каждый раз разный результат, забытые ингредиенты. С рецептом — предсказуемое качество. Workflow для агента — тот же рецепт: фиксированная последовательность шагов, которая срабатывает надёжно.</p>
+      <ul>
+        <li>Сначала <b>понять</b> задачу и контекст</li>
+        <li>Потом <b>план</b> — что и в каком порядке</li>
+        <li>Затем <b>Code</b> — правки, verify (тесты/линт), commit</li>
+      </ul>
+    </div>
+    <div class="card bg-orange">
+      <h3>Cursor: Plan mode + правила процесса</h3>
+      <p>В Cursor воркфлоу строится вокруг <b>Plan mode</b> (сначала план, только после одобрения — Agent mode), <b>Rules</b> (зафиксировать процесс), <b>Commands</b> (запустить сценарий), <b>Hooks</b> (гейты) и <b>Background / Cloud agents</b> для параллельного и фонового исполнения.</p>
+    </div>
+    <div class="card bg-purple">
+      <h3>Claude Code: тот же триптих</h3>
+      <p>Документированный цикл <b>Explore → Plan → Code → Commit</b> (commit — часть этапа Code). Плюс <code>/clear</code>, TDD внутри Code, subagents — позже в треке.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Level-0 ── -->
+<section class="section">
+  <h2>С нуля: как это работает изнутри — Claude Code / Cursor</h2>
+  <p class="sectionIntro">Концепция одинакова в Claude Code и Cursor — разница только в том, как называются кнопки и файлы. Начни отсюда, если раньше просто писал «сделай X» в чат.</p>
+
+  <div class="nuance-card nc-blue">
+    <h4>Уровень 0 — простыми словами</h4>
+    <p>Если попросить агента «сделай фичу» одним сообщением — он бросится писать код, не разобравшись, и часто наделает лишнего. Workflow разбивает это на этапы: сначала агент <b>читает</b> проект, потом <b>предлагает план</b> (ты его смотришь и правишь), только потом <b>пишет код</b>, и <b>проверяет</b> себя тестами. Меньше сюрпризов, легче откатить.</p>
+  </div>
+
+  <div class="schema-box"><span class="c"># Базовый цикл — один проход</span>
+
+  ┌──────────┐   ┌────────┐   ┌─────────────────────────┐
+  │ EXPLORE  │──▶│  PLAN  │──▶│ CODE (+ verify, commit) │
+  │ читаем   │   │ approve│   │ правки, тесты, PR       │
+  └──────────┘   └────────┘   └─────────────────────────┘
+       ▲                                    │
+       └──────── не прошло verify ────────┘</div>
+
+  <div class="tableWrap"><table>
+    <thead><tr><th>Термин</th><th>Простое объяснение</th><th>Техническое</th></tr></thead>
+    <tbody>
+      <tr><td><b>Workflow</b></td><td>Порядок шагов, как агент решает задачу</td><td>Повторяемый процесс: последовательность фаз с условиями перехода и точками проверки</td></tr>
+      <tr><td><b>Explore</b></td><td>Агент сначала читает код и доки</td><td>Сбор контекста (read-only): grep, чтение файлов, поиск, вопросы — без правок</td></tr>
+      <tr><td><b>Plan</b></td><td>Агент пишет что собирается сделать, ты одобряешь</td><td>Декомпозиция на шаги + human approval gate до реализации</td></tr>
+      <tr><td><b>Verify</b></td><td>Проверка, что не сломалось</td><td>Автоматическая обратная связь: тесты, линтер, типы, сборка, запуск</td></tr>
+      <tr><td><b>Gate</b></td><td>Место, где нужно подтверждение человека</td><td>HITL-точка: необратимые операции требуют явного approve</td></tr>
+      <tr><td><b>Fan-out / Fan-in</b></td><td>Разбить на части, сделать параллельно, собрать</td><td>Декомпозиция на независимые подзадачи → изолированное исполнение → слияние + верификация</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="platform-split" style="margin-top:14px">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor — одинаково?</div>
+      <p style="font-size:13px">Да, цикл тот же. Отличается только запуск: этап Plan = <b>Plan mode</b> (read-only, генерирует план), реализация = <b>Agent mode</b> после одобрения. Проверку удобно вешать на <b>Hooks</b>.</p>
+      <div style="font-size:12px;margin-top:8px">📖 <a href="https://docs.cursor.com/en/agent/planning" target="_blank">Cursor Docs — Planning</a></div>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code — документация</div>
+      <p style="font-size:13px">Тот же цикл описан явно как best practice. Уникальное: команда <code>/clear</code> между этапами, subagents для исследования, headless-режим для скриптов.</p>
+      <ul style="font-size:12px;margin:6px 0 0;padding-left:16px;line-height:2">
+        <li><a href="https://www.anthropic.com/engineering/claude-code-best-practices" target="_blank">Claude Code — Best Practices</a></li>
+        <li><a href="https://code.claude.com/docs/en/common-workflows" target="_blank">Common Workflows</a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── Базовый цикл ── -->
+<section class="section">
+  <h2>Базовый цикл: Explore → Plan → Code</h2>
+  <p class="sectionIntro">Ядро процесса в Cursor и Claude Code. <b>Verify</b> и <b>commit</b> — не отдельные «философские» этапы, а обязательная часть <b>Code</b>.</p>
+  <div class="lifecycle">
+    <div class="lc-step" style="background:#eff6ff">
+      <div class="lc-num">1</div><h4>Explore</h4>
+      <p>Читает файлы, доки, тесты. Без правок — только понять задачу и контекст.</p>
+    </div>
+    <div class="lc-step" style="background:#f0fdf4">
+      <div class="lc-num">2</div><h4>Plan</h4>
+      <p>План шагами. Ты смотришь, правишь, одобряешь — gate до кода.</p>
+    </div>
+    <div class="lc-step" style="background:#fefce8">
+      <div class="lc-num">3</div><h4>Code</h4>
+      <p>Правки по плану → verify (тесты, линт, запуск) → commit/PR. Не прошло verify — чиним в Code.</p>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:12px">
+    <b>Почему именно так:</b> LLM отлично пишет код, но плохо угадывает <em>намерение</em> и <em>границы задачи</em>. Explore и Plan дают агенту контекст и заранее согласованные рамки, Verify — объективный сигнал вместо «уверенного, но неверного» ответа. Пропуск Explore/Plan — причина №1 переусложнённых и мимо-задачи изменений.
+  </div>
+
+  <h3 style="font-size:15px;margin:18px 0 8px">Вариант с TDD — когда есть чёткий контракт</h3>
+  <div class="schema-box"><span class="c"># TDD-воркфлоу (best practice Claude Code и Cursor)</span>
+<span class="h">1.</span> Explore  — понять требование и существующий код
+<span class="h">2.</span> Tests    — написать падающие тесты по контракту (код ещё НЕ трогаем)
+<span class="h">3.</span> Confirm  — убедиться, что тесты действительно падают (red)
+<span class="h">4.</span> Implement— писать код, пока тесты не позеленеют (green)
+<span class="h">5.</span> Refactor — почистить структуру, тесты держим зелёными
+<span class="h">6.</span> Commit   — тесты + код одним осмысленным коммитом
+
+<span class="c"># Тесты = объективный gate. Агент не может «схитрить» — критерий готовности внешний.</span></div>
+</section>
+
+<!-- ── Параллельные воркфлоу ── -->
+<section class="section">
+  <h2>Параллельные воркфлоу — несколько агентов сразу</h2>
+  <p class="sectionIntro">Когда задача распадается на <b>независимые</b> части — их можно вести параллельно. Сначала освой линейный Explore → Plan → Code; параллель и fan-out логичнее после <a href="subagents.html">Subagents</a>.</p>
+
+  <div class="schema-box"><span class="c"># Fan-out → Fan-in: разложить, сделать параллельно, собрать</span>
+
+                          ┌────────────────────┐
+                          │  Задача целиком     │
+                          └─────────┬──────────┘
+                    ┌───────────────┼───────────────┐   <span class="c"># FAN-OUT: делим на независимые части</span>
+                    ▼               ▼               ▼
+            ┌──────────────┐┌──────────────┐┌──────────────┐
+            │ Агент A      ││ Агент B      ││ Агент C      │
+            │ worktree/    ││ worktree/    ││ worktree/    │  <span class="c"># изоляция: своя ветка/каталог</span>
+            │ ветка feat-a ││ ветка feat-b ││ ветка feat-c │
+            └──────┬───────┘└──────┬───────┘└──────┬───────┘
+                   └───────────────┼───────────────┘   <span class="c"># FAN-IN: собираем результаты</span>
+                                   ▼
+                          ┌────────────────────┐
+                          │  Merge + Verify     │  <span class="c"># слить → прогнать тесты на объединённом</span>
+                          └────────────────────┘</div>
+
+  <div class="platform-split" style="margin-top:14px">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor — параллельно</div>
+      <ul style="font-size:13px;line-height:1.7;padding-left:18px">
+        <li><b>Несколько Background / Cloud agents</b> — запускаешь разные задачи, они идут параллельно и не блокируют чат.</li>
+        <li><b>Git worktrees</b> — каждый агент в своём рабочем каталоге/ветке, правки не пересекаются.</li>
+        <li><b>Best-of-N</b> — несколько попыток одной задачи в изолированных worktree, потом выбираешь лучшую.</li>
+        <li><b>Параллельные subagents</b> — несколько задач в одном сообщении запускаются одновременно.</li>
+      </ul>
+      <div style="font-size:12px;margin-top:8px">📖 <a href="https://docs.cursor.com/en/background-agent" target="_blank">Cursor — Background Agents</a></div>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code — параллельно</div>
+      <ul style="font-size:13px;line-height:1.7;padding-left:18px">
+        <li><b>Параллельные subagents</b> — например 3 агента исследуют разные части кода, у каждого свой контекст (изоляция контекста главного агента).</li>
+        <li><b>Несколько сессий / git worktrees</b> на одну репу — независимые ветки задач.</li>
+        <li><b>Headless</b> <code>claude -p</code> — fan-out задач в скриптах и CI (например, «пройди по 20 файлам»).</li>
+      </ul>
+      <div style="font-size:12px;margin-top:8px">📖 <a href="https://code.claude.com/docs/en/sub-agents" target="_blank">Claude Code — Subagents</a> · <a href="https://code.claude.com/docs/en/headless" target="_blank">Headless</a></div>
+    </div>
+  </div>
+
+  <h3 style="font-size:15px;margin:18px 0 10px">Пример из практики: три независимых модуля в монорепо</h3>
+  <p style="font-size:13px;color:#475569;margin-bottom:10px"><b>Ситуация:</b> в монорепо нужно добавить unit-тесты в три пакета, которые <em>не импортируют друг друга</em>: <code>packages/auth</code>, <code>packages/billing</code>, <code>packages/notifications</code>. Один агент в одном каталоге — долго; три изолированных потока — быстрее и без гонок за одни файлы.</p>
+
+  <div class="cmd-card">
+    <div class="cmd-head">
+      <div class="cmd-icon" style="background:#eff6ff">🔀</div>
+      <div><h4>Fan-out: три агента, три worktree</h4><p>Реальный сценарий в Cursor или Claude Code + git</p></div>
+      <span class="trigger-pill tp-cursor">parallel</span>
+    </div>
+    <div class="cmd-body">
+      <div class="schema-box" style="font-size:12px"><span class="h"># 0. Главный агент (ты) — Plan, один раз</span>
+Задача: в каждом пакете — покрыть публичный API characterization-тестами.
+Критерий готовности: <span class="v">npm test -w packages/auth</span> (и аналог для billing, notifications) зелёный.
+<span class="c"># Не параллелим, пока нет общего плана и критериев verify.</span>
+
+<span class="h"># 1. FAN-OUT — изоляция (терминал, до агентов)</span>
+git fetch origin
+git worktree add ../oral-auth      -b feat/tests-auth      origin/main
+git worktree add ../oral-billing   -b feat/tests-billing   origin/main
+git worktree add ../oral-notify    -b feat/tests-notify    origin/main
+<span class="c"># Три каталога = три агента не трогают одни и те же файлы.</span>
+
+<span class="h"># 2. Параллельная работа</span>
+<span class="c"># Cursor: три Background/Cloud agent ИЛИ три окна + Agent в каждом worktree.</span>
+<span class="c"># Claude Code: три сессии в ../oral-auth, ../oral-billing, ../oral-notify</span>
+<span class="c"># Или один чат — параллельные subagents (одно сообщение):</span>
+
+«Запусти <span class="v">3 subagents параллельно</span>:
+  A) только <span class="v">packages/auth</span> — тесты по плану, без правок billing/notifications;
+  B) только <span class="v">packages/billing</span>;
+  C) только <span class="v">packages/notifications</span>.
+Каждый возвращает: список файлов, что добавил, вывод <span class="v">npm test -w …</span>.»
+
+<span class="h"># 3. FAN-IN — слияние и общий verify (ты или главный агент)</span>
+cd oral-auth      && git push -u origin feat/tests-auth
+cd ../oral-billing && git push -u origin feat/tests-billing
+cd ../oral-notify  && git push -u origin feat/tests-notify
+<span class="c"># Три PR или последовательный merge в main:</span>
+git checkout main && git pull
+git merge feat/tests-auth      <span class="c"># resolve conflicts если только в lockfile</span>
+git merge feat/tests-billing
+git merge feat/tests-notify
+npm test   <span class="c"># полный прогон на объединённом коде — обязательный gate</span>
+
+<span class="h"># 4. Уборка</span>
+git worktree remove ../oral-auth
+git worktree remove ../oral-billing
+git worktree remove ../oral-notify</div>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top:12px">
+    <b>Что здесь «реального»:</b> worktree — обычный git, не магия IDE; параллельные subagents — один промпт с тремя непересекающимися зонами; fan-in — не «склеить тексты агентов», а <em>merge веток + общий CI</em>. Если бы billing зависел от нового API в auth — сначала auth (последовательно), потом billing, а не три агента сразу.
+  </div>
+
+  <div class="nuance-card nc-red" style="margin-top:14px">
+    <h4>Изоляция состояния обязательна — иначе race на файлах</h4>
+    <p>Два агента, редактирующие одни и те же файлы в одном рабочем каталоге, затирают правки друг друга и ломают сборку. Правило: <b>один агент = своя ветка/worktree</b>. Только так параллелизм безопасен. Сливаешь результаты в конце (fan-in) и там же прогоняешь общий verify.</p>
+  </div>
+
+  <div class="nuance-card nc-orange">
+    <h4>Параллелить можно только независимые задачи</h4>
+    <p>Если задача B зависит от результата A (B использует API, который A ещё пишет) — параллелизм не ускоряет, а создаёт рассинхрон. Параллель хороша для <b>независимых</b> кусков: разные модули, разные файлы, разные попытки одной задачи (best-of-N). Зависимые шаги — только последовательно (или через DAG-зависимости).</p>
+  </div>
+
+  <div class="nuance-card nc-purple">
+    <h4>Параллелизм повышает стоимость контекста и сложность ревью</h4>
+    <p>N агентов = N контекстов = больше токенов и N веток на ревью. Иногда быстрее и дешевле сделать последовательно. Параллель оправдана, когда выигрыш по времени важнее и части действительно независимы. Не «параллель ради параллели».</p>
+  </div>
+</section>
+
+<!-- ── Инструменты ── -->
+<section class="section">
+  <h2>Из чего строить воркфлоу — Cursor и Claude Code</h2>
+  <div class="platform-split">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor — инструменты процесса</div>
+      <div class="tableWrap"><table style="font-size:13px">
+        <tbody>
+          <tr><td><b>Plan mode</b></td><td>Read-only планирование, план на одобрение до кода</td></tr>
+          <tr><td><b>Rules (.mdc)</b></td><td>Зафиксировать процесс: «сначала план», «не коммить без тестов»</td></tr>
+          <tr><td><b>Commands</b></td><td>Запустить готовый сценарий: <code>/pr-review</code>, <code>/refactor</code></td></tr>
+          <tr><td><b>Hooks</b></td><td>Гейты и проверки на уровне tool call (PreToolUse/PostToolUse)</td></tr>
+          <tr><td><b>Background / Cloud</b></td><td>Фоновое и параллельное исполнение задач</td></tr>
+          <tr><td><b>Checkpoints</b></td><td>Откат состояния при неудачном шаге</td></tr>
+        </tbody>
+      </table></div>
+      <div class="schema-box" style="margin-top:10px"><span class="c"># .cursor/rules/workflow.mdc — процесс как правило</span>
+<span class="h">---</span>
+<span class="k">description</span>: <span class="s">Team workflow</span>
+<span class="k">alwaysApply</span>: <span class="v">true</span>
+<span class="h">---</span>
+1. Сначала Plan mode — план на approve
+2. Реализация маленькими шагами
+3. После правок — запусти тесты и линт
+4. Коммит только при зелёных тестах</div>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code — инструменты процесса</div>
+      <div class="tableWrap"><table style="font-size:13px">
+        <tbody>
+          <tr><td><b>plan mode</b></td><td>Планирование до правок (shift+tab / <code>--permission-mode plan</code>)</td></tr>
+          <tr><td><code>/clear</code></td><td>Сбросить контекст между этапами — гигиена контекста</td></tr>
+          <tr><td><b>Subagents</b></td><td>Изоляция контекста, параллельное исследование</td></tr>
+          <tr><td><b>CLAUDE.md</b></td><td>Зафиксировать workflow и запреты репозитория</td></tr>
+          <tr><td><b>Slash commands</b></td><td><code>.claude/commands/*.md</code> — переиспользуемые сценарии</td></tr>
+          <tr><td><b>Headless <code>-p</code></b></td><td>Автоматизация в CI/скриптах, fan-out задач</td></tr>
+        </tbody>
+      </table></div>
+      <div class="schema-box" style="margin-top:10px"><span class="c"># CLAUDE.md — процесс проекта</span>
+<span class="h"># Workflow</span>
+1. Explore: прочитай затронутые файлы, НЕ пиши код сразу
+2. Plan: предложи план, дождись approve
+3. Реализуй по плану; после каждого шага — тесты
+4. Между крупными этапами — /clear для чистоты контекста
+5. Commit: осмысленное сообщение, PR по шаблону</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Примеры ── -->
+<section class="section">
+  <h2>Готовые воркфлоу — примеры</h2>
+
+  <div class="cmd-card">
+    <div class="cmd-head">
+      <div class="cmd-icon" style="background:#eff6ff">✨</div>
+      <div><h4>Фича с нуля</h4><p>Новая функциональность от идеи до PR</p></div>
+      <span class="trigger-pill tp-cursor">Explore→Plan→Code</span>
+    </div>
+    <div class="cmd-body">
+      <div class="schema-box" style="font-size:12px"><span class="h">1. Explore</span>  Прочитай @src/auth/, @docs/architecture.md — как устроена авторизация
+<span class="h">2. Plan</span>     Предложи план: какие файлы, какие тесты, порядок. Жди approve.
+<span class="h">3. Code</span>     Реализуй по шагам: сначала модель, потом сервис, потом роут
+<span class="h">4. Verify</span>   npm test && npm run lint && npm run typecheck
+<span class="h">5. Commit</span>   feat: add password reset flow + PR по шаблону</div>
+    </div>
+  </div>
+
+  <div class="cmd-card">
+    <div class="cmd-head">
+      <div class="cmd-icon" style="background:#fef2f2">🐛</div>
+      <div><h4>Багфикс по репорту</h4><p>От воспроизведения до регресс-теста</p></div>
+      <span class="trigger-pill tp-claude">reproduce→fix→regress</span>
+    </div>
+    <div class="cmd-body">
+      <div class="schema-box" style="font-size:12px"><span class="h">1.</span> Reproduce: воспроизведи баг, зафиксируй шаги
+<span class="h">2.</span> Isolate:   бинарный поиск — где ломается
+<span class="h">3.</span> Regress:   напиши падающий тест на баг (red)
+<span class="h">4.</span> Fix:       чини корневую причину, не симптом → тест зелёный
+<span class="h">5.</span> Verify:    полный прогон тестов, ничего не сломалось
+<span class="h">6.</span> Commit:    fix: ... + ссылка на issue</div>
+    </div>
+  </div>
+
+  <div class="cmd-card">
+    <div class="cmd-head">
+      <div class="cmd-icon" style="background:#fff7ed">♻️</div>
+      <div><h4>Рефакторинг с тестами</h4><p>Меняем структуру, не поведение</p></div>
+      <span class="trigger-pill tp-cursor">safe refactor</span>
+    </div>
+    <div class="cmd-body">
+      <div class="schema-box" style="font-size:12px"><span class="h">1.</span> Характеризующие тесты ДО любых изменений (фиксируем поведение)
+<span class="h">2.</span> Одно маленькое изменение за раз
+<span class="h">3.</span> После каждого — тесты зелёные (иначе откат/checkpoint)
+<span class="h">4.</span> Поведение НЕ меняем, только структуру
+<span class="h">5.</span> Каждый логический шаг — отдельный коммит</div>
+    </div>
+  </div>
+
+  <div class="cmd-card">
+    <div class="cmd-head">
+      <div class="cmd-icon" style="background:#f0fdf4">🔀</div>
+      <div><h4>Параллельный рефакторинг модулей</h4><p>Fan-out по независимым пакетам</p></div>
+      <span class="trigger-pill tp-claude">fan-out→fan-in</span>
+    </div>
+    <div class="cmd-body">
+      <div class="schema-box" style="font-size:12px"><span class="h">1. Split</span>   Раздели: pkg/api, pkg/ui, pkg/db — независимы
+<span class="h">2. Fan-out</span> Агент на модуль, каждый в своей ветке/worktree
+<span class="h">3. Work</span>    Параллельно: каждый рефакторит свой пакет + тесты
+<span class="h">4. Fan-in</span>  Слить ветки по очереди, решить конфликты
+<span class="h">5. Verify</span>  Прогнать ВСЕ тесты на объединённом коде
+<span class="c"># Если модули зависят друг от друга — НЕ параллелить, делать по порядку.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Тонкости ── -->
+<section class="section">
+  <h2>Тонкости</h2>
+
+  <div class="nuance-card nc-blue">
+    <h4>Гигиена контекста: /clear и свежие сессии между этапами</h4>
+    <p>Длинная сессия копит мусор: старые файлы, отменённые попытки, устаревшие рассуждения. Это ухудшает ответы (модель «тонет» в шуме). Best practice Claude Code — <code>/clear</code> между несвязанными этапами. В Cursor — начать новый чат или использовать subagent для изолированного куска. Правило: новый крупный этап = чистый контекст.</p>
+  </div>
+
+  <div class="nuance-card nc-green">
+    <h4>План перед кодом — не формальность, а экономия</h4>
+    <p>Одобренный план ловит недопонимание <em>до</em> написания кода, когда правка стоит одну фразу, а не переписывание файлов. Plan mode (Cursor) и plan mode (Claude Code) существуют именно для этого. Пропустил план на «простой» задаче — чаще всего именно там агент и уходит не туда.</p>
+  </div>
+
+  <div class="nuance-card nc-orange">
+    <h4>Узкие, проверяемые шаги — «Fix failing tests in auth.ts», а не «почини всё»</h4>
+    <p>Чем конкретнее и проверяемее шаг, тем предсказуемее результат. У шага должен быть объективный критерий готовности (тест зелёный, линтер чист, эндпоинт отвечает 200). Расплывчатые задачи → расплывчатый результат и невозможность проверить.</p>
+  </div>
+
+  <div class="nuance-card nc-red">
+    <h4>Тесты ≠ approval gate — HITL для необратимого</h4>
+    <p>Автоматический verify (тесты/линт) отлично ловит регрессии, но не заменяет человека на <b>необратимых</b> операциях: удаление данных, деплой в prod, миграции, финансовые действия. Такие шаги — всегда явный human gate. Тесты — про «код корректен», gate — про «мы действительно хотим это сделать».</p>
+  </div>
+
+  <div class="nuance-card nc-purple">
+    <h4>Длинный воркфлоу → lost in the middle</h4>
+    <p>Если воркфлоу — это один гигантский промпт на 15 шагов, средние шаги теряются (модель хуже помнит середину контекста). Лучше: короткие фазы, checkpoint/summary между ними, делегирование крупных кусков в subagents. Важное держи в начале и конце текущего контекста.</p>
+  </div>
+</section>
+
+<!-- ── Best practices ── -->
+<section class="section">
+  <h2>Best practices</h2>
+  <div class="grid">
+    <div class="card bg-green">
+      <h3>Делай</h3>
+      <ul>
+        <li>Сначала Explore и Plan, только потом код</li>
+        <li>Одобряй план до реализации (Plan mode / plan mode)</li>
+        <li>Узкие проверяемые шаги с объективным критерием готовности</li>
+        <li>Verify после каждого шага: тесты, линт, типы, запуск</li>
+        <li>Зафиксируй процесс в Rules / CLAUDE.md / Command</li>
+        <li>Чисти контекст между этапами (<code>/clear</code>, новый чат)</li>
+        <li>HITL-гейт на необратимых операциях</li>
+        <li>Параллель — только для независимых частей, в изоляции (worktree)</li>
+      </ul>
+    </div>
+    <div class="card bg-red">
+      <h3>Не делай</h3>
+      <ul>
+        <li>«Сделай фичу» одним сообщением без плана</li>
+        <li>Код без объективной проверки — «кажется, работает»</li>
+        <li>Гигантский монолитный промпт на 15 шагов</li>
+        <li>Параллелить зависимые задачи (race, рассинхрон)</li>
+        <li>Несколько агентов в одном рабочем каталоге на одних файлах</li>
+        <li>Автодеплой без human gate «на удачу»</li>
+        <li>Копить один бесконечный чат для всех задач подряд</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── Cursor vs Claude Code ── -->
+<section class="section">
+  <h2>Cursor vs Claude Code — сравнение</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Аспект</th><th><span class="platform-badge pb-cursor">🖱 Cursor</span></th><th><span class="platform-badge pb-claude">🤖 Claude Code</span></th></tr></thead>
+    <tbody>
+      <tr><td><b>Этап Plan</b></td><td>Plan mode (read-only, план на approve)</td><td>plan mode (shift+tab / <code>--permission-mode plan</code>)</td></tr>
+      <tr><td><b>Фиксация процесса</b></td><td>Rules (.mdc) + Commands</td><td>CLAUDE.md + <code>.claude/commands/</code></td></tr>
+      <tr><td><b>Гигиена контекста</b></td><td>Новый чат / subagent</td><td><code>/clear</code> между этапами</td></tr>
+      <tr><td><b>Гейты</b></td><td>Hooks (Pre/PostToolUse) + Permissions</td><td>Permissions + hooks + approval</td></tr>
+      <tr><td><b>Параллельно</b></td><td>Background/Cloud agents, worktrees, best-of-N, параллельные subagents</td><td>Параллельные subagents, несколько сессий/worktrees</td></tr>
+      <tr><td><b>Автоматизация</b></td><td>Cloud agents, CI-интеграции</td><td>Headless <code>claude -p</code> в скриптах/CI</td></tr>
+      <tr><td><b>Изоляция контекста</b></td><td>Subagents</td><td>Subagents (изолированный контекст)</td></tr>
+      <tr><td><b>Документация</b></td><td><a href="https://docs.cursor.com/en/agent/planning" target="_blank">docs.cursor.com/agent/planning ↗</a></td><td><a href="https://www.anthropic.com/engineering/claude-code-best-practices" target="_blank">claude-code-best-practices ↗</a></td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout" style="margin-top:12px">
+    <b>Главное отличие:</b> цикл Explore → Plan → Implement → Verify → Commit одинаков на обеих платформах. Различаются только <em>инструменты</em>: Cursor фиксирует процесс через Rules/Commands и режимы (Plan/Agent), Claude Code — через CLAUDE.md, <code>/clear</code> и headless. Концепция параллелизма (subagents + worktrees + fan-out/fan-in) тоже общая.
+  </div>
+</section>
+
+<section class="section">
+  <h2>Вопросы по уровням</h2>
+
+  <div class="qlevel-group">Junior — 10 вопросов</div>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое workflow агента?</summary>
+<div class="inside">Workflow — это повторяемый процесс, по которому агент решает задачу: фиксированная последовательность шагов (собрать контекст → спланировать → написать код → проверить → закоммитить). Он превращает хаотичную «переписку с ИИ» в предсказуемый инженерный процесс с точками проверки.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Из каких этапов состоит базовый цикл?</summary>
+<div class="inside">Explore (изучить контекст) → Plan (составить план и одобрить) → Code (правки, verify, commit/PR). Verify и commit — часть этапа Code, не отдельные «философские» шаги. Общее для Cursor и Claude Code.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Почему нельзя просто написать «сделай фичу» одним сообщением?</summary>
+<div class="inside">Агент бросится писать код, не разобравшись в задаче и границах, и часто сделает лишнее или мимо цели. Без Explore он не знает контекст, без Plan — не согласовал с тобой рамки. Результат сложнее проверить и откатить. Разбивка на этапы убирает эти риски.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что делает этап Explore?</summary>
+<div class="inside">Агент читает нужные файлы, документацию, тесты — <b>без правок кода</b>. Цель — понять, как устроен проект, прежде чем что-то менять. Это read-only сбор контекста: grep, чтение, поиск, уточняющие вопросы.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Зачем этап Plan и одобрение плана?</summary>
+<div class="inside">План — это список шагов, который ты смотришь и правишь <em>до</em> написания кода. Так недопонимание ловится, когда правка стоит одну фразу, а не переписывание файлов. Одобрение плана — это gate: код не пишется, пока человек не согласен.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое Verify и зачем он нужен?</summary>
+<div class="inside">Verify — объективная проверка после изменений: запуск тестов, линтера, проверки типов, сборки, самого приложения. Он даёт факт «работает/не работает» вместо «кажется, работает». Без Verify легко закоммитить сломанный код.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое Plan mode в Cursor?</summary>
+<div class="inside">Plan mode — режим только для чтения, где агент исследует и составляет план реализации, но не меняет файлы. Реализация начинается в Agent mode только после того, как ты одобрил план. Это встроенный способ сделать этап Plan.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что делает команда /clear в Claude Code?</summary>
+<div class="inside"><code>/clear</code> очищает контекст текущей сессии. Её используют между несвязанными этапами задачи, чтобы старый мусор (отменённые попытки, устаревшие файлы) не мешал модели. Свежий контекст = более точные ответы.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое параллельный воркфлоу простыми словами?</summary>
+<div class="inside">Это когда задачу делят на независимые части и делают их одновременно разными агентами/сессиями — каждый в своей изоляции (ветка/каталог). Потом результаты собирают вместе. Быстрее, но подходит только для частей, которые не зависят друг от друга.</div></details>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Где зафиксировать воркфлоу, чтобы агент его соблюдал?</summary>
+<div class="inside">В Cursor — в Rules (<code>.cursor/rules/*.mdc</code>) и Commands. В Claude Code — в <code>CLAUDE.md</code> и <code>.claude/commands/</code>. Там описываешь порядок шагов («сначала план», «после правок — тесты»), и агент следует ему автоматически (Rules/CLAUDE.md) или по вызову (Command).</div></details>
+
+  <div class="qlevel-group">Middle — 10 вопросов</div>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда использовать TDD-воркфлоу вместо обычного?</summary>
+<div class="inside">Когда есть чёткий контракт/спецификация: известны входы, выходы, поведение. Пишешь падающие тесты по контракту, убеждаешься что они красные, потом код до зелёного. Тесты становятся объективным gate — агент не может «схитрить», критерий готовности внешний. Для исследовательских задач без ясного контракта TDD менее удобен.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как сделать шаги воркфлоу проверяемыми?</summary>
+<div class="inside">У каждого шага должен быть объективный критерий готовности: «тесты в auth.test.ts зелёные», «линтер чист», «эндпоинт /login отвечает 200». Формулируй узко: «Fix failing tests in auth.ts», а не «почини авторизацию». Проверяемый шаг = предсказуемый результат + возможность автоматического Verify.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда стоит параллелить, а когда нет?</summary>
+<div class="inside">Параллель оправдана для <b>независимых</b> частей: разные модули, разные файлы, попытки best-of-N. Не параллелить, если задача B зависит от результата A (использует API, который A ещё пишет) — получишь рассинхрон, а не ускорение. Зависимые шаги — последовательно или через DAG.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Зачем git worktrees при параллельной работе?</summary>
+<div class="inside">Worktree даёт каждому агенту отдельный рабочий каталог и ветку. Без изоляции два агента редактируют одни файлы и затирают правки друг друга, ломая сборку. Правило: один агент = свой worktree/ветка. Результаты сливаются в конце (fan-in), там же общий Verify.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Что такое fan-out / fan-in?</summary>
+<div class="inside">Fan-out — разложить задачу на независимые подзадачи и запустить их параллельно (по агенту на подзадачу). Fan-in — собрать результаты: слить ветки, разрешить конфликты и прогнать тесты на объединённом коде. Это стандартный паттерн параллельного воркфлоу.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как гигиена контекста влияет на качество?</summary>
+<div class="inside">Длинная сессия копит шум: старые файлы, отменённые попытки, устаревшие рассуждения — модель «тонет» в них и отвечает хуже (lost in the middle). Между несвязанными этапами делай <code>/clear</code> (Claude Code) или новый чат/subagent (Cursor). Новый крупный этап = свежий контекст.</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Чем subagent помогает воркфлоу?</summary>
+<div class="inside">Subagent изолирует контекст: тяжёлое исследование или отдельный кусок выполняется в своём контексте и возвращает только выводы, не раздувая контекст главного агента. Плюс несколько subagents можно запустить параллельно (например, исследовать 3 части кода одновременно).</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как встроить HITL-гейты в воркфлоу?</summary>
+<div class="inside">Определи необратимые/опасные операции (delete, deploy, миграции, финансы) и требуй явного человеческого подтверждения перед ними. В Cursor — Permissions/Hooks и Plan mode; в Claude Code — permissions + approval. Тесты не заменяют gate: они про «код корректен», gate — про «мы действительно хотим это сделать».</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как воркфлоу для багфикса отличается от воркфлоу фичи?</summary>
+<div class="inside">Багфикс начинается с воспроизведения и изоляции, затем пишется <b>регресс-тест</b> на баг (падающий), потом чинится корневая причина (не симптом) до зелёного теста. Фича начинается с Explore существующей архитектуры и Plan новой функциональности. Общее — Verify и Commit; разное — старт (reproduce vs explore-arch).</div></details>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как использовать Commands/Skills для повторяемых воркфлоу?</summary>
+<div class="inside">Вынеси частый процесс в Command (<code>/pr-review</code>, <code>/refactor</code>) или Skill: там пошагово описан процесс и формат вывода. Тогда любой в команде запускает одинаковый воркфлоу одной командой, без необходимости помнить все шаги. Это стандартизирует «правильный способ» выполнения задачи.</div></details>
+
+  <div class="qlevel-group">Senior — 5 вопросов</div>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как спроектировать воркфлоу, устойчивый к неудачным шагам?</summary>
+<div class="inside">Ключевое — обратимость и точки восстановления: (1) маленькие шаги с Verify после каждого, чтобы сбой локализовался; (2) checkpoint/commit на каждом зелёном состоянии — есть куда откатиться; (3) явный «возврат на этап» в цикле (не прошёл Verify → назад в Implement/Plan, а не вперёд); (4) для параллели — изоляция в worktree, чтобы падение одного агента не ломало остальных. Воркфлоу должен уметь откатываться, а не только идти вперёд.</div></details>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как выбрать между последовательным и параллельным воркфлоу?</summary>
+<div class="inside">Считай две вещи: степень независимости частей и стоимость координации. Параллель выигрывает, когда части действительно независимы (разные модули/файлы) и выигрыш по времени превышает накладные расходы: N контекстов (больше токенов), N веток на ревью, стоимость fan-in (merge + конфликты). Если есть зависимости — либо последовательно, либо DAG с топологическим порядком. Best-of-N — частный случай параллели для одной задачи ради качества, а не скорости.</div></details>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как диагностировать, что агент «уходит не туда» в воркфлоу?</summary>
+<div class="inside">Признаки: правит файлы вне плана, растёт diff без роста готовности, зелёные тесты но не та фича, зацикливание на одном шаге. Причины и лечение: пропущен Explore/Plan → вернуть план и approval; переполнен контекст (lost in the middle) → <code>/clear</code>/summary/subagent; расплывчатый шаг → переформулировать в проверяемый; нет объективного Verify → добавить тест как критерий. Диагностика = сверять фактические правки с одобренным планом.</div></details>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как строить многоэтапный воркфлоу без потери контекста?</summary>
+<div class="inside">(1) Короткие фазы вместо одного мегапромпта; (2) checkpoint/summary между фазами — компактное состояние (что сделано, что дальше, ключевые решения); (3) делегировать тяжёлые куски в subagents, возвращая только выводы; (4) важное (цель, ограничения) держать в начале/конце текущего контекста; (5) процесс — в Rules/CLAUDE.md, чтобы не пересказывать его каждый раз. Так контекст остаётся релевантным на всех этапах.</div></details>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как встроить Verify как жёсткий gate, а не «на словах»?</summary>
+<div class="inside">Сделай проверку недоступной для обхода из чата: Hooks (PostToolUse) запускают тесты/линт и блокируют дальше при красном; CI-гейт на PR не даёт мержить без зелёного; в Command/Rule явно прописан «коммит только при зелёных тестах». Разница с «просьбой проверить» — принуждение на уровне инструмента/пайплайна, а не намерения модели. Так Verify нельзя пропустить, даже если агент «уверен».</div></details>
+
+  <div class="qlevel-group">Lead — 5 вопросов</div>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как стандартизировать воркфлоу в команде?</summary>
+<div class="inside">Зафиксируй канонический процесс в версионируемых артефактах: Rules/CLAUDE.md (обязательный порядок Explore→Plan→Verify→Commit + запреты) и общий набор Commands (<code>/pr</code>, <code>/refactor</code>, <code>/debug</code>). Опиши в AGENTS.md, какие воркфлоу есть и когда их применять. Онбординг включает «прогони /pr-review на любом PR». Цель — чтобы правильный процесс был путём по умолчанию, одинаковым для junior и senior.</div></details>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как измерять эффективность воркфлоу?</summary>
+<div class="inside">Метрики: доля PR, прошедших CI с первого раза; время от задачи до мержа; количество откатов/hotfix; доля задач, где план был одобрен без переделки. Сравнивай до/после внедрения воркфлоу. Через PostToolUse hooks можно логировать, как часто запускается Verify и сколько шагов проходит без падений. Рост «зелёных с первого раза» и падение переделок = воркфлоу работает.</div></details>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как управлять параллельной работой нескольких агентов в команде?</summary>
+<div class="inside">Правила координации: (1) один агент = своя ветка/worktree, единый naming (<code>feat/agent-a-...</code>); (2) разделение зон ответственности по модулям, чтобы не пересекались файлы; (3) явная точка fan-in с ответственным за merge и общим Verify; (4) лимит на число параллельных агентов (стоимость контекста и ревью); (5) для необратимого — единый gate, а не «каждый агент сам деплоит». Параллелизм — управляемый, а не стихийный.</div></details>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как поддерживать воркфлоу в актуальном состоянии?</summary>
+<div class="inside">Воркфлоу — код, а не документация: при изменении процесса деплоя/архитектуры обновление Rules/Commands входит в Definition of Done. Практики: owner у каждого воркфлоу, PR-ревью изменений процесса, дата последнего обновления, квартальный аудит, алерт на Commands без изменений 6+ месяцев. Обратная связь: разработчик нашёл, что шаг устарел → issue, а не молчаливый обход.</div></details>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как воркфлоу помогает онбордингу?</summary>
+<div class="inside">Новичок не должен помнить 15-шаговый процесс: он вызывает <code>/pr-review</code> и следует одобренному плану — воркфлоу кодирует накопленный опыт команды. В AGENTS.md/CLAUDE.md описано, какой воркфлоу для чего. Первая неделя: попробовать основные Commands, сделать задачу по циклу Explore→Plan→Verify→Commit под присмотром. Так знания не теряются при ротации людей.</div></details>
+
+  <div class="qlevel-group">Architect — 5 вопросов</div>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как спроектировать воркфлоу как DAG зависимостей?</summary>
+<div class="inside">Представь шаги как узлы, зависимости — рёбра ( acyclic). Топологический порядок задаёт, что можно параллелить (узлы без общих предков) и что строго последовательно (по рёбрам зависимостей). Fan-out — параллельные ветви DAG, fan-in — узлы слияния, где сходятся зависимости и стоит общий Verify. Такой дизайн даёт максимум параллелизма без race: параллельно идёт только реально независимое.</div></details>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как встроить воркфлоу в CI/CD и headless-автоматизацию?</summary>
+<div class="inside">Headless-режим (<code>claude -p</code>) и Cloud agents позволяют запускать воркфлоу без интерактива: в CI-джобе агент проходит Explore→Fix→Verify по заданному промпту, а гейты (тесты, security, approval) реализуются шагами пайплайна. Паттерн fan-out — распараллелить по файлам/пакетам (matrix job), fan-in — общий прогон тестов и единый PR. Human gate остаётся на необратимом (deploy) через ручное approval стадии.</div></details>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как воркфлоу, subagents и permissions образуют единую систему?</summary>
+<div class="inside">Воркфлоу задаёт <b>что и в каком порядке</b> (процесс), subagents дают <b>изоляцию контекста и параллелизм</b> (масштабирование), permissions/hooks — <b>границы безопасности</b> (что агент может без подтверждения). Вместе: главный агент оркеструет план → делегирует независимые куски subagents в изоляции → каждый шаг ограничен permissions → необратимое проходит gate. Разделение ответственности: процесс / масштаб / безопасность.</div></details>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как обеспечить воспроизводимость и аудит воркфлоу?</summary>
+<div class="inside">Воспроизводимость: процесс в версионируемых файлах (Rules/CLAUDE.md/Commands) + фиксированные критерии Verify → одинаковый результат независимо от исполнителя. Аудит: PostToolUse hooks логируют каждое действие в audit trail, коммиты по шагам дают историю, PR фиксирует план и Verify. Для необратимого — approval gate с записью, кто подтвердил. Так воркфлоу — не «магия ИИ», а прослеживаемый процесс.</div></details>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как масштабировать воркфлоу на организацию из многих команд?</summary>
+<div class="inside">Стандартные воркфлоу выносятся в shared-репозиторий/пакеты (Agent Package Manager) и подключаются в проекты; обновление одного источника улучшает процесс во всех командах. Domain-специфичные воркфлоу — поверх стандартных. Governance: owner, версионирование (major.minor), каталог воркфлоу, CI-линт на структуру. Платформенная команда владеет воркфлоу как внутренним продуктом, метрики (зелёные с первого раза, время до мержа) измеряют ROI.</div></details>
+
+</section>
+
+<div class="pageFooter"><div class="nextPrev">
+  <a href="agent-loop.html">← Agent Loop</a>
+  <a href="model-variance.html">Почему модель ≠ модель →</a>
+</div></div>
+</main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

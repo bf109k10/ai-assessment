@@ -1,0 +1,481 @@
+﻿<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Context Engineering</title><link rel="stylesheet" href="../assets/style.css"/></head><body><div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>
+    <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html" class="active"><span class="ico">🧠</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div>
+  <div class="progressBox"><b>Суть</b><p class="sourceNote">Context Engineering — архитектура того что попадает в окно: сигнал, порядок, актуальность, изоляция шума.</p></div>
+</aside>
+
+<main class="main">
+<section class="hero">
+  <div class="kicker">Agent Context Academy</div>
+  <h2>Context Engineering</h2>
+  <p>Управление всем контекстным окном как архитектурная задача: что включить, что убрать, в каком порядке, как не потерять важное в середине. Уровень выше Prompt Engineering.</p>
+  <div class="heroActions">
+    <a class="btn primary" href="prompting.html">← Prompt Engineering</a>
+    <a class="btn" href="context.html">Контекст агента</a>
+    <button class="markDone">Отметить страницу изученной</button>
+  </div>
+</section>
+
+<!-- Core concept -->
+<section class="section">
+  <h2>Что такое Context Engineering</h2>
+  <p class="sectionIntro">Prompt Engineering = как написать один хороший запрос. Context Engineering = как управлять тем, что агент <em>видит</em> при каждом запросе. Это системный, архитектурный уровень.</p>
+  <div class="grid">
+    <div class="card bg-blue">
+      <h3>Определение</h3>
+      <p>Context Engineering — практика проектирования и управления контекстным окном агента: выбор источников, порядок их расположения, фильтрация шума, структурирование для максимального signal-to-noise ratio.</p>
+      <ul>
+        <li>Что <b>включить</b> (нужные файлы, chunks, Memory)</li>
+        <li>Что <b>исключить</b> (.cursorignore, фильтры RAG)</li>
+        <li>В каком <b>порядке</b> (важное в начало / конец)</li>
+        <li>Как <b>структурировать</b> (Rules vs AGENTS.md vs prose)</li>
+        <li>Когда <b>сжать</b> (Checkpoint, compaction)</li>
+      </ul>
+    </div>
+    <div class="card bg-purple">
+      <h3>Почему это важнее промпта</h3>
+      <p>Идеальный промпт в плохом контексте даёт плохой результат. Средний промпт в хорошем контексте — отличный результат.</p>
+      <ul>
+        <li>Модель "видит" только то, что в окне</li>
+        <li>Лишний шум "разбавляет" важный сигнал</li>
+        <li>Lost in the middle: середина окна теряется</li>
+        <li>Stale context хуже чем отсутствие</li>
+        <li>Правильный контекст = предсказуемое поведение</li>
+      </ul>
+    </div>
+    <div class="card bg-green">
+      <h3>Аналогия</h3>
+      <p>Prompt Engineering — как правильно задать вопрос эксперту. Context Engineering — как правильно подготовить рабочий стол эксперта до встречи: положить нужные документы, убрать лишнее, выделить главное.</p>
+      <div class="callout"><b>Ключевая идея:</b> LLM — это функция от контекста. Лучший контекст → лучший ответ, даже с тем же промптом.</div>
+    </div>
+  </div>
+</section>
+
+<!-- Comparison -->
+<section class="section">
+  <h2>Context Engineering vs Prompt Engineering</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Аспект</th><th>Prompt Engineering</th><th>Context Engineering</th></tr></thead>
+    <tbody>
+      <tr><td><b>Фокус</b></td><td>Формулировка одного запроса</td><td>Управление всем контекстным окном</td></tr>
+      <tr><td><b>Масштаб</b></td><td>Один message</td><td>Архитектура системы</td></tr>
+      <tr><td><b>Когда работает</b></td><td>Разовая задача, чистый чат</td><td>Agentic workflow, большая кодовая база</td></tr>
+      <tr><td><b>Инструменты</b></td><td>Zero-shot, CoT, RCTFQ, Few-shot</td><td>RAG, Rules, .cursorignore, Checkpoints, Caching, Subagents</td></tr>
+      <tr><td><b>Уровень</b></td><td>A0–A1</td><td>A2–A4</td></tr>
+      <tr><td><b>Результат ошибки</b></td><td>Плохой ответ на этот запрос</td><td>Непредсказуемый агент по всем задачам</td></tr>
+      <tr><td><b>Результат</b></td><td>Лучший ответ на вопрос</td><td>Стабильная надёжная система агента</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><b>Правило:</b> Освой Prompt Engineering → потом Context Engineering. Хорошие промпты в плохо устроенном контексте не дают устойчивых результатов.</div>
+</section>
+
+<!-- Принципы -->
+<section class="section">
+  <h2>6 принципов Context Engineering</h2>
+  <div class="grid">
+    <div class="card bg-blue">
+      <h3>1. Signal over noise</h3>
+      <p>Каждый токен в контексте должен помогать модели. Irrelevant файлы, старые сообщения, дублирующийся контент — это шум. Шум "разбавляет" сигнал и снижает внимание к важному.</p>
+      <pre class="code">❌ @весь_репо/
+✅ @UserService.java @UserServiceTest.java</pre>
+    </div>
+    <div class="card bg-purple">
+      <h3>2. Primacy & Recency</h3>
+      <p>LLM лучше воспринимает токены в начале и в конце контекстного окна (primacy и recency effect). Середина — "мёртвая зона" при длинном контексте. Верх окна — <a href="prompting.html#system-instructions">system instructions</a> и Rules.</p>
+      <pre class="code">Порядок в prompt:
+[System/Rules] ← начало (primacy)
+[AGENTS.md / Memory]
+[RAG chunks]
+[User request] ← конец (recency)</pre>
+    </div>
+    <div class="card bg-orange">
+      <h3>3. Freshness</h3>
+      <p>Stale context (устаревшие данные) опаснее отсутствия данных. Агент будет уверенно давать неверные ответы на основе устаревшей информации.</p>
+      <pre class="code">✅ Live source: MCP tool → актуальный state
+❌ RAG doc from 6 months ago without date tag</pre>
+    </div>
+    <div class="card bg-green">
+      <h3>4. Specificity</h3>
+      <p>Конкретный, точный контекст лучше общего. Один нужный файл лучше десяти связанных. Точный chunk лучше целого документа.</p>
+      <pre class="code">❌ @src/  (500 файлов)
+✅ @src/billing/PaymentProcessor.java</pre>
+    </div>
+    <div class="card bg-teal">
+      <h3>5. Hierarchy</h3>
+      <p>Разные слои контекста имеют разный приоритет. Агент должен знать что важнее при конфликте.</p>
+      <pre class="code">Hooks (OS) > System Prompt
+> Rules (alwaysApply)
+> AGENTS.md
+> Current chat
+> Memory / RAG</pre>
+    </div>
+    <div class="card">
+      <h3>6. Isolation</h3>
+      <p>Subagents изолируют контекст: сложная задача со 100 файлами → subagent читает их, main agent получает только summary. Чистый контекст на каждом уровне.</p>
+      <pre class="code">Main agent: task + summary
+Subagent: full corpus + analysis</pre>
+    </div>
+  </div>
+</section>
+
+<!-- Инструменты -->
+<section class="section">
+  <h2>Инструменты Context Engineering</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Инструмент</th><th>Что делает</th><th>Когда использовать</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>@mention</b></td>
+        <td>Явно добавляет файл/папку в context</td>
+        <td>Когда агенту нужен конкретный файл для задачи</td>
+      </tr>
+      <tr>
+        <td><b>.cursorignore / .claudeignore</b></td>
+        <td>Исключает файлы из AI-индекса</td>
+        <td>Build artifacts, generated code, secrets, large binaries</td>
+      </tr>
+      <tr>
+        <td><b>Rules (alwaysApply)</b></td>
+        <td>Постоянный контекст при каждом запросе</td>
+        <td>Политика, ограничения, coding standards</td>
+      </tr>
+      <tr>
+        <td><b>AGENTS.md / CLAUDE.md</b></td>
+        <td>Контекст проекта при старте</td>
+        <td>Архитектура, команды, соглашения</td>
+      </tr>
+      <tr>
+        <td><b>RAG</b></td>
+        <td>Семантический поиск релевантных chunks</td>
+        <td>Большой corpus документов, кодовая база</td>
+      </tr>
+      <tr>
+        <td><b>Memory Bank</b></td>
+        <td>Структурированные долгосрочные знания</td>
+        <td>Факты о проекте которые нужны во всех сессиях</td>
+      </tr>
+      <tr>
+        <td><b>Checkpoint</b></td>
+        <td>Снимок состояния текущей задачи</td>
+        <td>Перед compaction, при смене сессии</td>
+      </tr>
+      <tr>
+        <td><b>Prompt Caching</b></td>
+        <td>Кеширует <b>prefix</b> — неизменное <em>начало</em> входа модели (те же байты в каждом запросе): system, Rules, AGENTS.md, описания tools. Провайдер сохраняет KV-состояние для этой части; всё, что меняется (вопрос пользователя, новые tool results), идёт <em>после</em> prefix и считается заново.</td>
+        <td>Повторяющиеся system prompt + docs; см. <a href="caching.html">Prompt Caching</a></td>
+      </tr>
+      <tr>
+        <td><b>Subagent isolation</b></td>
+        <td>Отдельный context для подзадачи</td>
+        <td>Задача со 100+ файлами, параллельный анализ</td>
+      </tr>
+    </tbody>
+  </table></div>
+  <div class="callout" style="margin-top:14px">
+    <b>Пример prefix:</b> <a href="caching.html#prefix-example">один prefix — два запроса</a> (system, Rules, AGENTS.md, tools в начале; разный user в suffix).
+  </div>
+  <div class="schema-box" style="margin-top:10px;font-size:12px;line-height:1.5;white-space:pre-wrap;background:#0f172a;color:#e2e8f0;border-radius:16px;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;overflow:auto">Запрос A и B — одинаковый PREFIX (кешируется):
+[System] + [Rules alwaysApply] + [AGENTS.md] + [MCP tool schemas]
+──────────────────────────── граница prefix ────────────────────────────
+Запрос A — SUFFIX (новый каждый раз): User: «Добавь тест для auth.ts»
+Запрос B — SUFFIX:                      User: «Исправь линтер в utils.mjs»</div>
+</section>
+
+<!-- Практика: как строить контекст -->
+<section class="section">
+  <h2>Как строить context window: схема</h2>
+  <div class="grid two">
+    <div class="card">
+      <h3>Оптимальный порядок слоёв</h3>
+      <pre class="code" style="white-space:pre-wrap">┌─────────────────────────────────┐
+│  НАЧАЛО (primacy zone)          │
+│  ① System Prompt (платформа)   │
+│  ② Rules alwaysApply           │
+│  ③ AGENTS.md / CLAUDE.md       │
+├─────────────────────────────────┤
+│  СЕРЕДИНА (дополнительный контекст)│
+│  ④ Memory Bank                 │
+│  ⑤ RAG chunks (top-3..7)      │
+│  ⑥ @mention файлы             │
+│  ⑦ История чата               │
+├─────────────────────────────────┤
+│  КОНЕЦ (recency zone)           │
+│  ⑧ Few-shot примеры (если есть)│
+│  ⑨ User request               │
+└─────────────────────────────────┘</pre>
+    </div>
+    <div class="card">
+      <h3>Что убирать из контекста</h3>
+      <ul>
+        <li><b>Build артефакты</b> — target/, dist/, __pycache__ → .cursorignore</li>
+        <li><b>Generated code</b> — proto files, ORM mappings → .cursorignore</li>
+        <li><b>Secrets / .env файлы</b> → никогда в context</li>
+        <li><b>Весь репозиторий</b> → только нужные файлы через @mention или RAG</li>
+        <li><b>Устаревшие RAG chunks</b> → freshness filter в pipeline</li>
+        <li><b>Длинная история чата</b> → Checkpoint + compaction</li>
+        <li><b>Лишние MCP серверы</b> → подключать только нужные (каждый сервер = токены)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Практические паттерны -->
+<section class="section">
+  <h2>Паттерны Context Engineering</h2>
+  <div class="grid">
+    <div class="card bg-blue">
+      <h3>Паттерн: Stable prefix + Dynamic suffix</h3>
+      <p>Неизменяемое начало (система, правила, документы) + изменяемый конец (вопрос пользователя). Stable prefix кешируется → экономия стоимости и latency.</p>
+      <pre class="code" style="white-space:pre-wrap">[System] stable ← кешируется
+[Rules] stable ← кешируется
+[Base docs] stable ← кешируется
+[---separator---]
+[User query] dynamic ← меняется</pre>
+    </div>
+    <div class="card bg-green">
+      <h3>Паттерн: Subagent isolation</h3>
+      <p>Сложная задача требует чтения 100 файлов → context overflow. Решение: subagent читает 100 файлов, возвращает 300-слов summary. Main agent работает с чистым контекстом.</p>
+      <pre class="code" style="white-space:pre-wrap">Main agent (чистый context):
+  → spawn subagent(files=[...100...])
+  ← receive summary (300 words)
+  → action based on summary</pre>
+    </div>
+    <div class="card bg-orange">
+      <h3>Паттерн: Checkpoint before compaction</h3>
+      <p>Длинная сессия → история chat растёт → compaction теряет детали. Checkpoint фиксирует критические решения и состояние до того как compaction их сотрёт.</p>
+      <pre class="code" style="white-space:pre-wrap">## Checkpoint (сессия 2026-07-01)
+Задача: рефакторинг UserService
+Сделано: методы findById, save
+Решение: без Optional (Legacy runtime)
+Следующий шаг: delete + update</pre>
+    </div>
+    <div class="card bg-purple">
+      <h3>Паттерн: RAG + MCP разделение</h3>
+      <p>RAG для архивного знания (документация, API specs). MCP для live state (текущие метрики, CI статус, конфиги). Никогда не путай: live данные через RAG — stale risk.</p>
+      <pre class="code" style="white-space:pre-wrap">RAG → "как работает auth flow"
+MCP → "какой сейчас статус CI job #123"</pre>
+    </div>
+  </div>
+</section>
+
+<!-- Тонкости -->
+<section class="section">
+  <h2>Тонкости и нюансы</h2>
+  <div class="nuance-card nc-red">
+    <h4>Lost in the middle — самый опасный эффект</h4>
+    <p>При контексте 200K токенов информация на позиции 100K получает меньше attention даже если технически в окне. Следствие: критические инструкции в Rules (начало), важные факты в Memory (начало файла), Few-shot примеры (конец перед запросом). Что нельзя ставить в середину: safety constraints, ключевые технические решения, единственный релевантный chunk.</p>
+  </div>
+  <div class="nuance-card nc-orange">
+    <h4>.cursorignore ≠ .gitignore — разные цели</h4>
+    <p>.gitignore исключает файлы из version control. .cursorignore исключает из AI-индексации. Файл может быть в git но не в AI-контексте (например: migration scripts, large test fixtures). Аналог в Claude Code — .claudeignore. Без явного .cursorignore — Cursor индексирует всё включая build артефакты → шум в RAG + замедление поиска.</p>
+  </div>
+  <div class="nuance-card nc-blue">
+    <h4>Каждый MCP сервер = токены в контексте</h4>
+    <p>При подключении MCP сервера descriptions всех его tools добавляются в context при каждом запросе. 10 серверов × 10 tools × 200 символов = тысячи токенов overhead. Принцип: подключай только нужные серверы. Temporary задача (DB migration) → подключи MCP для DB на время, отключи после.</p>
+  </div>
+  <div class="nuance-card nc-purple">
+    <h4>Compaction убивает детали, Checkpoint спасает</h4>
+    <p>Compaction — автоматическое сжатие истории chat при достижении лимита. Конкретные имена переменных, принятые решения ("использовать Optional везде"), точные error messages — всё заменяется кратким summary. Checkpoint создаётся явно, до compaction, и фиксирует именно то что важно помнить: current state, decisions, next steps.</p>
+  </div>
+  <div class="nuance-card nc-green">
+    <h4>Порядок Rules влияет на поведение</h4>
+    <p>alwaysApply Rules загружаются в context в порядке файлов. Первые правила получают primacy attention, последние — recency. Правила в середине при большом числе Rules получают меньше weight (lost in the middle для Rules). Совет: не более 3-5 alwaysApply Rules, критически важные — первыми.</p>
+  </div>
+</section>
+
+<!-- Best practices -->
+<section class="section">
+  <h2>Best practices Context Engineering</h2>
+  <div class="grid two">
+    <div class="card bg-green">
+      <h3>Делай ✅</h3>
+      <ul>
+        <li>Настрой .cursorignore / .claudeignore с первого дня</li>
+        <li>Структурируй AGENTS.md: важное — вверху (≤800 слов)</li>
+        <li>Используй @mention для конкретных файлов, не директорий</li>
+        <li>RAG top-k: 3-7 chunks (не 20)</li>
+        <li>Checkpoint перед compaction в длинных сессиях</li>
+        <li>Stable prefix → prompt caching для повторяющихся задач</li>
+        <li>Subagent для задач с большим объёмом чтения</li>
+        <li>Разделяй RAG (архив) и MCP (live state)</li>
+        <li>Документируй все слои контекста для команды</li>
+      </ul>
+    </div>
+    <div class="card bg-red">
+      <h3>Не делай ❌</h3>
+      <ul>
+        <li>Не добавляй весь репозиторий в контекст</li>
+        <li>Не держи secrets в AGENTS.md или Memory</li>
+        <li>Не используй RAG для live state (статус CI, метрики)</li>
+        <li>Не пиши AGENTS.md на 2000+ слов</li>
+        <li>Не подключай 10 MCP серверов если нужны 2</li>
+        <li>Не добавляй timestamp в system prompt (ломает кеш)</li>
+        <li>Не смешивай temporary task state с долгосрочной Memory</li>
+        <li>Не игнорируй lost-in-the-middle для критических правил</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Q&A -->
+<section class="section">
+  <h2>Вопросы по уровням</h2>
+
+  <div class="qlevel-group">Junior — 10 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое Context Engineering?</summary>
+  <div class="inside">Context Engineering — дисциплина управления всем context window языковой модели как архитектурная задача. Это не просто написание хорошего промпта, а системное решение: что включить в context, что исключить, в каком порядке расположить, как структурировать для максимальной эффективности. CE охватывает Rules, AGENTS.md, RAG, Memory Bank, Checkpoints, .cursorignore — весь экосистем информации, которую видит агент.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Чем Context Engineering отличается от Prompt Engineering?</summary>
+  <div class="inside">Prompt Engineering — оптимизация одного запроса: формулировка, роль, примеры, CoT, формат. Работает с тем, что уже есть в context. Context Engineering — управление тем, что попадает в context: RAG chunks, Rules, AGENTS.md, Memory Bank, .cursorignore фильтры. PE отвечает на вопрос «как написать запрос», CE — на вопрос «что агент должен видеть». CE — уровень выше, системный подход. Хороший промпт в плохом context работает хуже, чем простой промпт в хорошем context.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое signal-to-noise ratio в context?</summary>
+  <div class="inside">Signal — токены, которые помогают модели дать правильный ответ на текущий запрос: нужные файлы, релевантные правила, актуальные факты. Noise — всё остальное: нерелевантные файлы, устаревшие chunks, старые сообщения в чате, лишние Rules, раздутый AGENTS.md. Высокий SNR = агент сфокусирован на нужном. Низкий SNR = полезный сигнал тонет в шуме → hallucinations, lost-in-the-middle ошибки, непредсказуемое поведение. Цель CE — максимизировать SNR.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое context layers?</summary>
+  <div class="inside">Context layers — слои информации, которые формируют context window агента. Основные слои (от высшего приоритета к низшему): System Prompt платформы → Rules (alwaysApply) → AGENTS.md/CLAUDE.md → Memory Bank → RAG chunks → Tool results → История чата → Текущий запрос. Каждый слой занимает токены и конкурирует за ограниченное окно. При конфликте вышестоящий слой побеждает. Context Engineering — это управление этими слоями: что включать, сколько токенов выделять каждому, как организовать.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое context poisoning?</summary>
+  <div class="inside">Context poisoning — ситуация, когда в context попадают неверные, устаревшие или намеренно вредоносные данные, которые искажают поведение агента. Примеры: устаревший RAG chunk («порт 8080» вместо реального «9090»), противоречивые инструкции из разных Rules, prompt injection через RAG corpus (документ содержит «игнорируй предыдущие инструкции»). Poisoned context может заставить агента дать уверенно неверный ответ или выполнить нежелательное действие.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое context budget?</summary>
+  <div class="inside">Context budget — явное распределение токенов между слоями context. Например: Rules: 2K токенов, AGENTS.md: 3K, Memory Bank: 2K, RAG chunks: 5K, chat history: 10K — итого 22K из 200K доступных. Context budget помогает контролировать чтобы один слой не «съел» все токены. Без явного budget AGENTS.md может незаметно вырасти до 10K токенов, вытесняя RAG и историю. Budget — архитектурный constraint, а не жёсткий лимит.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что включается в total context при запросе к агенту?</summary>
+  <div class="inside">Total context = сумма всех слоёв при конкретном запросе: System Prompt (платформы) + Rules alwaysApply + AGENTS.md + Memory Bank + RAG chunks (retrieved для этого запроса) + Tool call descriptions + Tool results (из прошлых шагов) + История чата + Текущий запрос пользователя. Всё это суммируется в токенах и сравнивается с model context limit. Если сумма превышает лимит — compaction или ошибка. Именно поэтому CE оптимизирует каждый слой.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое relevance filtering?</summary>
+  <div class="inside">Relevance filtering — механизм отбора информации для включения в context на основе релевантности текущей задаче. Примеры: RAG возвращает top-k chunks по семантической схожести (filtering по relevance score); auto-attached Rules применяются только к файлам по glob-паттерну; .cursorignore исключает нерелевантные файлы из AI-индекса. Без relevance filtering агент получает всё подряд → низкий SNR. Хороший filtering = агент видит только нужное для текущего запроса.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое context compression?</summary>
+  <div class="inside">Context compression — техники сжатия информации для уменьшения объёма токенов без существенной потери смысла. Виды: 1) Compaction (автоматический): платформа сжимает историю чата при переполнении; 2) Summary: ключевые факты вместо полного текста в Memory Bank; 3) Checkpoint: структурированное резюме состояния задачи вместо длинной истории; 4) AGENTS.md компактность: 800 слов вместо 5000; 5) RAG chunking: chunk содержит только самое релевантное. Compression — trade-off: токены vs полнота информации.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое context overflow?</summary>
+  <div class="inside">Context overflow — ситуация, когда суммарный объём всех слоёв context превышает model context limit (token limit). Последствия: платформа применяет compaction (сжимает историю чата, теряя детали), или API возвращает ошибку, или агент начинает давать деградированные ответы. Context overflow — не редкость при длинных сессиях, большом AGENTS.md, многих alwaysApply Rules и активном RAG. Context Engineering предотвращает overflow через явный budget management.</div></details>
+
+  <div class="qlevel-group">Middle — 10 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как расставить приоритеты слоёв при ограниченном context budget?</summary>
+  <div class="inside">Приоритизация по убыванию важности: 1) System Prompt + alwaysApply Rules — нельзя убрать, они определяют поведение; 2) Текущий запрос пользователя — обязателен; 3) AGENTS.md + Memory Bank — постоянный контекст проекта; 4) RAG chunks — релевантные знания для задачи; 5) История чата — контекст текущей сессии; 6) Tool results — результаты предыдущих действий. При нехватке токенов: убирай от низшего приоритета. История чата → Checkpoint (сжатие). Много RAG chunks → top-3 вместо top-10. AGENTS.md раздут → compact.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда стоит исключать информацию из context?</summary>
+  <div class="inside">Исключать информацию стоит когда она: 1) Нерелевантна текущей задаче — build артефакты в .cursorignore; 2) Устарела — stale RAG chunk, outdated Memory; 3) Дублируется — одно и то же в Rules и AGENTS.md; 4) Добавляет шум без сигнала — весь репозиторий через @mention когда нужен один файл; 5) Слишком большая при низкой информационной плотности — raw logs вместо их summary. Правило: добавляй в context только то, без чего агент не может правильно выполнить задачу. Сомневаешься — исключи и посмотри влияние.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как измерять signal-to-noise ratio в context?</summary>
+  <div class="inside">Практические подходы к измерению SNR: 1) Token composition audit: раздели context на слои и посчитай токены каждого. Какой % токенов напрямую релевантен текущей задаче? 2) Retrieval precision: из top-k RAG chunks — сколько реально использовал агент в ответе? Если 1 из 5 — precision 20%, остальное noise; 3) Behavioral test: убери по одному слою и проверь изменение качества — что реально влияет; 4) Ablation study на ответах: насколько изменяется качество при уменьшении context? Если не меняется — был noise; 5) Cache hit rate: unstable prefix → много noise в stable части.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Какие методы context compression наиболее эффективны?</summary>
+  <div class="inside">По эффективности: 1) Structured Checkpoint (лучший): явная структура «Что сделано / Решения / Следующий шаг» — заменяет 50+ сообщений истории при minimal потере; 2) Memory Bank distillation: факты вместо разговора — «stack: Python 3.11, FastAPI, PostgreSQL» вместо 10 сообщений об этом; 3) Hierarchical summarization: subagent делает детальный анализ → возвращает 500-слов summary → main agent работает с summary; 4) RAG вместо @mention: 3 релевантных chunks вместо 10 полных файлов; 5) AGENTS.md компактность: bullet points вместо прозы, только актуальные факты.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда Context Engineering особенно критичен?</summary>
+  <div class="inside">CE критичен в сценариях: 1) Длинные agentic задачи (>30 мин): без CE → compaction уничтожит детали; 2) Большой codebase: без RAG и .cursorignore → context overflow; 3) Multi-agent системы: без изоляции context → noise propagation между агентами; 4) Production automation: агент действует автономно → plохой context = неверные решения без human check; 5) Команда из 5+ разработчиков: без Rules/AGENTS.md стандартов → каждый агент ведёт себя по-разному. CE менее критичен для: коротких одноразовых запросов, простых задач с ограниченным контекстом.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как Rules влияют на качество context?</summary>
+  <div class="inside">Rules как CE инструмент: 1) alwaysApply Rules добавляют стабильный сигнал при каждом запросе — языковой стандарт, запреты, workflow; 2) Auto-attached Rules добавляют контекст только релевантным файлам → экономят токены; 3) Хорошо написанное Rule = высокий SNR; плохо написанное = noise. Проблемы: слишком много alwaysApply → overhead растёт, lost in the middle для самих правил; устаревшие Rules → context poisoning; конфликтующие Rules → непредсказуемое поведение. CE best practice: alwaysApply ≤5, регулярный audit, одна идея — одно Rule.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как использовать RAG как инструмент Context Engineering?</summary>
+  <div class="inside">RAG как CE: вместо «включить весь репозиторий» → включить только релевантные chunks. CE решения вокруг RAG: 1) Качество chunking: semantic chunking по функциям/классам лучше fixed-size — chunks сохраняют смысл; 2) Freshness: добавь metadata дату создания/обновления — старые chunks ранжировать ниже; 3) top-k management: top-3 при высоком precision лучше top-10 с noise; 4) Reranking: лучший chunk первым в context (primacy effect); 5) Hybrid search: BM25 + dense embeddings → лучший recall; 6) .cursorignore: исключи нерелевантные директории из индекса — меньше мусора в retrieval.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как писать компактные AGENTS.md с высоким SNR?</summary>
+  <div class="inside">Принципы компактного AGENTS.md: 1) Максимум 800 слов — это жёсткий constraint; 2) Только актуальные факты: стек, ключевые решения, что нельзя делать; 3) Bullet points вместо прозы — информационная плотность выше; 4) Исключи очевидное (стандарты которые и так знает модель); 5) Ссылки вместо дублирования: «для Rules см. .cursor/rules/» а не копировать содержимое; 6) Регулярный audit: при ревью спрашивай «каждый факт здесь нужен агенту прямо сейчас?»; 7) Remove устаревшее: AGENTS.md с 2000 строк = накопленный долг. Меньше и точнее > больше и общее.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как оптимизировать context для длинных сессий?</summary>
+  <div class="inside">Оптимизация для long sessions: 1) Checkpoint pattern: каждые 30-40 сообщений или при смене этапа — создавай Checkpoint файл; 2) Rolling window: при compaction — явно создай новую сессию с @checkpoint.md вместо продолжения деградирующей; 3) Memory Bank incremental update: после каждого значимого решения — добавляй в Memory (не накапливай в чате); 4) Subagent offload: token-heavy операции (анализ большого файла) → subagent, main получает summary; 5) Context health monitoring: отслеживай input_tokens при каждом запросе — рост сигнализирует о приближении к пределу; 6) Stable prefix guard: не трогай System + Rules состав в середине сессии — ломает кеш.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Context Engineering vs fine-tuning: когда что выбирать?</summary>
+  <div class="inside">CE: изменение контекста без изменения весов модели. Fine-tuning: изменение весов модели на специфическом dataset. Выбор: CE предпочтительнее когда: знания меняются часто (обновляемая документация), нужна быстрая итерация, задача domain-specific но не требует новых навыков, достаточен RAG + Rules. Fine-tuning нужен когда: нужен специфический стиль/формат которого нельзя достичь промптом, объём знаний огромен и в CE не помещается, нужна скорость/стоимость (fine-tuned модель меньше, дешевле). На практике: CE — первый выбор; fine-tuning — когда CE не справляется.</div></details>
+
+  <div class="qlevel-group">Senior — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как проектировать context pipeline для сложной agentic задачи?</summary>
+  <div class="inside">Context pipeline architecture: 1) Ingestion layer: определи источники (code, docs, memory, live data) и их freshness requirements; 2) Filtering layer: relevance gate (RAG retrieval + reranking), .cursorignore для нерелевантных директорий; 3) Assembly layer: собери слои в правильном порядке с учётом primacy/recency effect: Rules → AGENTS.md → Memory → RAG (best first) → task → query; 4) Compression layer: если budget превышен — Checkpoint вместо истории, summary вместо полных файлов; 5) Validation layer: проверь token composition перед отправкой — нет ли аномальных слоёв; 6) Caching layer: stable prefix помечается для кеширования. Pipeline явный и измеримый — каждый слой с explicit size limit.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как диагностировать context degradation в production?</summary>
+  <div class="inside">Симптомы context degradation: агент игнорирует Rules, даёт противоречивые ответы, «забывает» ранние решения, повторяет уже сделанное. Диагностика: 1) Token timeline: логируй input_tokens при каждом запросе — нарастающий тренд = accumulation, скачок = что-то добавилось; 2) Layer audit: разбей context на слои и измерь каждый — нет ли аномально раздутого? 3) Compaction detection: при резком падении input_tokens — произошёл compaction → проверь потерю деталей; 4) Cache hit rate падение: нестабильный prefix → что-то изменилось в stable слое; 5) A/B test с чистым контекстом: новая сессия с только необходимым context → сравни качество. Degradation часто не очевидна — нужен мониторинг.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как A/B тестировать разные context layouts?</summary>
+  <div class="inside">A/B testing context layouts: 1) Hypothesis: «Перемещение best RAG chunk первым улучшит точность ответов на X%»; 2) Test set: фиксированный набор задач с ожидаемыми категориями ответов (не exact match); 3) Control group: текущий layout; Treatment group: новый layout; 4) Metric: точность (правильный ответ?), format compliance (следует ли формату?), consistency (похожи ли ответы при повторном запуске?); 5) Sample size: минимум 50 задач для статистической значимости; 6) Confounding control: одинаковый model version, temperature, time of day при тестировании; 7) LLM-as-judge: используй отдельную модель как evaluator для scalable оценки. Без A/B testing оптимизация context — «чувство».</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как оптимизировать context под attention heads LLM?</summary>
+  <div class="inside">Attention optimization в CE: 1) Primacy effect (начало): System Prompt, alwaysApply Rules — помещай критические инструкции; 2) Recency effect (конец): текущий запрос, самые важные Few-shot примеры — максимум attention; 3) Middle penalty: история чата, вспомогательные RAG chunks — менее важное. При 200K window «середина» — это позиции 50K–150K, они реально получают меньше weight; 4) Chunk positioning: лучший RAG chunk всегда первым (не последним!), reranking обязателен; 5) AGENTS.md positioning: ближе к началу (после Rules), не в конце перед запросом; 6) Instruction repetition: для очень критичных инструкций (не делай X) — duplicate в начало (Rule) И ближе к запросу (в task description).</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как распределить context budget для сложной multi-tool задачи?</summary>
+  <div class="inside">Context budget allocation для multi-tool agentic задачи: 1) Резервируй output budget: если ожидается длинный output (план, код) — оставляй 20-30K под generation; 2) Tool overhead: каждый MCP сервер = N tool descriptions × M токенов → подключай только нужные серверы; 3) Tool results: результат tool call тоже занимает токены → truncate длинные outputs до summary; 4) Adaptive RAG: при большом tool history — уменьши top-k RAG (меньше chunks); 5) History pruning: при длинном tool chain — history компрессируй в Checkpoint раньше, чем платформа сделает это сама (хуже); 6) Priority queue: при бюджетном дефиците — инструмент выбора: Rules > Task context > RAG > History.</div></details>
+
+  <div class="qlevel-group">Lead — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как выстроить framework контроля качества context в команде?</summary>
+  <div class="inside">Context Quality Framework: 1) Context Policy: документ что можно/нельзя в context (PII policy, secrets policy, data classification); 2) Size SLA: AGENTS.md ≤800 слов, alwaysApply Rules ≤5, Memory Bank ≤800 слов — нарушение = PR blocker; 3) CI checks: automated проверка размеров файлов при каждом PR; 4) Quarterly audit: команда совместно проверяет все .mdc файлы, AGENTS.md, Memory на актуальность; 5) Rules ownership model: каждое правило имеет owner, last_reviewed дату; 6) Incident process: при «странном» поведении агента → root cause в context layers → post-mortem → fix в Rules/AGENTS.md; 7) Quality metrics dashboard: average context size, cache hit rate, compaction frequency.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как обучить команду Context Engineering?</summary>
+  <div class="inside">CE обучение в команде: 1) Workshop «Token Awareness»: покажи реальный context в Cursor debug mode, посчитай токены каждого слоя вместе — видимость создаёт понимание; 2) Pairing session: senior разработчик показывает свой workflow — как выбирает @mention, как строит Checkpoint, когда использует subagent; 3) CE anti-patterns gallery: реальные примеры из команды — «вот что пошло не так из-за контекста»; 4) Checkpoint habit: team challenge — 2 недели каждый создаёт Checkpoint при задачах >30 мин. Ретро: что изменилось; 5) Context health check ritual: в начале недели — быстрый audit AGENTS.md и Rules; 6) Code review addition: в checklist добавить «не добавляет ли PR лишнего в alwaysApply или AGENTS.md?»</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Какие метрики context effectiveness использовать?</summary>
+  <div class="inside">Context Effectiveness Metrics: 1) Cache hit rate: usage.cache_read_input_tokens / total_tokens → target >50%. Показывает стабильность prefix; 2) Compaction frequency: как часто происходит compaction в сессиях команды → высокая частота = context не управляется; 3) RAG retrieval precision: из top-k chunks — сколько реально цитировано в ответе. Если 1 из 5 → precision 20%; 4) Context size per task: сколько токенов при стандартной задаче → тренд роста = накопление долга; 5) Rules compliance rate: при code review — как часто агент нарушил Rules. Высокий rate → правила lost-in-middle или conflicting; 6) Agent restart frequency: как часто разработчики начинают новый чат «потому что агент деградировал» → indirect measure compaction damage.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как управлять governance context design decisions?</summary>
+  <div class="inside">Context Governance: 1) Decision record: при значимых изменениях context architecture (новый Memory Bank паттерн, изменение Rules структуры) — ADR (Architecture Decision Record) с rationale; 2) Change control для alwaysApply Rules: изменения влияют на всю команду → mandatory review, не просто PR; 3) Experimentation process: хочешь изменить context layout → A/B test на 1 неделе → метрики → решение; 4) Rollback capability: при деградации поведения агента — git revert Rules/AGENTS.md; 5) Communication: при изменениях context, влияющих на всю команду — explicit announcement (Slack, team meeting), не просто merge; 6) External context audit: раз в квартал — кто-то из другой команды проверяет ваш context setup. Внешний взгляд находит то, что замылился.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как организовать checklist context review при code review?</summary>
+  <div class="inside">Context Review Checklist для PR: 1) alwaysApply count: количество alwaysApply правил ≤5? Новое правило действительно universal или может быть auto-attached? 2) AGENTS.md size: слово-счёт ≤800? Каждый добавленный факт необходим? 3) .cursorignore coverage: новые build директории добавлены в ignore? 4) Memory Bank changes: если Memory обновляется агентом автоматически — review изменений; 5) Rules conflicts: новое правило не конфликтует с существующими? 6) Checkpoint template: если задача была долгой — создан ли Checkpoint? 7) RAG corpus: при добавлении документов — правильно ли структурированы для chunking? 8) Security: нет ли PII в примерах или AGENTS.md? Этот checklist занимает 2-3 минуты и предотвращает context debt.</div></details>
+
+  <div class="qlevel-group">Architect — 5 вопросов</div>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как рассматривать Context Engineering как архитектурный слой системы?</summary>
+  <div class="inside">Context Engineering как архитектурный слой: CE — это не «настройка агента», это infrastructure layer определяющий качество системы. Архитектурные свойства: 1) Scalability: как context architecture масштабируется при росте codebase, команды, числа агентов; 2) Reliability: насколько context предсказуем и воспроизводим между сессиями; 3) Observability: есть ли мониторинг token composition, cache rates, compaction; 4) Maintainability: как легко обновлять Rules, AGENTS.md при изменении системы; 5) Security: context как attack surface (prompt injection через RAG). В правильной архитектуре: CE решения документированы как ADR, мониторятся как infrastructure, тестируются как код.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как реализовать context routing между агентами в multi-agent системе?</summary>
+  <div class="inside">Context routing architecture: разные агенты получают разные контексты в зависимости от роли. Implementation: 1) Orchestrator agent: полный context (AGENTS.md, Memory, все Rules) для принятия высокоуровневых решений; 2) Specialist agents: только domain-specific контекст (security agent видит security Rules + security docs; data agent видит data schemas + data docs); 3) Context injection protocol: orchestrator явно передаёт context пакет каждому subagent (не все видят всё); 4) Context versioning: при передаче context между агентами — версия snapshot чтобы агенты работали с consistent view; 5) Context registry: центральный сервис знает какой agent получает какой context — observability и governance; 6) Principle of least context: каждый agent получает минимально необходимый context.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Что такое versioned context specifications и зачем они нужны?</summary>
+  <div class="inside">Versioned context specifications — explicit versioning всего context setup: Rules, AGENTS.md, Memory schema, RAG corpus version, prompt templates. Зачем: 1) Reproducibility: воспроизведи точно то поведение агента которое было в moment X — нужно для debugging production incidents; 2) Rollback: при деградации — не «что изменилось?», а git revert context spec до предыдущей версии; 3) A/B testing: v1.2 context vs v1.3 context на split трафике; 4) Compliance: audit trail что агент видел в конкретный момент (важно для regulated industries); 5) Team onboarding: новый разработчик получает точно тот же context setup что и команда. Implementation: context spec как code в repo, versioned с semver, с changelog.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как организовать context monitoring в production?</summary>
+  <div class="inside">Production context monitoring stack: 1) Metrics: input_tokens (total + per layer), cache_hit_rate, compaction_count, context_overflow_count, p50/p95 latency — в time series (Prometheus/Datadog); 2) Alerts: input_tokens растёт >10% в неделю → alert (накопление долга); cache_hit_rate <30% → alert (нестабильный prefix); compaction_count spikes → alert (сессии деградируют); 3) Tracing: каждый запрос с context composition breakdown — какие Rules загружены, сколько RAG chunks, размер Memory → для debugging; 4) Anomaly detection: резкое изменение average context size после deploy → correlation с изменением Rules/AGENTS.md; 5) User feedback loop: при «странном поведении» агента → автоматически capture context snapshot для анализа.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как применять Context Engineering для системы с RAG + Memory Bank + MCP?</summary>
+  <div class="inside">Интегрированная CE архитектура для RAG + Memory + MCP: 1) Token budget allocation: явно разделить 200K window: System+Rules (5K), AGENTS.md (3K), Memory Bank (2K), RAG chunks (8K), MCP tool descriptions (5K), MCP results (10K), chat history (10K), output buffer (30K) — итого ~73K используется, 127K резерв; 2) Priority preemption: при перегрузке — MCP results truncate (summary), затем RAG chunks reduce, затем chat history → Checkpoint; 3) Freshness hierarchy: MCP > RAG > Memory для live данных; Memory > RAG для persistent знаний проекта; 4) Anti-duplication: не держи одно знание и в Memory и в RAG — выбери canonical source; 5) Circuit breaker: если MCP сервер возвращает огромный result → automatic truncation + summary hook; 6) Unified observability: мониторь все три источника как единый context budget.</div></details>
+
+</section>
+
+<div class="pageFooter"><div class="nextPrev">
+  <a href="prompting.html">← Prompt Engineering</a>
+  <a href="context.html">Контекст агента →</a>
+</div></div>
+</main></div><script src="../assets/app.js"></script></body></html>

@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Agent Package Manager — что это, зачем, как работает</title>
+  <link rel="stylesheet" href="../assets/style.css"/>
+  <style>
+    .schema-box{background:#0f172a;color:#e2e8f0;border-radius:16px;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.65;overflow:auto;margin:10px 0;white-space:pre-wrap}
+    .schema-box .c{color:#64748b}
+    .schema-box .k{color:#93c5fd}
+    .schema-box .s{color:#fcd34d}
+    .schema-box .v{color:#86efac}
+    .nuance-card{border-left:4px solid;border-radius:0 14px 14px 0;padding:12px 16px;margin:8px 0;background:#fff;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+    .nc-blue{border-left-color:#2563eb}.nc-red{border-left-color:#dc2626}.nc-orange{border-left-color:#f97316}.nc-green{border-left-color:#16a34a}.nc-purple{border-left-color:#7c3aed}
+    code{background:#f1f5f9;padding:2px 5px;border-radius:5px;font-family:ui-monospace,Menlo,monospace;font-size:12px}
+    .apm-analogy{display:grid;grid-template-columns:1fr auto 1fr;gap:0;align-items:center;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff;margin:12px 0}
+    .apm-col{padding:16px 18px}
+    .apm-col h4{margin:0 0 8px;font-size:14px;font-weight:900}
+    .apm-col ul{margin:0;padding-left:16px;font-size:13px;color:#334155}
+    .apm-arrow{background:#f8fafc;padding:16px 12px;font-size:22px;text-align:center;border-left:1px solid var(--line);border-right:1px solid var(--line);color:#7c3aed;font-weight:900;white-space:nowrap}
+    .apm-left{background:#eff6ff}
+    .apm-right{background:#fdf4ff}
+    .lifecycle{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border:1px solid var(--line);border-radius:18px;overflow:hidden}
+    .lc-step{padding:16px 10px;text-align:center;border-right:1px solid var(--line);background:#fff}
+    .lc-step:last-child{border-right:none}
+    .lc-num{width:34px;height:34px;border-radius:999px;background:#7c3aed;color:#fff;display:grid;place-items:center;font-weight:900;font-size:14px;margin:0 auto 10px}
+    .lc-step h4{font-size:13px;margin:0 0 4px}
+    .lc-step p{font-size:12px;color:#64748b;margin:0;line-height:1.4}
+    .pkg-card{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff}
+    .pkg-card h4{margin:0 0 6px;font-size:15px;display:flex;align-items:center;gap:8px}
+    .pkg-tag{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:900;border:1px solid}
+    .tag-cursor{background:#eff6ff;border-color:#93c5fd;color:#1e40af}
+    .tag-claude{background:#fdf4ff;border-color:#d8b4fe;color:#6b21a8}
+    .tag-npm{background:#f0fdf4;border-color:#86efac;color:#14532d}
+    .tag-pip{background:#fefce8;border-color:#fde68a;color:#92400e}
+    @media(max-width:900px){.apm-analogy{grid-template-columns:1fr}.apm-arrow{border:none;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.lifecycle{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>
+  <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub active"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div>
+  <div class="progressBox"><b>Суть APM</b><p class="sourceNote">Agent Package = переиспользуемый набор Skills + Rules + AGENTS.md. APM — как npm, только для способностей агента, а не кода.</p></div>
+</aside>
+
+<main class="main">
+<section class="hero">
+  <div class="kicker">Agent Context Academy · AGENTS / Rules / Skills</div>
+  <h2>Agent Package Manager</h2>
+  <p>Agent Package Manager (APM) — система упаковки, распространения и установки <em>способностей агента</em>: Skills, Rules, AGENTS.md, Hooks, MCP-конфиги. Как npm для кода, только единица — не библиотека, а готовый workflow AI-агента.</p>
+  <div class="heroActions">
+    <a class="btn" href="skills.html">← Skills</a>
+    <a class="btn" href="commands.html">Commands →</a>
+    <button class="markDone">Отметить страницу изученной</button>
+  </div>
+</section>
+
+<!-- ── Аналогия для новичка ── -->
+<section class="section">
+  <h2>Объясняю с нуля: аналогия</h2>
+  <p class="sectionIntro">Если ты никогда не слышал об APM — представь что у тебя есть два мира: мир кода и мир агентов.</p>
+
+  <div class="apm-analogy">
+    <div class="apm-col apm-left">
+      <h4>📦 npm / pip (для кода)</h4>
+      <ul>
+        <li>Пишешь <code>npm install react</code></li>
+        <li>Получаешь готовую библиотеку компонентов</li>
+        <li>Импортируешь и используешь в своём коде</li>
+        <li>Пакет = файлы JavaScript/Python</li>
+      </ul>
+    </div>
+    <div class="apm-arrow">→<br><small style="font-size:11px;color:#64748b">то же, но для<br>агента</small></div>
+    <div class="apm-col apm-right">
+      <h4>📦 APM (для агентов)</h4>
+      <ul>
+        <li>«Установи мне пакет code-review-agent»</li>
+        <li>Получаешь готовый набор Skills + Rules</li>
+        <li>Агент умеет делать code review «из коробки»</li>
+        <li>Пакет = Markdown-инструкции для агента</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout">
+    <b>Проще говоря:</b> APM — это способ сказать «дай агенту умение X», не объясняя каждый раз как делать X с нуля. Кто-то уже упаковал это умение — ты просто «устанавливаешь» его.
+  </div>
+</section>
+
+<!-- ── Что входит в пакет ── -->
+<section class="section">
+  <h2>Что входит в один «агент-пакет»</h2>
+  <p class="sectionIntro">Пакет — это папка с набором файлов. Каждый файл даёт агенту что-то конкретное.</p>
+
+  <div class="grid two">
+    <div class="pkg-card">
+      <h4>📋 AGENTS.md <span class="pkg-tag tag-claude">обязательный</span></h4>
+      <p style="font-size:13px;color:#475569">Главный файл пакета. Описывает роль агента, контекст проекта, стек, ограничения. Агент читает его первым.</p>
+      <div class="schema-box" style="font-size:12px"><span class="c"># code-review-agent/AGENTS.md</span>
+<span class="k">## Role</span>
+Senior Code Reviewer. Focus on correctness,
+security, test coverage.
+
+<span class="k">## Stack</span>
+Java 17, Spring Boot 3, JUnit 5.
+
+<span class="k">## Constraints</span>
+- Never suggest removing tests
+- Always cite line numbers</div>
+    </div>
+    <div class="pkg-card">
+      <h4>⚡ Skills <span class="pkg-tag tag-claude">workflow-инструкции</span></h4>
+      <p style="font-size:13px;color:#475569">Пошаговые инструкции для конкретных задач. Агент выбирает нужный Skill по description.</p>
+      <div class="schema-box" style="font-size:12px"><span class="c"># skills/review-pr/SKILL.md</span>
+---
+name: review-pr
+description: "Full PR review: correctness,
+  security, tests. Use when reviewing code."
+---
+<span class="k">## Steps</span>
+1. Read changed files top to bottom
+2. Check logic correctness
+3. Look for security issues
+4. Verify test coverage
+<span class="k">## Output</span>
+Structured list: file:line + issue + fix</div>
+    </div>
+    <div class="pkg-card">
+      <h4>🔒 Rules <span class="pkg-tag tag-cursor">политика</span></h4>
+      <p style="font-size:13px;color:#475569">Жёсткие ограничения агента. Применяются всегда, обойти нельзя.</p>
+      <div class="schema-box" style="font-size:12px"><span class="c"># rules/no-secrets.mdc</span>
+---
+alwaysApply: true
+---
+NEVER commit files containing API keys,
+passwords or tokens. If found — stop
+and notify the user immediately.</div>
+    </div>
+    <div class="pkg-card">
+      <h4>🛠 MCP config <span class="pkg-tag tag-npm">опционально</span></h4>
+      <p style="font-size:13px;color:#475569">Конфигурация инструментов — например, какие MCP-серверы нужны для этого пакета.</p>
+      <div class="schema-box" style="font-size:12px"><span class="c"># mcp.json</span>
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y",
+        "@modelcontextprotocol/server-github"]
+    }
+  }
+}</div>
+    </div>
+  </div>
+
+  <div class="nuance-card nc-blue" style="margin-top:12px">
+    <h4>Пакет ≠ код</h4>
+    <p>В agent-пакете нет исполняемого кода в привычном смысле. Это набор <em>текстовых инструкций</em> — Markdown-файлов, которые агент читает и которым следует. Поэтому пакет работает на любой модели и не требует компиляции.</p>
+  </div>
+</section>
+
+<!-- ── Жизненный цикл ── -->
+<section class="section">
+  <h2>Жизненный цикл: от создания до использования</h2>
+  <div class="lifecycle">
+    <div class="lc-step">
+      <div class="lc-num">1</div>
+      <h4>Создание</h4>
+      <p>Команда пишет AGENTS.md, Skills, Rules. Упаковывает в папку с именем пакета.</p>
+    </div>
+    <div class="lc-step">
+      <div class="lc-num">2</div>
+      <h4>Публикация</h4>
+      <p>Пакет кладётся в git-репо, npm registry, или внутренний реестр команды.</p>
+    </div>
+    <div class="lc-step">
+      <div class="lc-num">3</div>
+      <h4>Установка</h4>
+      <p>Другой проект «устанавливает» пакет — копирует файлы в нужные директории.</p>
+    </div>
+    <div class="lc-step">
+      <div class="lc-num">4</div>
+      <h4>Активация</h4>
+      <p>Агент читает AGENTS.md и Skills при запуске — «знает» что умеет этот пакет.</p>
+    </div>
+    <div class="lc-step">
+      <div class="lc-num">5</div>
+      <h4>Обновление</h4>
+      <p>Изменили Skill → обновили версию → pull в проекте, которые его используют.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Реальные примеры APM ── -->
+<section class="section">
+  <h2>Реальные реализации APM</h2>
+  <p class="sectionIntro">Стандарта APM пока нет — каждая платформа решает по-своему. Вот как это выглядит сегодня.</p>
+
+  <div class="grid">
+    <div class="card bg-blue">
+      <h3>🖱 Cursor — .cursor/rules/ + Skills</h3>
+      <p style="font-size:13px">«Пакет» — набор <code>.mdc</code> файлов в <code>.cursor/rules/</code> и <code>.cursor/commands/</code>. Устанавливается вручную или через git submodule. Нет единого CLI.</p>
+      <div class="schema-box" style="font-size:12px"><span class="c"># Структура пакета для Cursor</span>
+my-review-package/
+├── .cursor/
+│   ├── rules/
+│   │   └── review-policy.mdc
+│   └── commands/
+│       └── review-pr.md
+└── AGENTS.md</div>
+    </div>
+    <div class="card bg-purple">
+      <h3>🤖 Claude Code — .claude/ + SKILL.md</h3>
+      <p style="font-size:13px">Skills с YAML frontmatter живут в <code>.claude/commands/</code>. Глобальные — в <code>~/.claude/commands/</code>. Claude Code читает все SKILL.md при запуске.</p>
+      <div class="schema-box" style="font-size:12px"><span class="c"># Структура пакета для Claude Code</span>
+my-review-package/
+├── .claude/
+│   └── commands/
+│       ├── review-pr.md
+│       └── security-scan.md
+└── CLAUDE.md  <span class="c"># = AGENTS.md для Claude</span></div>
+    </div>
+    <div class="card bg-green">
+      <h3>📦 NPM-based APM (экспериментальный)</h3>
+      <p style="font-size:13px">Некоторые команды уже публикуют agent-пакеты в npm. Установка через <code>npx agent-install</code>, файлы копируются в проект.</p>
+      <div class="schema-box" style="font-size:12px"><span class="c"># Гипотетический CLI:</span>
+npx agent-install @myorg/code-reviewer
+<span class="c"># Копирует в .cursor/rules/ и .claude/</span>
+
+<span class="c"># package.json агент-пакета:</span>
+{
+  "name": "@myorg/code-reviewer",
+  "version": "2.1.0",
+  "agentFiles": {
+    "cursor": ".cursor/",
+    "claude": ".claude/"
+  }
+}</div>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top:14px">
+    <b>Тренд:</b> рынок движется к стандартизации. Anthropic, Cursor и сообщество обсуждают единый формат «agent package» с манифестом, версионированием и registry. Сегодня это в основном соглашения внутри команд, а не единый стандарт.
+  </div>
+</section>
+
+<!-- ── Структура пакета ── -->
+<section class="section">
+  <h2>Эталонная структура agent-пакета</h2>
+  <p class="sectionIntro">Стандарт де-факто, используемый командами с несколькими агентами.</p>
+  <div class="schema-box"><span class="c"># Корневая директория пакета</span>
+my-agent-package/
+│
+├── <span class="k">package.json</span>           <span class="c"># манифест: name, version, description, agentType</span>
+├── <span class="k">AGENTS.md</span>              <span class="c"># или CLAUDE.md — роль, контекст, стек</span>
+├── <span class="k">README.md</span>              <span class="c"># для людей: что умеет, как установить</span>
+│
+├── <span class="k">skills/</span>                <span class="c"># Skills = workflow-инструкции агента</span>
+│   ├── code-review/
+│   │   └── SKILL.md
+│   ├── security-scan/
+│   │   └── SKILL.md
+│   └── db-migration/
+│       └── SKILL.md
+│
+├── <span class="k">rules/</span>                 <span class="c"># Rules = жёсткая политика</span>
+│   ├── no-secrets.mdc
+│   └── test-coverage.mdc
+│
+├── <span class="k">hooks/</span>                 <span class="c"># (опц.) Claude Code hooks для принуждения</span>
+│   └── hooks.json
+│
+└── <span class="k">mcp/</span>                   <span class="c"># (опц.) конфиги MCP-серверов</span>
+    └── mcp.json</div>
+</section>
+
+<!-- ── Установка вручную ── -->
+<section class="section">
+  <h2>Как «установить» пакет сегодня</h2>
+  <p class="sectionIntro">Пока нет единого CLI — вот три рабочих способа.</p>
+
+  <div class="grid">
+    <div class="card">
+      <h3>1️⃣ Git submodule</h3>
+      <p style="font-size:13px;color:#475569">Пакет как вложенный репо. При обновлении — <code>git submodule update</code>.</p>
+      <div class="schema-box" style="font-size:12px">git submodule add \
+  https://github.com/myorg/code-reviewer \
+  .agent-packages/code-reviewer
+
+<span class="c"># Файлы появятся, вручную скопируй нужные в:</span>
+<span class="c"># .cursor/rules/, .claude/commands/ и т.д.</span></div>
+    </div>
+    <div class="card">
+      <h3>2️⃣ Скрипт установки</h3>
+      <p style="font-size:13px;color:#475569">Python/bash-скрипт копирует файлы в нужные директории.</p>
+      <div class="schema-box" style="font-size:12px"><span class="c"># install_agent_package.py</span>
+import shutil, json
+from pathlib import Path
+
+pkg = Path(".agent-packages/code-reviewer")
+cfg = json.loads((pkg/"package.json").read_text())
+
+for src, dst in cfg["agentFiles"].items():
+    shutil.copytree(pkg/src, Path(dst),
+                    dirs_exist_ok=True)
+print("✅ Installed:", cfg["name"])</div>
+    </div>
+    <div class="card">
+      <h3>3️⃣ npx agent-install (npm-пакет)</h3>
+      <p style="font-size:13px;color:#475569">Опубликованный в npm пакет с postinstall-скриптом.</p>
+      <div class="schema-box" style="font-size:12px"><span class="c"># Установка</span>
+npx @myorg/code-reviewer-agent install
+
+<span class="c"># Под капотом: postinstall.js</span>
+const fs = require('fs-extra');
+fs.copySync('./cursor-rules', '.cursor/rules');
+fs.copySync('./claude', '.claude/commands');</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Версионирование ── -->
+<section class="section">
+  <h2>Версионирование agent-пакетов</h2>
+  <p class="sectionIntro">Semver работает для агентов так же как для кода — только «breaking change» означает другое.</p>
+
+  <div class="tableWrap"><table>
+    <thead><tr><th>Версия</th><th>Что изменилось</th><th>Пример</th></tr></thead>
+    <tbody>
+      <tr><td><b>patch</b> 1.0.1</td><td>Уточнение формулировок, исправление опечатки в Skill</td><td>«Верни JSON» → «Верни валидный JSON»</td></tr>
+      <tr><td><b>minor</b> 1.1.0</td><td>Новый Skill или Rule добавлен, ничего не удалено</td><td>Добавили skill «performance-review»</td></tr>
+      <tr><td><b>major</b> 2.0.0</td><td>Удалили Skill, сменили output-формат, переименовали Role</td><td>Output теперь JSON вместо Markdown</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="schema-box" style="margin-top:12px"><span class="c"># package.json агент-пакета</span>
+{
+  <span class="k">"name"</span>: <span class="s">"@myorg/code-reviewer-agent"</span>,
+  <span class="k">"version"</span>: <span class="s">"2.1.0"</span>,
+  <span class="k">"description"</span>: <span class="s">"Senior code reviewer for Java/Spring projects"</span>,
+  <span class="k">"agentType"</span>: <span class="s">"code-quality"</span>,
+  <span class="k">"compatibleWith"</span>: [<span class="s">"cursor"</span>, <span class="s">"claude-code"</span>],
+  <span class="k">"agentFiles"</span>: {
+    <span class="k">"cursor"</span>: <span class="s">".cursor/"</span>,
+    <span class="k">"claude"</span>: <span class="s">".claude/"</span>
+  },
+  <span class="k">"changelog"</span>: {
+    <span class="k">"2.1.0"</span>: <span class="s">"Added performance-review skill"</span>,
+    <span class="k">"2.0.0"</span>: <span class="s">"Output format changed to JSON"</span>
+  }
+}</div>
+</section>
+
+<!-- ── Примеры реальных пакетов ── -->
+<section class="section">
+  <h2>Примеры реальных agent-пакетов</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Пакет</th><th>Что даёт агенту</th><th>Skills внутри</th><th>Rules внутри</th></tr></thead>
+    <tbody>
+      <tr><td><b>code-reviewer</b></td><td>Умение делать code review</td><td>review-pr, security-scan, style-check</td><td>no-skipping-tests, cite-line-numbers</td></tr>
+      <tr><td><b>db-migration-agent</b></td><td>Безопасные миграции БД</td><td>create-migration, rollback-plan, dry-run</td><td>backup-first, no-prod-without-staging</td></tr>
+      <tr><td><b>onboarding-agent</b></td><td>Помощь новым разработчикам</td><td>explain-architecture, first-pr-guide</td><td>beginner-friendly-tone</td></tr>
+      <tr><td><b>security-auditor</b></td><td>Поиск уязвимостей</td><td>owasp-scan, dependency-check, secrets-hunt</td><td>never-fix-without-approval</td></tr>
+      <tr><td><b>release-manager</b></td><td>Подготовка релизов</td><td>changelog-gen, tag-version, notify-team</td><td>staging-before-prod, human-approval-gate</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ── Тонкости ── -->
+<section class="section">
+  <h2>Тонкости</h2>
+  <div class="nuance-card nc-red">
+    <h4>APM ≠ менеджер Python/npm пакетов</h4>
+    <p>Не путай. npm ставит JavaScript-библиотеки в <code>node_modules</code>. Agent Package Manager ставит <em>инструкции для агента</em> — SKILL.md, AGENTS.md, Rules. Это разные уровни: npm — для кода, APM — для поведения агента. Оба могут сосуществовать в одном проекте.</p>
+  </div>
+  <div class="nuance-card nc-orange">
+    <h4>Конфликт пакетов — Rule всегда побеждает</h4>
+    <p>Если два пакета ставят разные Rules с противоречивыми инструкциями — агент применяет оба, а при конфликте приоритет у правила с <code>alwaysApply: true</code>. Явно фиксируй зависимости и несовместимости в README пакета.</p>
+  </div>
+  <div class="nuance-card nc-blue">
+    <h4>Пакет не изолирован от контекста проекта</h4>
+    <p>В отличие от npm-модуля, agent-пакет не живёт в «песочнице». Его Rules и Skills видят весь проект, весь context window. Ставь только то, что нужно для задачи — лишние Skills засоряют context агента и могут вызвать нежелательные автосрабатывания.</p>
+  </div>
+  <div class="nuance-card nc-purple">
+    <h4>Версионирование сложнее чем кажется</h4>
+    <p>Если Skill изменился — не все проекты сразу обновятся. Стale SKILL.md в команде из 10 проектов — реальная проблема. Решение: фиксируй версию в README каждого проекта и настрой оповещения при обновлении пакета.</p>
+  </div>
+  <div class="nuance-card nc-green">
+    <h4>Приватный реестр vs публичный</h4>
+    <p>Публичный npm/GitHub — хорошо для open-source пакетов. Для корпоративных агентов с внутренними процессами и данными нужен приватный реестр (Artifactory, verdaccio, GitHub Packages private). Не публикуй в публичный npm пакеты с внутренними URL, токенами или специфичными бизнес-процессами.</p>
+  </div>
+</section>
+
+<!-- ── Best practices ── -->
+<section class="section">
+  <h2>Best practices — Делай / Не делай</h2>
+  <div class="grid two">
+    <div class="card bg-green"><h3>✅ Делай</h3><ul>
+      <li>Один пакет = одна чёткая роль (reviewer, migrator, auditor)</li>
+      <li>Semver: major при breaking change output-формата или роли</li>
+      <li>README с примером task description для активации</li>
+      <li>Тестируй пакет: задай агенту задачу и проверь применение Skill</li>
+      <li>Prerequisites секция: что нужно установить/настроить</li>
+      <li>Приватный реестр для корпоративных агентов</li>
+    </ul></div>
+    <div class="card bg-red"><h3>❌ Не делай</h3><ul>
+      <li>Не клади все Skills в один мегапакет — агент запутается</li>
+      <li>Не ставь пакеты с перекрывающимися Rules без аудита конфликтов</li>
+      <li>Не публикуй в npm внутренние URL, токены, бизнес-процессы</li>
+      <li>Не игнорируй версионирование — stale Skill = неверный workflow</li>
+      <li>Не создавай пакет без README — другие не поймут как его активировать</li>
+    </ul></div>
+  </div>
+</section>
+
+<!-- ── Platform Split ── -->
+<section class="section">
+  <h2>Cursor vs Claude Code — сравнение пакетов</h2>
+  <div class="platform-split">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor — Agent Packages</div>
+      <p style="font-size:13px">В Cursor «пакет агента» — это набор файлов: AGENTS.md + Rules (.mdc) + Skills (.md) + Hooks (hooks.json). Устанавливается копированием файлов в проект.</p>
+      <div class="schema-box" style="font-size:11px">📦 agent-package/
+├── AGENTS.md          ← роль и workflow
+├── .cursor/rules/     ← политики
+│   └── *.mdc
+├── .cursor/skills/    ← навыки
+│   └── SKILL.md
+└── hooks.json         ← хуки</div>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code — Agent Packages</div>
+      <p style="font-size:13px">В Claude Code пакет — CLAUDE.md + hooks.json + skills/. Можно распространять через npm/git submodules или копировать вручную.</p>
+      <div class="schema-box" style="font-size:11px">📦 agent-package/
+├── CLAUDE.md          ← роль и workflow
+├── .claude/settings.json ← permissions
+├── skills/            ← навыки
+│   └── SKILL.md
+└── hooks.json         ← хуки</div>
+    </div>
+  </div>
+
+  <div class="tableWrap" style="margin-top:14px"><table>
+    <thead><tr><th>Аспект</th><th>Cursor</th><th>Claude Code</th></tr></thead>
+    <tbody>
+      <tr><td>Основной файл</td><td>AGENTS.md</td><td>CLAUDE.md</td></tr>
+      <tr><td>Rules/политики</td><td>.cursor/rules/*.mdc</td><td>Секции в CLAUDE.md или hooks</td></tr>
+      <tr><td>Skills</td><td>.cursor/skills/SKILL.md</td><td>skills/SKILL.md</td></tr>
+      <tr><td>Hooks</td><td>hooks.json</td><td>hooks.json (.claude/)</td></tr>
+      <tr><td>Установка</td><td>Копирование файлов в проект</td><td>Копирование / npm / git submodule</td></tr>
+      <tr><td>APM / реестр</td><td>Нет стандартного реестра</td><td>Нет стандартного реестра</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><b>Главное отличие:</b> структура файлов идентична концептуально, отличаются имена (AGENTS.md vs CLAUDE.md) и расположение настроек.</div>
+</section>
+
+<!-- ── Q&A ── -->
+<section class="section">
+  <h2>Вопросы по уровням</h2>
+
+  <div class="qlevel-group">Junior — 10 вопросов</div>
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое Agent Package Manager (APM)?</summary>
+  <div class="inside">APM — система управления «пакетами способностей» агента. Как npm для JavaScript-кода, только единица распространения — не библиотека, а набор инструкций: Skills (как делать задачу), Rules (что запрещено), AGENTS.md (роль и контекст). Пакет устанавливается в проект, и агент сразу «умеет» всё что в нём описано.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Чем agent-пакет отличается от npm-пакета?</summary>
+  <div class="inside">npm-пакет — JavaScript/TypeScript код, выполняется runtime. Agent-пакет — Markdown-инструкции для AI-агента, не выполняется как код. npm ставится в node_modules, агент-пакет копирует файлы в .cursor/rules/ или .claude/commands/. npm для кода — APM для поведения агента. Оба могут быть в одном проекте одновременно.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что входит в agent-пакет?</summary>
+  <div class="inside">Типичный состав: AGENTS.md (роль агента, стек, контекст) + Skills (пошаговые workflow-инструкции) + Rules (жёсткие ограничения, политика) + опционально Hooks (shell-скрипты принуждения) + MCP config (конфигурация инструментов). Всё это текстовые файлы — Markdown и JSON. Никакого исполняемого кода внутри пакета нет.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Зачем вообще нужен APM, если можно просто написать AGENTS.md?</summary>
+  <div class="inside">Написать AGENTS.md для одного проекта — легко. А если у тебя 10 проектов и все должны использовать одинаковые правила code review? Каждый раз копировать вручную — ошибки, устаревание. APM решает: пакет один, все проекты его устанавливают, обновление в одном месте — все получают новую версию.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Как agent-пакет «активируется»?</summary>
+  <div class="inside">Никакого специального запуска не нужно. Агент (Cursor или Claude Code) при старте сессии читает все файлы из .cursor/rules/, .claude/commands/ и AGENTS.md в проекте. Если там лежат файлы из пакета — агент автоматически их видит и знает что умеет. Skills применяются при совпадении задачи с description, Rules — всегда.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Как сейчас устанавливают agent-пакеты?</summary>
+  <div class="inside">Единого стандарта нет. Три рабочих способа: (1) git submodule — пакет как вложенный репо, файлы копируются вручную; (2) скрипт установки — Python/bash копирует файлы в нужные директории; (3) npm-пакет с postinstall — при npm install пакет сам копирует файлы в .cursor/ и .claude/. Скоро ожидается единый CLI, но пока команды выбирают сами.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое манифест пакета (package.json для агента)?</summary>
+  <div class="inside">Файл, описывающий пакет: name (уникальное имя), version (semver), description (что умеет агент), agentType (роль), compatibleWith (cursor, claude-code), agentFiles (куда копировать файлы при установке). Аналог package.json для npm, только добавлены agent-специфичные поля. Используется скриптом установки.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Можно ли поставить несколько пакетов в один проект?</summary>
+  <div class="inside">Да. Например: code-reviewer-agent + security-auditor-agent + db-migration-agent в одном проекте. Агент видит Skills и Rules всех пакетов одновременно. Важно: проверь что у пакетов нет конфликтующих Rules. Если два пакета запрещают одно и то же по-разному — агент применит оба, может быть неожиданное поведение.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Что означают major/minor/patch для agent-пакета?</summary>
+  <div class="inside">Patch (1.0.1): исправлена опечатка в Skill, уточнена формулировка — поведение не меняется. Minor (1.1.0): добавлен новый Skill или Rule, всё старое работает как прежде. Major (2.0.0): удалён Skill, изменён output-формат, переименована роль агента — существующие проекты могут сломаться, нужна миграция.</div></details>
+
+  <details class="details"><summary><span class="q-level q-junior">Junior</span> Где хранятся agent-пакеты?</summary>
+  <div class="inside">Варианты: git-репозиторий (GitHub, GitLab) — самый простой; npm registry (публичный или приватный) — для команд уже знакомых с npm; внутренний корпоративный реестр (Artifactory, verdaccio) — для enterprise. Для начала достаточно обычного git-репо с README: как клонировать и куда скопировать файлы.</div></details>
+
+  <div class="qlevel-group">Middle — 10 вопросов</div>
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как спроектировать хорошую структуру agent-пакета?</summary>
+  <div class="inside">Принципы: один пакет — одна роль (не мегапакет «всего и сразу»). Структура: AGENTS.md (роль) + skills/ (каждый Skill — поддиректория с SKILL.md) + rules/ (отдельные .mdc файлы по темам) + README.md (как установить, как активировать, примеры task description). Размер: Skills суммарно не более 5-7 (иначе агент путается). Rules: только то что реально нужно принудить.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как тестировать agent-пакет перед публикацией?</summary>
+  <div class="inside">Тест-план: (1) Установи пакет в тестовый проект. (2) Дай агенту задачу совпадающую с description каждого Skill — убедись что Skill активируется. (3) Дай задачу намеренно нарушающую Rule — агент должен отказать. (4) Проверь output-формат: соответствует ли ## Output в SKILL.md. (5) Граничный тест: задача похожая на Skill, но другая — Skill НЕ должен активироваться. (6) Protip: golden set — 10 пар (задача, ожидаемый результат) как регрессионный тест.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как управлять зависимостями между пакетами?</summary>
+  <div class="inside">Agent-пакеты могут зависеть друг от друга. Например: security-auditor требует, чтобы был установлен code-reviewer (читает его Rules). Как объявлять: в package.json поле agentDependencies (аналог peerDependencies в npm). При установке скрипт проверяет наличие зависимых пакетов. Circular dependencies — запрещены. Лучше: минимальные зависимости, общие Rules выноси в shared-пакет.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как разрешать конфликты Rules из разных пакетов?</summary>
+  <div class="inside">Конфликт: пакет A говорит «всегда добавляй unit тест», пакет B говорит «не добавляй тесты в hotfix». Приоритет: alwaysApply: true — выше, чем условные Rules. При одинаковом приоритете — побеждает тот что последний в алфавитном порядке файлов (поведение платформы). Лучше: явный conflict matrix в README каждого пакета. При несовместимости — документируй это, не устанавливай одновременно.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как обновлять пакет в 10 проектах одновременно?</summary>
+  <div class="inside">Стратегии: (1) Git submodule — git submodule update --remote во всех проектах одной командой. (2) Shared repo с синхронизацией — центральный репо, все проекты делают pull периодически. (3) CI pipeline — при тeг новой версии пакета автоматически создаёт PR в каждом проекте-потребителе. (4) Package registry — npm update, verdaccio. Лучший вариант для команды 10+ проектов: CI с автоматическими PR на обновление.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда делить один пакет на два, а когда объединять?</summary>
+  <div class="inside">Разделять когда: Skills несовместимы по контексту (security-audit и onboarding — разные роли, разные Rules), одну роль нужно в части проектов, другую во всех, разный ownership (security team vs product team). Объединять когда: Skills дополняют друг друга и всегда нужны вместе, общая роль в AGENTS.md, один owner. Правило: если в README пишешь «ставь оба вместе» — возможно стоит объединить.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как документировать agent-пакет для команды?</summary>
+  <div class="inside">Минимальный README: (1) Что умеет агент с этим пакетом. (2) Как установить (шаги). (3) Как активировать: примеры задач которые триггерят каждый Skill. (4) Rules — список что агент никогда не сделает. (5) Несовместимость с другими пакетами. (6) Версионирование (changelog). (7) Owner и контакт. Хорошая документация = команда понимает без вопросов к автору пакета.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как использовать APM в CI/CD pipeline?</summary>
+  <div class="inside">CI-паттерн: (1) В начале pipeline — шаг install agent packages (скрипт копирует нужные Skills/Rules). (2) CI-агент запускается с установленными пакетами. (3) Задачи: code review PR, security scan, changelog generation — всё через Skills. Пример: PR открыт → CI запускает Claude Code с code-reviewer-agent → reviews PR → оставляет комментарии. Ключево: пакет зафиксирован в lockfile (хэш коммита или версия), не плавающий latest.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как хранить секреты нужные для пакета (API keys)?</summary>
+  <div class="inside">Никогда не в пакете. Пакет хранит только инструкции. Секреты — через env vars, CI secrets, secrets manager. В AGENTS.md пакета указывай: «Требуется переменная окружения JIRA_TOKEN». В mcp.json: "env": {"JIRA_TOKEN": "${JIRA_TOKEN}"}. При установке скрипт проверяет наличие нужных env vars и предупреждает об отсутствующих. README: список required env vars.</div></details>
+
+  <details class="details"><summary><span class="q-level q-middle">Middle</span> Как APM связан со Skills и Commands?</summary>
+  <div class="inside">APM — уровень распространения и управления. Skills и Commands — единицы внутри пакета. Аналогия: npm-пакет содержит функции/классы; agent-пакет содержит Skills/Commands. Устанавливая пакет, ты устанавливаешь набор Skills (автоматически активируемые) и Commands (явный вызов). APM = способ поставить эти Skills и Commands в проект, не копируя вручную.</div></details>
+
+  <div class="qlevel-group">Senior — 5 вопросов</div>
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как спроектировать APM-систему с нуля для организации?</summary>
+  <div class="inside">Компоненты: (1) Package schema — стандарт package.json для агентов: обязательные поля, agentFiles mapping, agentDependencies. (2) Registry — приватный npm (verdaccio) или git-based. (3) CLI-инструмент — install/update/list команды, копирование файлов, проверка конфликтов. (4) Discovery — catalog страница с поиском по роли/домену. (5) Versioning policy — semver enforcement через CI. (6) Validation — линтер SKILL.md и AGENTS.md при публикации. Итеративно: начни с простого git + скрипт, перейди к CLI когда пакетов >10.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как обеспечить backward compatibility при обновлении agent-пакета?</summary>
+  <div class="inside">Стратегии: (1) Additive changes — добавляй Skills, не удаляй. Если нужно убрать — deprecate (пометь в README и frontmatter) и удали в следующем major. (2) Output format compatibility — если меняешь ## Output, поддерживай оба формата N+1 период. (3) Migration guide — в CHANGELOG для каждого major: что изменилось, как обновить проект. (4) Тест на compatibility: golden set запросов из предыдущей версии должен проходить с новой. Правило: никогда не делай breaking change в minor/patch.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как диагностировать проблему «пакет установлен, но агент не применяет Skills»?</summary>
+  <div class="inside">Диагностика по слоям: (1) Файлы на месте? Проверь что SKILL.md скопированы в .cursor/commands/ или .claude/commands/. (2) YAML frontmatter валиден? Ошибки в --- блоке молча игнорируются. (3) Description совпадает с задачей? Попробуй описать задачу словами из description Skill. (4) Конфликт с Rule? Может Rule блокирует действие которое Skill пытается сделать. (5) Skills слишком много? Context window переполнен descriptions — агент не может обработать. (6) Перезапусти сессию — некоторые платформы читают Skills только при старте.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как версионировать agent-пакеты в монорепо?</summary>
+  <div class="inside">В монорепо: используй независимое версионирование для каждого пакета (changesets или lerna). Структура: packages/code-reviewer/, packages/security-auditor/ — у каждого свой package.json и CHANGELOG. CI: при изменении файла в packages/X — автоматически bump version X. Зависимости между пакетами внутри монорепо — через workspace protocol (npm workspaces). Публикация: только изменённые пакеты публикуются в registry при merge в main.</div></details>
+
+  <details class="details"><summary><span class="q-level q-senior">Senior</span> Как тестировать APM в CI автоматически?</summary>
+  <div class="inside">CI тест-pipeline для agent-пакета: (1) YAML lint — проверка frontmatter всех SKILL.md и AGENTS.md. (2) Schema validation — package.json соответствует схеме. (3) Install test — скрипт установки работает без ошибок в чистом проекте. (4) Agent behavior test — sandbox: запускаем агента с пакетом на golden set (задача → ожидаемый Skill). (5) Conflict check — проверяем что Rules пакета не конфликтуют с common-rules. (6) Size check — суммарный размер Skills не превышает N токенов. Инструменты: pytest + mock LLM для поведенческих тестов.</div></details>
+
+  <div class="qlevel-group">Lead — 5 вопросов</div>
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как выстроить governance APM в организации?</summary>
+  <div class="inside">Framework: (1) Approval process — новый пакет: security review (нет секретов, нет опасных Rules) + architecture review (нужен ли, не дублирует ли существующий). (2) Owner per package — каждый пакет имеет team-owner, ответственный за актуальность. (3) Internal registry — каталог с owner, version, статусом (active/deprecated/sunset). (4) Update policy — при major: announcement 30 дней, migration guide, sunset дата для старой версии. (5) Quality bar: минимальные требования к README, тестам, описанию Skills. Platform team — владелец registry и CLI; product teams — авторы пакетов.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как обучать команду созданию и использованию agent-пакетов?</summary>
+  <div class="inside">Программа: (1) Workshop (2ч) — что такое APM, демо установки пакета и активации Skills. (2) Template — готовая структура пакета с README, AGENTS.md, одним Skill. (3) Hands-on — каждый инженер берёт реальный повторяемый процесс своей команды и упаковывает в пакет. (4) Review — парное ревью первого пакета. (5) Catalog demo — показываешь каталог существующих пакетов, предотвращаешь дублирование. Критерий успеха: через месяц команда сама предлагает упаковать новые процессы в пакеты.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как управлять lifecycle устаревающих пакетов?</summary>
+  <div class="inside">Lifecycle stages: (1) Active — поддерживается, получает обновления. (2) Deprecated — пакет работает, но рекомендован заменитель. Помечается в registry и README. (3) Sunset (end-of-life) — дата после которой пакет удаляется. (4) Removed. Процесс: Owner объявляет deprecated → 90 дней на миграцию → напоминания потребителям → удаление из registry. Метрика: count проектов использующих пакет. При нуле — ускоренный sunset.</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как измерять ROI от внедрения APM?</summary>
+  <div class="inside">Метрики: (1) Время на onboarding нового инженера до первого самостоятельного task — до и после APM. (2) Consistency score — доля PR прошедших code review без отклонения из-за стиля. (3) Time to install agent capability — ручное написание AGENTS.md vs установка пакета. (4) Defect rate — находит ли security-auditor-agent реальные уязвимости. (5) Package adoption — сколько проектов используют пакет. Presenting to leadership: «пакет сэкономил X часов/мес потому что Y команд не писали Rules с нуля».</div></details>
+
+  <details class="details"><summary><span class="q-level q-lead">Lead</span> Как строить inter-team collaboration через APM?</summary>
+  <div class="inside">Модель: (1) Platform team публикует shared-rules-agent — основные правила безопасности и стиля для всей организации. Все команды устанавливают обязательно. (2) Domain teams публикуют domain-специфичные пакеты для своего сервиса. (3) Inner-source — любая команда может PR в пакет другой команды. (4) APM guild — встреча раз в 2 недели: новые пакеты, улучшения, cross-team Issues. (5) Recognition — команда создавшая самый используемый пакет месяца. Эффект: экспертиза одной команды доступна всем через пакет без консультаций.</div></details>
+
+  <div class="qlevel-group">Architect — 5 вопросов</div>
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как спроектировать APM как platform capability?</summary>
+  <div class="inside">Architecture: (1) Package registry service — API для publish/install/search, metadata store, версионирование. (2) CLI — единая команда agentpm install/update/list/publish. (3) Schema service — валидация package.json, SKILL.md, AGENTS.md при публикации. (4) Discovery UI — веб-каталог с поиском, ratings, usage stats. (5) Integration hooks — webhooks при publish новой версии, CI triggers для автопропагации обновлений. (6) Observability — какие пакеты установлены где, adoption metrics. Tech stack: любой registry (npm-compatible), CLI (Node.js/Python), catalog (статика или SPA).</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как APM вписывается в enterprise AI governance?</summary>
+  <div class="inside">APM как governance layer: все agent capabilities проходят через registry → естественный контроль. Governance points: (1) Publish gate — security review перед публикацией (нет секретов, нет опасных Rules). (2) Mandatory packages — shared-security-rules обязателен для всех. (3) Audit trail — кто установил какой пакет когда. (4) Compliance reporting — все проекты с агентами имеют approved пакеты. (5) Emergency revocation — если в пакете найдена проблема → central revoke → все инсталляции оповещены. APM = контролируемая точка распространения AI capabilities в организации.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как обеспечить безопасность цепочки поставок agent-пакетов?</summary>
+  <div class="inside">Supply chain security для APM: (1) Signing — каждый пакет подписан GPG ключом publisher. При установке signature проверяется. (2) Hash pinning — в lockfile фиксируется SHA256 каждого пакета. (3) Registry trust — только approved publishers могут публиковать. Whitelist publisher teams. (4) SBOM для агентов — список всех пакетов и их версий как software bill of materials. (5) Dependency scanning — проверка что пакет не зависит от deprecated/unsafe пакетов. (6) Reproducible installs — одни и те же версии во всех окружениях. Threat: compromised SKILL.md может изменить поведение агента — не менее опасно чем compromised npm пакет.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как APM масштабируется при сотнях пакетов и тысячах проектов?</summary>
+  <div class="inside">Scale challenges: (1) Discovery — поиск нужного пакета среди 500 становится сложным. Решение: таксономия по ролям, тегам, доменам + semantic search по descriptions. (2) Conflict detection — при установке нескольких пакетов проверять Rule conflicts автоматически. (3) Update propagation — при major обновлении известить всех потребителей (webhook список). (4) Context budget — агент с 20 пакетами может перегрузить context window descriptions Skills. Решение: lazy loading — Skills загружаются только при матче. (5) Quality decay — пакеты устаревают. Автоматический staleness check по дате последнего обновления.</div></details>
+
+  <details class="details"><summary><span class="q-level q-arch">Arch</span> Как APM эволюционирует к стандарту отрасли?</summary>
+  <div class="inside">Текущее состояние: разрозненные подходы, нет стандарта. Векторы эволюции: (1) Anthropic / Cursor specs — вероятно появится официальный формат agent package manifest. (2) Model Context Protocol extensions — MCP как стандарт уже есть; agent-capabilities package format — следующий шаг. (3) Open registry — аналог npmjs.com для agent-пакетов. (4) Interoperability — один пакет работает в Cursor, Claude Code, GitHub Copilot. (5) AI-generated packages — агент сам упаковывает свои удачные workflows в пакет. Позиция architect: закладывай абстракцию сегодня (agentFiles mapping), чтобы безболезненно перейти на стандарт когда он появится.</div></details>
+</section>
+
+<div class="pageFooter"><div class="nextPrev">
+  <a href="skills.html">← Skills</a>
+  <a href="commands.html">Commands →</a>
+</div></div>
+</main>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

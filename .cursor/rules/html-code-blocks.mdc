@@ -1,0 +1,401 @@
+---
+description: Academy HTML page structure — required sections, platform split, code blocks, nav sync
+globs: agent_context_academy/**/*.html
+alwaysApply: true
+---
+
+# Academy HTML Page Requirements
+
+## 0. PLATFORM SPLIT — ОБЯЗАТЕЛЬНО для platform-specific тем
+
+Когда тема различается между Cursor и Claude Code (Rules, Skills, Commands, Hooks, AGENTS.md и т.д.) — ВСЕГДА показывай оба варианта явно.
+
+### Формат: side-by-side блок
+
+```html
+<div class="platform-split">
+  <div class="ps-col">
+    <div class="ps-head ps-cursor">🖱 Cursor — ...</div>
+    <!-- Cursor-специфичный контент, файлы, примеры -->
+  </div>
+  <div class="ps-col">
+    <div class="ps-head ps-claude">🤖 Claude Code — ...</div>
+    <!-- Claude Code-специфичный контент, файлы, примеры -->
+  </div>
+</div>
+```
+
+### Что включать в каждый столбец:
+- Расположение файлов (`code block` с деревом)
+- Синтаксис / формат (рабочий пример кода)
+- Способ вызова / активации
+- Уникальные фичи платформы
+
+### Финальная таблица Cursor vs Claude Code
+
+В конце каждой platform-specific страницы — ОБЯЗАТЕЛЬНАЯ сравнительная таблица:
+
+```html
+<section class="section">
+  <h2>Cursor vs Claude Code — сравнение</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Аспект</th><th>Cursor</th><th>Claude Code</th></tr></thead>
+    <tbody>
+      <tr><td>Расположение</td><td>...</td><td>...</td></tr>
+      <tr><td>Формат</td><td>...</td><td>...</td></tr>
+      <tr><td>Уникальная фича</td><td>...</td><td>...</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><b>Главное отличие:</b> ...</div>
+</section>
+```
+
+---
+
+## 1. Required sections on EVERY topic page
+
+Every topic page (context, rules, hooks, skills, mcp, rag, memory, etc.) MUST include all of the following sections IN THIS ORDER:
+
+1. **Hero** — title, subtitle, heroActions buttons
+2. **Core concept** — что это, зачем нужно
+3. **Структура / Формат** — файлы, поля, синтаксис
+4. **Примеры** — реальные, конкретные, с кодом
+5. **Тонкости** — неочевидные нюансы в `.nuance-card` блоках
+6. **Best practices** — Делай / Не делай карточки
+7. **Cursor vs Claude Code** — сравнительная таблица (если тема platform-specific)
+8. **Каверзные вопросы** — `<details>` Q&A, минимум 3-4 вопроса включая каверзные
+
+## 2. Тонкости (nuances) — обязательный формат
+
+```html
+<div class="nuance-card nc-COLOR">
+  <h4>Заголовок тонкости</h4>
+  <p>Объяснение...</p>
+</div>
+```
+Colors: `nc-blue`, `nc-red`, `nc-orange`, `nc-green`, `nc-purple`
+
+Минимум 3-4 nuance cards per page. Должны включать:
+- Неочевидное поведение
+- Распространённые ошибки
+- Разницу с похожим концептом
+- Что происходит при длинном контексте (lost in the middle)
+
+## 3. Вопросы по уровням — обязательный формат
+
+```html
+<details class="details"><summary><span class="q-level q-junior">Junior</span> ВОПРОС</summary>
+<div class="inside">ОТВЕТ</div></details>
+```
+
+**На каждой тематической странице — 35 вопросов по 5 уровням:**
+
+| Уровень | Кол-во | Фокус |
+|---------|--------|-------|
+| Junior  | 10     | Определения, синтаксис, базовые концепции, «что это такое» |
+| Middle  | 10     | Практика, use cases, нюансы, trade-offs, «как использовать» |
+| Senior  | 5      | Edge cases, архитектурные решения, оптимизация, «почему так» |
+| Lead    | 5      | Командные стандарты, масштаб, governance, onboarding, «как выстроить в команде» |
+| Arch    | 5      | System design, cross-cutting concerns, межсистемные решения, «как спроектировать» |
+
+### Формат секции:
+```html
+<section class="section">
+  <h2>Вопросы по уровням</h2>
+  <div class="qlevel-group">Junior — 10 вопросов</div>
+  <!-- 10 details с <span class="q-level q-junior">Junior</span> -->
+  <div class="qlevel-group">Middle — 10 вопросов</div>
+  <!-- 10 details с <span class="q-level q-middle">Middle</span> -->
+  <div class="qlevel-group">Senior — 5 вопросов</div>
+  <!-- 5 details с <span class="q-level q-senior">Senior</span> -->
+  <div class="qlevel-group">Lead — 5 вопросов</div>
+  <!-- 5 details с <span class="q-level q-lead">Lead</span> -->
+  <div class="qlevel-group">Architect — 5 вопросов</div>
+  <!-- 5 details с <span class="q-level q-arch">Arch</span> -->
+</section>
+```
+
+- Каждый вопрос начинается со span-бейджа уровня
+- Вопросы конкретны по теме страницы, с развёрнутыми ответами
+- Junior/Middle — понимание и практика; Senior/Lead/Arch — экспертиза и дизайн
+
+## 4. Сравнение Cursor vs Claude Code
+
+Если тема различается по платформам — добавь таблицу в конце перед Q&A:
+
+```html
+<section class="section">
+  <h2>Cursor vs Claude Code — сравнение</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Аспект</th><th>Cursor</th><th>Claude Code</th></tr></thead>
+    <tbody>...</tbody>
+  </table></div>
+  <div class="callout">Главное отличие: ...</div>
+</section>
+```
+
+## 5. Code block styling — ОБЯЗАТЕЛЬНО
+
+```css
+/* ВСЕГДА включать white-space: pre-wrap */
+.schema-box {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  white-space: pre-wrap; /* ← REQUIRED */
+  overflow: auto;
+}
+```
+
+Без `white-space: pre-wrap` код сворачивается в одну строку.
+
+## 6. Карточки тем (topic-card / topicCard / topicGraphCard) — принцип «Для чего это»
+
+Любая карточка, которая описывает тему/концепцию (topic-grid на `overall-full.html` + `partials/context-topics.html`, learning-map карточки на `home.html`), ДОЛЖНА сразу — без клика, без скролла, без открытия модалки — показывать, **для чего это нужно на практике**.
+
+### Обязательный элемент: короткая строка-цель
+
+Сразу после заголовка/tagline карточки — одна короткая выделенная строка (не список):
+
+```html
+<div class="topic-purpose"><b>Для чего это:</b> чтобы агент отвечал по актуальным фактам из документов, а не по памяти модели.</div>
+```
+
+Для карточек `home.html` (`.topicCard`) — тот же принцип, класс `card-why`:
+
+```html
+<p class="card-why"><b>Зачем:</b> не терять принятые решения между сессиями.</p>
+```
+
+Для узлов графа `roadmap.html` (`NODES`) — поле `why` для модалки «Для чего это» при клике по узлу (отдельной сетки карточек под графом нет):
+
+```js
+{id:'rag', label:'RAG', ..., why:'Чтобы агент отвечал по актуальным фактам из источников, а не по памяти.', desc:'...длинное описание...'}
+```
+
+Требования к строке «Для чего / Зачем»:
+- 1 предложение, практическое, отвечает на вопрос «зачем это использовать», а не «что это такое»
+- НЕ дублирует dictionary-определение из «Простыми словами» / desc
+- Видна сразу в свёрнутом/списочном виде карточки (не прячется в `<details>`, не требует клика)
+
+### НЕ делай мини-блок «Ограничения» блоком по умолчанию
+
+Раньше на topic-card был блок `<div class="mini-box"><b>Ограничения</b>...</div>` в паре с «Когда использовать» (`.split` на 2 колонки). Это скрывало главное — «зачем это» — за списком минусов и делало layout из двух колонок с мелким текстом.
+
+- Если у темы есть значимые ограничения/риски — оставляй ОДИН mini-box (например «Что включать» / «Риски» — там, где это ключевая часть темы, как у Checkpoint или Summary/Compression), но НЕ делай его дефолтной парой к «Когда использовать».
+- Когда ограничений нет как отдельного обязательного раздела — «Когда использовать» идёт на всю ширину карточки (без `.split`), а не жмётся в половину колонки.
+- Приоритет: **польза/цель видна сразу → детали → нюансы/риски** (риски не должны быть первым, что видит читатель).
+
+## 7. Nav sync — при добавлении страницы
+
+**Канонический порядок навигации** (одинаковый на ВСЕХ страницах, совпадает с шагами на home.html):
+
+```html
+  <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+```
+
+На активной странице — только у соответствующей ссылки добавить `active` в class. **Никогда не менять порядок, не удалять Hooks.**
+
+**Порядок обучения (шаги 1…N):** при новой теме синхронизировать `home.html` (topicCard), таблицу и **`VP_PHASES`** в `roadmap.html` — см. `.cursor/rules/academy-sync.mdc` §0. Nav и карточка на home **не заменяют** обновление `VP_PHASES`.
+
+---
+
+## 8. Level-0 / Foundational секция — «С нуля»
+
+Если тема опирается на базовый концепт (agent loop, context window, RAG pipeline, MCP protocol и т.д.) — **первые две секции** страницы строятся по шаблону ниже, до погружения в детали.
+
+### Когда добавлять
+
+- Тема содержит термин который новичок может не знать
+- Страница ссылается на другую концепцию как на данность
+- Тема platform-specific и поведение на Cursor vs Claude Code отличается
+
+---
+
+### Секция A — «Что такое X»
+
+Используй `div.grid` с карточками `card bg-COLOR` — по одной на каждый ключевой аспект. Паттерн взят с `rules.html` и `mcp.html`.
+
+```html
+<section class="section">
+  <h2>Что такое [КОНЦЕПТ] и зачем он нужен</h2>
+
+  <!-- grid с 2–3 карточками: суть + Cursor + Claude Code -->
+  <div class="grid">
+    <div class="card bg-blue">
+      <h3>[Концепт] = [одно слово-метафора]</h3>
+      <p>Аналогия из реальной жизни (USB для AI, менеджер + специалист, почтовый ящик...).</p>
+      <ul>
+        <li>Ключевой факт 1</li>
+        <li>Ключевой факт 2</li>
+      </ul>
+    </div>
+    <div class="card bg-orange">
+      <h3>Cursor: [как называется / где живёт]</h3>
+      <p>Конкретно: файл, директория, формат, как активируется.</p>
+    </div>
+    <div class="card bg-purple">
+      <h3>Claude Code: [аналог]</h3>
+      <p>Аналог или отличие. Что используется вместо.</p>
+    </div>
+  </div>
+</section>
+```
+
+**Цвета карточек по смыслу:**
+- `bg-blue` — основное определение / что это
+- `bg-orange` — Cursor-специфика
+- `bg-purple` — Claude Code-специфика
+- `bg-green` — преимущества / когда полезно
+- `bg-teal` — протокол / технический аспект
+
+---
+
+### Секция B — «Формат / Архитектура»
+
+Используй `diff-split` (два столбца): **слева** — рабочий пример кода в `schema-box`, **справа** — таблица полей/параметров. Паттерн взят с `rules.html` (формат .mdc) и `mcp.html`.
+
+```html
+<section class="section">
+  <h2>Формат [файла / структуры / запроса] — архитектура</h2>
+  <div class="diff-split">
+    <div>
+      <h3 style="margin-bottom:10px">Полный формат</h3>
+      <!-- один или несколько schema-box с рабочими примерами -->
+      <div class="schema-box">
+[рабочий пример с подсветкой: .h .k .v .s .c .r]
+      </div>
+      <!-- второй пример если нужно -->
+      <div class="schema-box" style="margin-top:10px">
+[второй вариант / частный случай]
+      </div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:10px">Поля / Параметры</h3>
+      <div class="tableWrap">
+        <table>
+          <thead><tr><th>Поле</th><th>Обяз.</th><th>Описание</th></tr></thead>
+          <tbody>
+            <tr><td><code>поле</code></td><td class="req-yes">✓</td><td>Что делает, когда нужно.</td></tr>
+            <tr><td><code>поле</code></td><td class="req-no">—</td><td>Опционально. Дефолт и edge cases.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- callout с naming convention или важным предупреждением -->
+      <div class="callout" style="margin-top:12px">
+        <b>Naming convention:</b> ...
+      </div>
+      <div class="callout warn" style="margin-top:8px">
+        <b>Лимиты / предупреждение:</b> ...
+      </div>
+    </div>
+  </div>
+</section>
+```
+
+**CSS для `diff-split` — добавить в `<style>` страницы если ещё нет:**
+```css
+.diff-split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.diff-split{grid-template-columns:1fr}}
+.req-yes{color:#dc2626;font-weight:900}
+.req-no{color:#64748b}
+```
+
+---
+
+### Секция C — Level-0 nuance + схема + таблица терминов
+
+После «Что такое» и «Архитектура» — секция с углублённым объяснением для тех кто хочет понять механику.
+
+```html
+<section class="section">
+  <h2>С нуля: как это работает изнутри — Claude Code / Cursor</h2>
+  <p class="sectionIntro">Концепция одинакова в Claude Code и Cursor — разница только в деталях реализации.</p>
+
+  <!-- 1. Nuance-card уровня 0 -->
+  <div class="nuance-card nc-blue">
+    <h4>Уровень 0 — простыми словами</h4>
+    <p>2–3 предложения. Аналогия. Никаких аббревиатур.</p>
+  </div>
+
+  <!-- 2. ASCII схема -->
+  <div class="schema-box">[визуальный цикл / поток данных]</div>
+
+  <!-- 3. Таблица терминов — два уровня -->
+  <div class="tableWrap"><table>
+    <thead><tr><th>Термин</th><th>Простое объяснение</th><th>Техническое</th></tr></thead>
+    <tbody>
+      <tr><td><b>Термин</b></td><td>Что это для новичка</td><td>Точное определение</td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- 4. Пошаговый пример -->
+  <h3 style="font-size:15px;margin:14px 0 8px">Пример: [сценарий] — шаг за шагом</h3>
+  <div class="schema-box">[пошаговый пример с реальными данными]</div>
+
+  <!-- 5. Platform split + ссылки на доки -->
+  <div class="platform-split" style="margin-top:14px">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor — одинаково?</div>
+      <p style="font-size:13px">Да/нет/частично. Что отличается.</p>
+      <div style="font-size:12px;margin-top:8px">📖 <a href="https://docs.cursor.com" target="_blank">Cursor Docs</a></div>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code — документация</div>
+      <p style="font-size:13px">Уникальные возможности. Ссылки.</p>
+      <ul style="font-size:12px;margin:6px 0 0;padding-left:16px;line-height:2">
+        <li><a href="https://code.claude.com/docs/..." target="_blank">Раздел доков</a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+```
+
+### Правила контента
+
+- **grid карточки**: аналогия из жизни в первой карточке, не словарное определение
+- **diff-split**: слева — рабочий пример который можно скопировать, справа — справочник полей
+- **Таблица терминов**: каждый термин в двух уровнях — «простое» для новичка, «техническое» для продвинутого
+- **Пример**: конкретный (файлы, команды, реальные значения), не абстрактный («Fix failing tests in auth.ts», не «выполни задачу»)
+- **Platform split**: явно писать «концепция идентична, отличается только API/синтаксис» если различий нет
+- **Ссылки**: всегда в конце — `docs.cursor.com` и `code.claude.com/docs`
+
+Этот порядок = шаги на home.html (1→prompting, 2→context-engineering, 3→context, 4→model-variance, 5→agents-rules-skills, 8→memory, 9→rag, 10→mcp, 11→caching, 12→checkpoints, 13→subagents, 14→conflicts, 16→tricky-questions, 17→assessment).
+
+Обновить ВСЁ:
+- Nav во всех .html файлах используя `sync_nav.py` (Python script для bulk)
+- Карточка на `home.html` с номером шага и level badge
+- Строка в `roadmap.html` таблице последовательности
+- Mental model на `home.html` если новый слой
+- PAGES array в `assets/app.js`

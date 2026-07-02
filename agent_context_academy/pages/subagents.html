@@ -1,0 +1,813 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Subagents</title><link rel="stylesheet" href="../assets/style.css"/></head><body><div class="app"><aside class="sidebar"><div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>  <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html" class="active"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div><div class="progressBox"><b>Формула</b><p class="sourceNote">System → AGENTS/Rules → Current task → Memory/RAG/MCP/Skills → Subagent findings.</p></div></aside><main class="main"><section class="hero"><div class="kicker">Agent Context Academy</div><h2>Subagents</h2><p>Как работают подагенты: отдельный контекст, делегирование, ограничения, tools, permissions, foreground/background и проверка результата.</p><div class="heroActions"><a class="btn primary" href="home.html">На главную</a><a class="btn" href="assessment.html">К assessment</a><button class="markDone">Отметить страницу изученной</button></div></section>
+<style>
+  .schema-box{background:#0f172a;color:#e2e8f0;border-radius:16px;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.65;overflow:auto;margin:10px 0;white-space:pre-wrap}
+  .schema-box .h{color:#c084fc;font-weight:900}
+  .schema-box .c{color:#64748b}
+  .schema-box .k{color:#93c5fd}
+  .schema-box .v{color:#86efac}
+  .schema-box .s{color:#fcd34d}
+  .nuance-card{border-left:4px solid;border-radius:0 14px 14px 0;padding:12px 16px;margin:8px 0;background:#fff;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .nc-blue{border-left-color:#2563eb}.nc-red{border-left-color:#dc2626}.nc-orange{border-left-color:#f97316}.nc-green{border-left-color:#16a34a}.nc-purple{border-left-color:#7c3aed}
+  .platform-split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:12px 0}
+  .ps-col{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff}
+  .ps-head{border-radius:10px;padding:7px 14px;font-weight:800;font-size:13px;margin-bottom:10px}
+  .ps-cursor{background:#eff6ff;color:#1e40af}
+  .ps-claude{background:#f0fdf4;color:#14532d}
+  @media(max-width:900px){.platform-split{grid-template-columns:1fr}}
+</style>
+
+<!-- ── С нуля: Agent Loop ── -->
+<section class="section">
+  <h2>С нуля: что такое Agent Loop — Claude Code / Cursor</h2>
+  <p class="sectionIntro">Прежде чем разобраться в subagents — нужно понять базу: как вообще работает агент изнутри. Это и есть <b>agent loop</b>. Концепция одинакова в Claude Code и Cursor — разница только в деталях реализации.</p>
+
+  <div class="nuance-card nc-blue" style="margin-bottom:14px">
+    <h4>Уровень 0 — простыми словами</h4>
+    <p>Когда ты пишешь агенту задачу — он не отвечает сразу. Он начинает <b>цикл</b>: думает → вызывает инструмент (читает файл, запускает команду) → смотрит на результат → думает снова → снова вызывает инструмент... И так повторяет пока задача не решена. Этот цикл и называется <b>agent loop</b>.</p>
+  </div>
+
+  <div class="schema-box"><span class="h">Agent Loop — цикл работы агента</span>
+
+<span class="c">┌─────────────────────────────────────────────────────┐</span>
+<span class="c">│                    AGENT LOOP                       │</span>
+<span class="c">│                                                     │</span>
+<span class="c">│  1. Получить prompt (задачу от пользователя)        │</span>
+<span class="c">│           ↓                                         │</span>
+<span class="c">│  2. Claude оценивает: что нужно сделать?            │</span>
+<span class="c">│           ↓                                         │</span>
+<span class="c">│  3. Вызывает tool (Read файл / Bash команда / MCP)  │</span>◄──┐
+<span class="c">│           ↓                                         │</span>   │
+<span class="c">│  4. Получает результат tool → добавляет в контекст  │</span>   │
+<span class="c">│           ↓                                         │</span>   │
+<span class="c">│  5. Снова оценивает — нужен ещё tool?               │───┘ повтор</span>
+<span class="c">│           ↓ нет                                     │</span>
+<span class="c">│  6. Возвращает финальный ответ → ResultMessage      │</span>
+<span class="c">└─────────────────────────────────────────────────────┘</span>
+
+<span class="k">Один проход шагов 3–5 = один Turn</span>
+<span class="v">Простая задача:</span>  1–2 turns  (grep + ответ)
+<span class="v">Сложная задача:</span> 10–30 turns (исследование + правки + тесты)</div>
+
+  <div class="tableWrap" style="margin-top:14px"><table>
+    <thead><tr><th>Термин</th><th>Простое объяснение</th><th>Техническое</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>Agent Loop</b></td>
+        <td>Цикл «думаю → делаю → смотрю → думаю» — основной движок агента</td>
+        <td>Execution loop: Claude evaluates → calls tools → receives results → repeats until no tool calls</td>
+      </tr>
+      <tr>
+        <td><b>Turn</b></td>
+        <td>Один «ход»: агент что-то сделал (вызвал инструмент и получил результат)</td>
+        <td>One round trip: Claude produces output with tool calls → SDK executes tools → results fed back</td>
+      </tr>
+      <tr>
+        <td><b>Tool call</b></td>
+        <td>Агент вызвал инструмент: прочитал файл, запустил команду, обратился к API</td>
+        <td>Claude requests a tool execution; SDK runs it and returns result as UserMessage</td>
+      </tr>
+      <tr>
+        <td><b>Context window</b></td>
+        <td>Всё что агент «помнит» прямо сейчас: задача + все tool результаты + история turns</td>
+        <td>Accumulated: system prompt + tool defs + conversation history + tool inputs/outputs</td>
+      </tr>
+      <tr>
+        <td><b>ResultMessage</b></td>
+        <td>Финальный ответ агента — когда он решил что задача выполнена</td>
+        <td>Emitted when loop ends: final text + cost + session_id + stop_reason</td>
+      </tr>
+      <tr>
+        <td><b>max_turns</b></td>
+        <td>Максимальное количество «ходов» — защита от бесконечного цикла</td>
+        <td>Caps tool-use round trips; loop returns <code>error_max_turns</code> if hit</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div style="margin-top:16px">
+    <h3 style="font-size:15px;margin-bottom:10px">Пример: как агент исправляет тест — шаг за шагом</h3>
+    <div class="schema-box" style="font-size:12px"><span class="h">Задача:</span> <span class="s">"Fix the failing tests in auth.ts"</span>
+
+<span class="c">── Turn 1 ──────────────────────────────────────────</span>
+Claude вызывает: <span class="k">Bash("npm test")</span>
+Результат: <span class="v">3 теста упали, ошибки в auth.ts</span>
+
+<span class="c">── Turn 2 ──────────────────────────────────────────</span>
+Claude вызывает: <span class="k">Read("auth.ts")</span> + <span class="k">Read("auth.test.ts")</span>
+Результат: <span class="v">содержимое файлов → видит где баг</span>
+
+<span class="c">── Turn 3 ──────────────────────────────────────────</span>
+Claude вызывает: <span class="k">Edit("auth.ts", fix)</span> → <span class="k">Bash("npm test")</span>
+Результат: <span class="v">все 3 теста прошли ✅</span>
+
+<span class="c">── Final Turn ───────────────────────────────────────</span>
+Claude: <span class="s">"Fixed the auth bug, all three tests pass now."</span>
+<span class="c">→ ResultMessage {subtype: "success", cost: $0.003}</span>
+
+<span class="v">Итого: 4 turns, 3 с tool calls + 1 финальный текстовый</span></div>
+  </div>
+
+  <div style="margin-top:16px">
+    <h3 style="font-size:15px;margin-bottom:10px">Типы сообщений в agent loop</h3>
+    <div class="tableWrap"><table>
+      <thead><tr><th>Тип сообщения</th><th>Когда возникает</th><th>Что содержит</th></tr></thead>
+      <tbody>
+        <tr><td><code>SystemMessage (init)</code></td><td>Самое первое — при старте сессии</td><td>session_id, метаданные</td></tr>
+        <tr><td><code>AssistantMessage</code></td><td>После каждого ответа Claude</td><td>Текст + запросы на tool calls</td></tr>
+        <tr><td><code>UserMessage</code></td><td>После выполнения каждого tool</td><td>Результат tool → идёт обратно в Claude</td></tr>
+        <tr><td><code>ResultMessage</code></td><td>Конец loop — задача завершена</td><td>Финальный текст, cost, session_id, stop_reason</td></tr>
+        <tr><td><code>SystemMessage (compact_boundary)</code></td><td>Когда контекст сжимается</td><td>Сигнал о compaction</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div style="margin-top:14px">
+    <h3 style="font-size:15px;margin-bottom:10px">Уровни effort — сколько думать на каждый turn</h3>
+    <div class="tableWrap"><table>
+      <thead><tr><th>Уровень</th><th>Поведение</th><th>Когда использовать</th></tr></thead>
+      <tbody>
+        <tr><td><code>low</code></td><td>Минимум рассуждений, быстро</td><td>Прочитать файл, ls директории</td></tr>
+        <tr><td><code>medium</code></td><td>Сбалансированно</td><td>Стандартные правки, рутина</td></tr>
+        <tr><td><code>high</code></td><td>Глубокий анализ</td><td>Рефакторинг, debugging</td></tr>
+        <tr><td><code>xhigh</code></td><td>Расширенные рассуждения</td><td>Сложные архитектурные задачи</td></tr>
+        <tr><td><code>max</code></td><td>Максимальная глубина</td><td>Многошаговые проблемы</td></tr>
+      </tbody>
+    </table></div>
+    <p style="font-size:12px;color:#64748b;margin-top:6px">Выше effort → больше токенов → дороже и медленнее. Для subagents можно задавать effort отдельно через <code>AgentDefinition.effort</code>.</p>
+  </div>
+
+  <div class="nuance-card nc-orange" style="margin-top:14px">
+    <h4>Почему context window растёт с каждым turn</h4>
+    <p>Context не сбрасывается между turns внутри одной сессии — всё накапливается: system prompt + история всех turns + все tool inputs + все tool outputs. Большой файл прочитан → тысячи токенов добавлены навсегда в текущую сессию. Через 20–30 turns context может стать огромным → автоматический <b>compaction</b> (сжатие) или передача задачи subagent'у со свежим context.</p>
+  </div>
+
+  <div class="platform-split" style="margin-top:14px">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor — одинаково?</div>
+      <p style="font-size:13px;color:#334155;margin:0 0 8px">Да, концепция <b>полностью та же</b>: think → tool call → result → think. В Cursor это называется <b>Agent mode</b>. Cursor использует те же принципы loop — turns, tool calls, context accumulation.</p>
+      <p style="font-size:13px;color:#64748b;margin:0 0 8px"><b>Отличие от Claude Code SDK:</b> в Cursor нет прямого доступа к параметрам типа <code>max_turns</code> или <code>effort</code> в коде — это управляется через UI и настройки. Но логика цикла идентична.</p>
+      <ul style="font-size:12px;color:#475569;margin:0;padding-left:18px;line-height:1.8">
+        <li>Tool calls: Read, Edit, Bash, Grep, Glob — те же</li>
+        <li>Subagents: через Task tool (встроен в агент)</li>
+        <li>Context accumulation: нарастает по turns</li>
+        <li>Compaction: автоматический при переполнении</li>
+      </ul>
+      <div style="margin-top:8px;font-size:12px">
+        📖 <a href="https://docs.cursor.com" target="_blank" style="color:#1e40af;text-decoration:underline">Cursor Docs</a>
+        · <a href="https://docs.cursor.com/agent" target="_blank" style="color:#1e40af;text-decoration:underline">Cursor Agent</a>
+      </div>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code SDK — документация</div>
+      <p style="font-size:13px;color:#334155;margin:0 0 8px">Claude Code SDK даёт <b>программный доступ</b> к agent loop — можно встроить в своё приложение, задать <code>max_turns</code>, <code>effort</code>, подключить MCP, управлять permissions через код.</p>
+      <p style="font-size:13px;color:#64748b;margin:0 0 6px"><b>Ссылки на документацию:</b></p>
+      <ul style="font-size:12px;margin:0;padding-left:18px;line-height:2">
+        <li><a href="https://code.claude.com/docs/en/agent-sdk/agent-loop" target="_blank" style="color:#14532d;text-decoration:underline">How the agent loop works</a></li>
+        <li><a href="https://code.claude.com/docs/en/how-claude-code-works" target="_blank" style="color:#14532d;text-decoration:underline">How Claude Code works (agentic loop)</a></li>
+        <li><a href="https://code.claude.com/docs/en/agent-sdk/subagents" target="_blank" style="color:#14532d;text-decoration:underline">Subagents in SDK</a></li>
+        <li><a href="https://code.claude.com/docs/en/agent-sdk/permissions" target="_blank" style="color:#14532d;text-decoration:underline">Permissions</a></li>
+        <li><a href="https://code.claude.com/docs/en/agent-sdk/hooks" target="_blank" style="color:#14532d;text-decoration:underline">Hooks</a></li>
+        <li><a href="https://code.claude.com/docs/en/agent-sdk/mcp" target="_blank" style="color:#14532d;text-decoration:underline">MCP в SDK</a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section"><h2>Subagents: что это</h2><p class="sectionIntro">Subagent — отдельный специализированный агент или изолированный image.png, которому main agent делегирует focused subtask. Он работает со своим контекстом и возвращает findings/summary.</p><div class="diagram"><div class="stack"><div class="layer bg-gray">Main agent <small>видит основную задачу и принимает финальное решение</small></div><div class="layer bg-blue">Task A → Code search subagent <small>ищет классы/методы</small></div><div class="layer bg-green">Task B → Test analyst <small>анализирует CI/test logs</small></div><div class="layer bg-purple">Task C → Security reviewer <small>проверяет риски</small></div><div class="layer bg-gray">Summaries return <small>main объединяет и проверяет</small></div></div></div></section>
+<!-- ── Platform split ── -->
+<section class="section">
+  <h2>Cursor vs Claude Code — как запускать subagents</h2>
+  <p class="sectionIntro">Механика запуска subagents отличается: Cursor использует Task tool, Claude Code — нативный синтаксис делегирования. Но концепция одна.</p>
+
+  <div class="platform-split">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor — Task tool</div>
+      <p style="font-size:13px;color:#475569">Cursor предоставляет встроенный <b>Task tool</b> в своём UI. Агент может создавать subagents через параметры:</p>
+      <div class="schema-box" style="font-size:12px"><span class="c">// Как агент вызывает Task tool в Cursor</span>
+{
+  <span class="k">"description"</span>: <span class="s">"Security scan — auth module"</span>,
+  <span class="k">"subagent_type"</span>: <span class="s">"generalPurpose"</span>,
+  <span class="k">"prompt"</span>: <span class="s">"Role: Security Analyst.
+Goal: find SQL injection in api/auth/.
+Scope: api/auth/*.py only.
+Constraints: do not edit files.
+Output: list of issues with file:line"</span>,
+  <span class="k">"readonly"</span>: <span class="v">true</span>,             <span class="c">// только чтение</span>
+  <span class="k">"run_in_background"</span>: <span class="v">false</span>    <span class="c">// foreground</span>
+}</div>
+      <p style="font-size:12px;color:#64748b;margin-top:8px"><b>Типы subagent:</b> generalPurpose, explore, shell, bugbot, security-review, best-of-n-runner, ci-investigator</p>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code — нативное делегирование</div>
+      <p style="font-size:13px;color:#475569">Claude Code поддерживает <b>TodoWrite + автономный режим</b>. Subagents через AGENTS.md и <code>--agent</code> флаги. В Claude Max — параллельный запуск агентов.</p>
+      <div class="schema-box" style="font-size:12px"><span class="c"># Запуск Claude Code как subagent (CLI)</span>
+claude --agent "security-reviewer" \
+  --scope "api/auth/**" \
+  --readonly \
+  --output structured \
+  "Find SQL injection vulnerabilities.
+   Return: file:line + severity for each."
+
+<span class="c"># Через AGENTS.md — роль subagent'а</span>
+<span class="c">## Role: Security Reviewer Subagent</span>
+<span class="c">## Scope: api/ directory only</span>
+<span class="c">## Allowed: Read files, grep, analyze</span>
+<span class="c">## Forbidden: Edit, delete, run commands</span>
+<span class="c">## Output: JSON {file, line, issue, severity}</span></div>
+      <p style="font-size:12px;color:#64748b;margin-top:8px">AGENTS.md в поддиректории переопределяет роль для файлов этой директории — мощный механизм специализации.</p>
+    </div>
+  </div>
+
+  <div class="tableWrap" style="margin-top:14px"><table>
+    <thead><tr><th>Аспект</th><th>Cursor</th><th>Claude Code</th></tr></thead>
+    <tbody>
+      <tr><td>Механизм запуска</td><td>Task tool (встроен в агент)</td><td>CLI флаги + AGENTS.md</td></tr>
+      <tr><td>Специализация ролей</td><td>subagent_type параметр</td><td>AGENTS.md в поддиректории</td></tr>
+      <tr><td>Параллельный запуск</td><td>Несколько Task tool calls в одном сообщении</td><td>Параллельные claude процессы (Claude Max)</td></tr>
+      <tr><td>Read-only режим</td><td><code>"readonly": true</code></td><td><code>--readonly</code> флаг</td></tr>
+      <tr><td>Background режим</td><td><code>"run_in_background": true</code></td><td>Фоновый процесс, notify при завершении</td></tr>
+      <tr><td>Возврат результата</td><td>completion message с summary</td><td>Structured output или stdout</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ── Foreground vs Background ── -->
+<section class="section">
+  <h2>Foreground vs Background выполнение</h2>
+  <p class="sectionIntro">Subagent может работать в двух режимах. Выбор влияет на flow взаимодействия с пользователем и эффективность параллелизма.</p>
+
+  <div class="platform-split">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">Foreground (синхронный)</div>
+      <p style="font-size:13px;color:#475569"><code>"run_in_background": false</code> — main agent <b>ждёт</b> завершения subagent.</p>
+      <div class="schema-box" style="font-size:12px">Main agent запускает subagent
+         ↓
+    [BLOCKING — ждёт]
+         ↓
+Subagent выполняет задачу
+         ↓
+    возвращает findings
+         ↓
+Main agent получает результат
+и продолжает работу</div>
+      <p style="font-size:13px;margin-top:8px"><b>Когда:</b> результат нужен для следующего шага. Задачи последовательные и зависимы.</p>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">Background (асинхронный)</div>
+      <p style="font-size:13px;color:#475569"><code>"run_in_background": true</code> — main agent <b>продолжает работу</b>, получает уведомление по завершении.</p>
+      <div class="schema-box" style="font-size:12px">Main запускает subagent A  ──┐
+Main запускает subagent B  ──┤  параллельно
+Main запускает subagent C  ──┘
+         ↓
+Main продолжает другую работу
+         ↓
+[уведомления при завершении]
+A: done → reading results
+B: done → reading results
+C: done → reading results
+         ↓
+Main агрегирует все findings</div>
+      <p style="font-size:13px;margin-top:8px"><b>Когда:</b> независимые задачи, нужен параллелизм. Ускоряет сложные workflows.</p>
+    </div>
+  </div>
+
+  <div class="nuance-card nc-orange">
+    <h4>Background ≠ "fire and forget"</h4>
+    <p>Main agent должен явно читать результаты background subagents и не заканчивать работу без получения их findings. Если main agent завершается раньше background subagent — результат теряется. Правило: в конце turn main agent явно ожидает все незавершённые background subagents.</p>
+  </div>
+</section>
+
+<!-- ── Наследование от main agent ── -->
+<section class="section">
+  <h2>Что наследует subagent от main agent — модель передачи контекста</h2>
+  <p class="sectionIntro">Subagent — это <em>чистый старт</em>. Он не получает историю диалога, Memory Bank или Rules автоматически. Всё что ему нужно — main agent обязан передать явно в task description.</p>
+
+  <div class="tableWrap"><table>
+    <thead><tr><th>Параметр</th><th>Наследуется автоматически?</th><th>Что происходит / как передать явно</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>История диалога</b> (весь чат main агента)</td>
+        <td style="color:#dc2626;font-weight:700">❌ Нет</td>
+        <td>Subagent не видит предыдущие сообщения. Передавать ключевые факты в prompt-е задачи.</td>
+      </tr>
+      <tr>
+        <td><b>Rules / AGENTS.md</b></td>
+        <td style="color:#f97316;font-weight:700">⚠️ Зависит от платформы</td>
+        <td>В Cursor — глобальные Rules могут загружаться, но лучше дублировать критичные constraints в task description. В Claude Code — AGENTS.md в рабочей директории загружается.</td>
+      </tr>
+      <tr>
+        <td><b>Memory Bank</b> (файлы памяти)</td>
+        <td style="color:#dc2626;font-weight:700">❌ Нет</td>
+        <td>Subagent не читает Memory Bank. Передать нужные выдержки явно в prompt.</td>
+      </tr>
+      <tr>
+        <td><b>System prompt / модель поведения</b></td>
+        <td style="color:#f97316;font-weight:700">⚠️ Частично</td>
+        <td>Базовый system prompt платформы — да. Кастомные инструкции main агента — нет. Ключевые правила поведения передавать в Role / Constraints.</td>
+      </tr>
+      <tr>
+        <td><b>Tool access (MCP, файловые tools)</b></td>
+        <td style="color:#f97316;font-weight:700">⚠️ Зависит от <code>readonly</code></td>
+        <td>Cursor: если <code>"readonly": true</code> — только чтение. Разрешённые tools явно указывать в task description. По умолчанию — полный доступ платформы.</td>
+      </tr>
+      <tr>
+        <td><b>Files в context</b> (открытые файлы, @-прикреплённые)</td>
+        <td style="color:#dc2626;font-weight:700">❌ Нет</td>
+        <td>Явно перечислять нужные пути в task description: «Читай только <code>api/handlers/*.py</code>».</td>
+      </tr>
+      <tr>
+        <td><b>Текущий прогресс / todo list</b></td>
+        <td style="color:#dc2626;font-weight:700">❌ Нет</td>
+        <td>Subagent не знает что уже сделал main agent. Включать релевантный статус в prompt.</td>
+      </tr>
+      <tr>
+        <td><b>Роль / Role definition</b></td>
+        <td style="color:#dc2626;font-weight:700">❌ Нет</td>
+        <td>Main agent может называть себя «Senior Backend Engineer» — subagent об этом не знает. Задавать роль subagent'а в начале task description: «Role: Security Analyst».</td>
+      </tr>
+      <tr>
+        <td><b>MCP серверы / MCP tools</b></td>
+        <td style="color:#f97316;font-weight:700">⚠️ Зависит от платформы и режима</td>
+        <td>Подробнее — см. блок ниже.</td>
+      </tr>
+      <tr>
+        <td><b>Выбранная модель (model)</b></td>
+        <td style="color:#f97316;font-weight:700">⚠️ Зависит от платформы</td>
+        <td>В Cursor subagent использует ту же модель что main, если не задан другой <code>model</code> параметр.</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div style="margin-top:18px;border:1px solid var(--line);border-radius:16px;padding:16px;background:#fff">
+    <h3 style="font-size:15px;margin:0 0 12px">MCP и subagents — что наследуется, что нет</h3>
+    <p style="font-size:13px;color:#475569;margin:0 0 12px">MCP-серверы (tools, ресурсы) — одна из самых неочевидных частей наследования. Subagent не получает «доступ к MCP» автоматически в общем смысле — это зависит от режима запуска и платформы.</p>
+
+    <div class="platform-split">
+      <div class="ps-col">
+        <div class="ps-head ps-cursor">🖱 Cursor — MCP и subagents</div>
+        <ul style="font-size:13px;line-height:1.8;margin:0;padding-left:18px">
+          <li>Subagent запущенный через <b>Task tool</b> работает в той же среде Cursor → имеет доступ к тем же MCP-серверам что настроены в <code>.cursor/mcp.json</code>.</li>
+          <li>Но: если <code>"readonly": true</code> — MCP tools с write-операциями (create file, run command) <b>заблокированы</b>.</li>
+          <li>Subagent видит <b>те же MCP tools</b> что main agent, если они подключены глобально.</li>
+          <li>Если нужно <em>ограничить</em> MCP доступ — явно указать в Constraints: <code>«Не использовать MCP tools, только чтение файлов»</code>.</li>
+        </ul>
+        <div class="schema-box" style="font-size:11px;margin-top:10px"><span class="c">// Task description — явно указать что MCP разрешён</span>
+{
+  <span class="k">"prompt"</span>: <span class="s">"Role: Data Fetcher.
+Goal: получить список issues через GitHub MCP.
+Allowed tools: mcp_github_list_issues only.
+Constraints: не редактировать, не создавать issues.
+Output: JSON array {id, title, labels}"</span>,
+  <span class="k">"readonly"</span>: <span class="v">false</span>   <span class="c">// нужен для MCP write tools</span>
+}</div>
+      </div>
+      <div class="ps-col">
+        <div class="ps-head ps-claude">🤖 Claude Code — MCP и subagents</div>
+        <ul style="font-size:13px;line-height:1.8;margin:0;padding-left:18px">
+          <li>Claude Code subagent (через CLI) <b>не наследует</b> MCP-конфигурацию автоматически — нужно передать <code>--mcp-config</code> явно.</li>
+          <li>Каждый Claude Code процесс — отдельная сессия, MCP серверы инициализируются заново.</li>
+          <li>Если subagent должен использовать MCP — передавать конфиг файл или флаги при запуске.</li>
+          <li>В <b>AGENTS.md подпапки</b> можно указать разрешённые MCP tools для subagent этой директории.</li>
+        </ul>
+        <div class="schema-box" style="font-size:11px;margin-top:10px"><span class="c"># Claude Code subagent с MCP</span>
+claude --mcp-config ./mcp-readonly.json \
+  --agent "data-fetcher" \
+  "Goal: fetch issues from GitHub MCP.
+   Allowed: mcp__github__list_issues only.
+   Constraints: no write operations."
+
+<span class="c"># mcp-readonly.json — минимальный конфиг</span>
+<span class="c"># только нужные серверы, только нужные tools</span></div>
+      </div>
+    </div>
+
+    <div class="tableWrap" style="margin-top:14px"><table>
+      <thead><tr><th>Ситуация</th><th>MCP доступен subagent'у?</th><th>Что делать</th></tr></thead>
+      <tbody>
+        <tr><td>Cursor, <code>readonly: false</code></td><td style="color:#16a34a">✅ Да — те же MCP что у main</td><td>Явно указать в Constraints какие MCP можно использовать</td></tr>
+        <tr><td>Cursor, <code>readonly: true</code></td><td style="color:#f97316">⚠️ Только read-only MCP tools</td><td>Write-операции через MCP заблокированы</td></tr>
+        <tr><td>Claude Code CLI subagent</td><td style="color:#dc2626">❌ Нет без явного --mcp-config</td><td>Передавать <code>--mcp-config</code> с нужными серверами</td></tr>
+        <tr><td>MCP с секретами (API keys)</td><td style="color:#f97316">⚠️ Осторожно</td><td>Subagent получает доступ к тем же credentials — scope constraints критичны</td></tr>
+        <tr><td>Нужен <em>только один</em> MCP tool</td><td>—</td><td>Явно указать в Allowed tools: «только <code>mcp_github_list_issues</code>» — минимальные привилегии</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="nuance-card nc-purple" style="margin-top:10px">
+      <h4>MCP с доступом к базам / prod — принцип минимальных привилегий</h4>
+      <p>Если main agent подключён к MCP с доступом к production БД или внешним API — subagent в Cursor автоматически наследует этот доступ. Это риск: subagent с широкой задачей может случайно вызвать write-операцию. Правило: если subagent делает только анализ → <code>"readonly": true</code>. Если MCP нужен — явно белым списком указывать разрешённые tools в Constraints: <code>«Allowed MCP tools: только list/read операции»</code>.</p>
+    </div>
+  </div>
+
+  <div style="margin-top:18px">
+    <h3 style="font-size:15px;margin-bottom:10px">Что можно переопределить в task description subagent'а</h3>
+    <div class="platform-split">
+      <div class="ps-col">
+        <div class="ps-head ps-cursor">Переопределяемые параметры</div>
+        <ul style="font-size:13px;margin:0;padding-left:18px;line-height:1.8">
+          <li><b>Role</b> — задать любую роль (Security Analyst, Performance Reviewer, Code Explorer)</li>
+          <li><b>Tone / style</b> — «отвечай кратко», «только JSON», «без объяснений»</li>
+          <li><b>Tool access</b> — ограничить до subset или разрешить конкретные MCP</li>
+          <li><b>Scope</b> — явно сузить до нужных файлов/директорий</li>
+          <li><b>Output format</b> — JSON, markdown, plain text, structured report</li>
+          <li><b>Model</b> — в Cursor можно указать другую модель через <code>model</code></li>
+          <li><b>Behaviour constraints</b> — «не редактируй файлы», «не делай предположений»</li>
+        </ul>
+      </div>
+      <div class="ps-col">
+        <div class="ps-head ps-claude" style="background:#fef3c7;color:#92400e">Что нельзя переопределить</div>
+        <ul style="font-size:13px;margin:0;padding-left:18px;line-height:1.8">
+          <li><b>Безопасность платформы</b> — системные ограничения Cursor/Claude Code (нельзя дать subagent право выполнять произвольный системный код за пределами разрешённого)</li>
+          <li><b>Billing / rate limits</b> — платформенные лимиты не обходятся через task description</li>
+          <li><b>Базовый system prompt модели</b> — конституция Claude/GPT остаётся</li>
+          <li><b>Глобальные Rules если они enforced платформой</b> — в Cursor alwaysApply Rules могут применяться и к subagents</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="nuance-card nc-red" style="margin-top:14px">
+    <h4>Главная ловушка: «он же должен знать наши правила»</h4>
+    <p>Main agent работает с Rules, видит AGENTS.md, знает ограничения проекта. Subagent — нет. Инженеры часто предполагают что subagent автоматически «знает» правила («не удалять тесты», «не менять API контракт»). Он не знает. Критичные constraints нужно явно включать в task description или передавать содержимое AGENTS.md как часть prompt.</p>
+  </div>
+</section>
+
+<!-- ── Files, Constraints, Scope ── -->
+<section class="section">
+  <h2>Files, Constraints, Scope — три ключевых параметра задачи</h2>
+  <p class="sectionIntro">Любая хорошая task description для subagent строится на трёх концептах: <b>Files</b> (с чем работать), <b>Scope</b> (в каких границах), <b>Constraints</b> (что запрещено). Это три разных уровня ограничения — часто путают.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:14px 0">
+    <div class="ps-col" style="border-left:4px solid #2563eb">
+      <div style="font-weight:800;font-size:15px;color:#1e40af;margin-bottom:8px">📂 Files</div>
+      <p style="font-size:13px;color:#334155;margin:0 0 8px"><b>Что это:</b> конкретные файлы или паттерны файлов которые subagent может / должен читать или изменять.</p>
+      <p style="font-size:13px;color:#64748b;margin:0 0 8px"><b>Зачем:</b> без явного списка subagent начнёт сканировать весь проект, тратя tokens и время.</p>
+      <div class="schema-box" style="font-size:11px">Files:
+  - api/handlers/*.py   <span class="c"># читать</span>
+  - api/models.py       <span class="c"># читать</span>
+  - tests/test_auth.py  <span class="c"># НЕ трогать</span>
+
+<span class="c"># Паттерны (glob)</span>
+Files: src/services/**/*.ts
+Exclude: **/*.test.ts, dist/</div>
+      <p style="font-size:12px;color:#64748b;margin-top:8px"><b>Частая ошибка:</b> не указать Files → subagent читает всё → context overflow → дорого и медленно.</p>
+    </div>
+
+    <div class="ps-col" style="border-left:4px solid #7c3aed">
+      <div style="font-weight:800;font-size:15px;color:#6d28d9;margin-bottom:8px">🔭 Scope</div>
+      <p style="font-size:13px;color:#334155;margin:0 0 8px"><b>Что это:</b> тематические границы задачи — что <em>концептуально</em> входит в задачу, а что нет. Отвечает на «о чём эта задача».</p>
+      <p style="font-size:13px;color:#64748b;margin:0 0 8px"><b>Зачем:</b> subagent без scope может «поплыть» — найдя одну проблему, начать исследовать смежные, не связанные с заданием.</p>
+      <div class="schema-box" style="font-size:11px">Scope: только аутентификация
+  (auth, session, tokens)
+
+OUT of scope:
+  - бизнес-логика заказов
+  - UI компоненты
+  - инфраструктура/деплой
+
+<span class="c"># Scope = тема, Files = файлы</span>
+<span class="c"># Это разные вещи!</span></div>
+      <p style="font-size:12px;color:#64748b;margin-top:8px"><b>Частая ошибка:</b> думать что Files = Scope. Можно дать файл в Files, но сказать «смотри только на функции авторизации».</p>
+    </div>
+
+    <div class="ps-col" style="border-left:4px solid #dc2626">
+      <div style="font-weight:800;font-size:15px;color:#b91c1c;margin-bottom:8px">🚫 Constraints</div>
+      <p style="font-size:13px;color:#334155;margin:0 0 8px"><b>Что это:</b> явные запреты на действия — что subagent <em>не должен делать</em> ни при каких условиях.</p>
+      <p style="font-size:13px;color:#64748b;margin:0 0 8px"><b>Зачем:</b> защита от непреднамеренных изменений, нарушения архитектуры, работы за пределами полномочий.</p>
+      <div class="schema-box" style="font-size:11px">Constraints:
+  - readonly: не редактировать файлы
+  - не удалять тесты
+  - не менять публичный API
+  - не обращаться к внешним URL
+  - не запускать команды
+  - не касаться prod configs
+  - не предлагать смену стека</div>
+      <p style="font-size:12px;color:#64748b;margin-top:8px"><b>Частая ошибка:</b> не указать constraints → subagent «помогает» редактируя файлы которые нельзя трогать.</p>
+    </div>
+  </div>
+
+  <h3 style="font-size:15px;margin:18px 0 10px">Как они работают вместе — полный пример</h3>
+  <div class="schema-box"><span class="h">Role:</span> <span class="v">Security Code Reviewer</span>
+
+<span class="h">Goal:</span> <span class="s">Найти SQL injection уязвимости в слое работы с базой данных</span>
+
+<span class="h">Files:</span>                          <span class="c">← конкретные файлы для чтения</span>
+  <span class="k">- api/handlers/*.py</span>
+  <span class="k">- api/repositories/*.py</span>
+  <span class="k">- api/models.py</span>
+  Exclude: <span class="k">tests/, migrations/</span>
+
+<span class="h">Scope:</span>                          <span class="c">← тематические границы</span>
+  <span class="s">Только SQL-запросы и ORM-вызовы.</span>
+  <span class="s">Не анализировать бизнес-логику, UI, конфиги.</span>
+  <span class="s">Фокус: raw queries, f-string interpolation, user input в SQL.</span>
+
+<span class="h">Constraints:</span>                    <span class="c">← что запрещено</span>
+  <span class="k">- readonly: не редактировать файлы</span>
+  <span class="k">- не предлагать рефакторинг за пределами найденных уязвимостей</span>
+  <span class="k">- не запускать команды</span>
+  <span class="k">- не касаться тестов и migrations</span>
+
+<span class="h">Output format:</span>
+  JSON array: [{<span class="k">file</span>, <span class="k">line</span>, <span class="k">code_snippet</span>, <span class="k">severity</span>: high|medium|low, <span class="k">fix_hint</span>}]
+  Max: 10 findings. Если больше — вернуть топ-10 по severity.</div>
+
+  <div class="tableWrap" style="margin-top:14px"><table>
+    <thead><tr><th>Параметр</th><th>Отвечает на вопрос</th><th>Что будет без него</th></tr></thead>
+    <tbody>
+      <tr><td><b>Files</b></td><td>«Где искать?» — конкретные пути</td><td>Subagent сканирует весь проект — медленно, дорого, много шума</td></tr>
+      <tr><td><b>Scope</b></td><td>«О чём эта задача?» — тематические границы</td><td>Subagent «плывёт» — начинает исследовать смежные темы, размывает фокус</td></tr>
+      <tr><td><b>Constraints</b></td><td>«Что нельзя?» — явные запреты</td><td>Subagent «помогает» делая то что не просили: редактирует, удаляет, меняет</td></tr>
+      <tr><td><b>Output format</b></td><td>«Как вернуть результат?»</td><td>Subagent возвращает prose который сложно использовать программно</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="nuance-card nc-blue">
+    <h4>Files vs Scope — тонкая разница</h4>
+    <p><b>Files</b> = физические пути к файлам (что читать). <b>Scope</b> = концептуальные границы (о чём думать). Пример: Files включает <code>api/orders.py</code> потому что там есть auth-логика, но Scope = «только аутентификация» — subagent читает файл, но анализирует только auth-части, не всю бизнес-логику заказов. Без явного Scope subagent будет анализировать весь файл.</p>
+  </div>
+</section>
+
+<!-- ── Паттерны оркестрации ── -->
+<section class="section">
+  <h2>Паттерны оркестрации subagents</h2>
+  <p class="sectionIntro">Паттерны — проверенные способы организации multi-agent workflows. Выбирай по структуре задачи.</p>
+
+  <div style="background:#0f172a;border-radius:20px;padding:20px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:#e2e8f0;overflow:auto;margin:12px 0">
+<pre style="margin:0;background:none;padding:0;color:inherit;font-family:inherit;font-size:inherit;white-space:pre">
+ ① HUB-AND-SPOKE (звезда)         ② PIPELINE (конвейер)
+ ┌────────────────┐                 ┌──────────┐
+ │   ORCHESTRATOR │                 │ Planner  │──→ spec
+ └───┬──┬──┬──┬──┘                 └──────────┘
+     │  │  │  │                         │ spec
+     ▼  ▼  ▼  ▼                         ▼
+    A  B  C  D                    ┌──────────┐
+  (parallel)                      │Researcher│──→ facts
+                                   └──────────┘
+  Все возвращают в                      │ facts
+  orchestrator, он                      ▼
+  агрегирует.                    ┌──────────┐
+                                  │ Coder    │──→ code
+  Когда: широкая                  └──────────┘
+  параллелизуемая задача.              │ code
+                                       ▼
+                                 ┌──────────┐
+                                  │ Reviewer │──→ report
+                                  └──────────┘
+
+  Когда: последовательная        ③ BEST-OF-N (конкурсный)
+  зависимая задача.
+                                  Одна задача → N агентов
+                                  решают независимо
+                                      ↓
+                                  Orchestrator выбирает
+                                  лучший результат
+
+                                  Когда: важно качество,
+                                  неоднозначная задача.
+
+ ④ HIERARCHICAL (иерархия)       ⑤ COMPETITIVE → CONSENSUS
+ ┌────────────────────┐            Задача → 3 агента
+ │  Main Orchestrator │            дают разные ответы
+ └─────┬──────┬───────┘                ↓
+       │      │                   Голосование / выбор
+       ▼      ▼                   наиболее согласованного
+  ┌──────┐ ┌──────┐
+  │Coord1│ │Coord2│              Когда: critical decisions,
+  └──┬───┘ └──┬───┘              нужна верификация.
+     ▼         ▼
+  Workers  Workers
+
+  Когда: очень большие задачи
+  с доменными подзадачами.</pre>
+  </div>
+
+  <div class="tableWrap" style="margin-top:12px"><table>
+    <thead><tr><th>Паттерн</th><th>Параллельность</th><th>Сложность</th><th>Cost</th><th>Когда выбрать</th></tr></thead>
+    <tbody>
+      <tr><td>Hub-and-Spoke</td><td>Высокая</td><td>Низкая</td><td>Высокий</td><td>Независимые параллельные задачи</td></tr>
+      <tr><td>Pipeline</td><td>Нет</td><td>Средняя</td><td>Средний</td><td>Sequential зависимые шаги</td></tr>
+      <tr><td>Best-of-N</td><td>Высокая</td><td>Средняя</td><td>N×</td><td>Качество важнее стоимости</td></tr>
+      <tr><td>Hierarchical</td><td>Средняя</td><td>Высокая</td><td>Высокий</td><td>Очень сложные доменные задачи</td></tr>
+      <tr><td>Consensus</td><td>Высокая</td><td>Высокая</td><td>3N×</td><td>Critical decisions с верификацией</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout" style="margin-top:12px"><b>Как строить такие системы на практике</b> — декомпозиция задачи, выбор параллельно/последовательно, дерево зависимостей, распределение файлов и готовые шаблоны task description: → <a href="agentic-systems.html">Построение агентских систем</a>.</div>
+</section>
+
+<!-- ── Примеры task descriptions ── -->
+<section class="section">
+  <h2>Реальные примеры task descriptions</h2>
+  <p class="sectionIntro">Хорошая task description = briefing специалисту. Конкретная роль, чёткий scope, ожидаемый output.</p>
+
+  <div class="grid two">
+    <div class="card danger">
+      <h3>❌ Плохо — слишком широко</h3>
+      <pre class="code">Проверь наш код и найди
+проблемы. Сообщи что не так
+и как исправить.</pre>
+      <ul style="font-size:13px"><li>Нет роли — кто ты?</li><li>Нет scope — какие файлы?</li><li>Нет output format — что вернуть?</li><li>Нет constraints — что не делать?</li></ul>
+    </div>
+    <div class="card good">
+      <h3>✅ Хорошо — конкретный briefing</h3>
+      <pre class="code">Role: Security Code Reviewer.
+Goal: Find SQL injection vulns.
+Scope: api/handlers/*.py only.
+Context: Python 3.11, raw psycopg2.
+Constraints: readonly, no edits.
+Output: JSON list:
+  [{file, line, code, severity,
+    fix_suggestion}]
+Max findings: 10.</pre>
+    </div>
+    <div class="card danger">
+      <h3>❌ Плохо — нет evidence requirement</h3>
+      <pre class="code">Проанализируй производительность
+и дай рекомендации по
+оптимизации.</pre>
+      <ul style="font-size:13px"><li>Нет требования к доказательствам</li><li>Subagent вернёт общие советы без конкретики</li></ul>
+    </div>
+    <div class="card good">
+      <h3>✅ Хорошо — с evidence</h3>
+      <pre class="code">Role: Performance Analyst.
+Goal: Find slow DB queries.
+Scope: services/billing/ queries.
+Tools: read files, search.
+Output: Top-5 slow queries with:
+  - file:line
+  - estimated complexity O(n)
+  - missing index suggestion
+Evidence required: exact SQL.</pre>
+    </div>
+  </div>
+</section>
+
+<section class="section"><h2>Когда полезны</h2><div class="grid two"><div class="card good"><h3>Хорошие случаи</h3><ul><li>Большая codebase-wide задача.</li><li>Параллельно проверить несколько гипотез.</li><li>Изолировать шум: subagent читает много файлов, main получает summary.</li><li>Специализированное поведение: security, performance, tests.</li></ul></div><div class="card danger"><h3>Плохие случаи</h3><ul><li>Маленькая задача на 1 файл.</li><li>Несколько агентов редактируют один файл.</li><li>Шаги сильно зависят друг от друга.</li><li>Контекст критичен, но его сложно передать.</li></ul></div></div></section>
+<section class="section"><h2>Ограничения</h2><div class="tableWrap"><table><thead><tr><th>Ограничение</th><th>Что означает</th><th>Как снизить риск</th></tr></thead><tbody><tr><td>Ограниченный контекст</td><td>Может не видеть весь главный чат</td><td>Передавать задачу, файлы, constraints, output</td></tr><tr><td>Tool access зависит от платформы</td><td>Не всегда имеет MCP/tools/write access</td><td>Задать allowed tools и permission mode</td></tr><tr><td>Summary loss</td><td>Main получает сжатый результат</td><td>Просить evidence: files, lines, commands</td></tr><tr><td>Конфликт инструкций</td><td>Может предложить нарушение Rule</td><td>Main проверяет against Rules/AGENTS.md</td></tr><tr><td>Cost/latency</td><td>Параллельные агенты стоят больше</td><td>Использовать там, где есть выигрыш</td></tr></tbody></table></div></section>
+<section class="section"><h2>Как ставить задачу</h2><div class="grid two"><div class="card danger"><h3>Плохо</h3><pre class="code">Проверь проект и скажи, что не так.</pre><p>Слишком широко, непонятен scope и output.</p></div><div class="card good"><h3>Хорошо</h3><pre class="code">Role: CI failure analyst.
+Task: find why job "billing-tests" fails.
+Scope: read logs/job-123.txt and files under billing/.
+Constraints: do not edit files.
+Output: 3 hypotheses max, each with evidence and next check.
+Respect: project rules and no dependency changes.</pre></div></div></section>
+<section class="section"><h2>Subagent vs Agent team vs Skill</h2><div class="tableWrap"><table><thead><tr><th>Механизм</th><th>Как работает</th><th>Когда выбрать</th></tr></thead><tbody><tr><td>Subagent</td><td>Main вызывает focused worker, получает summary</td><td>Изоляция контекста и конкретный результат</td></tr><tr><td>Agent team</td><td>Несколько независимых сессий координируются</td><td>Сложная работа, где агенты обмениваются findings</td></tr><tr><td>Skill</td><td>Skill / instruction</td><td>Нужен repeatable workflow</td></tr><tr><td>MCP tool</td><td>Вызов внешней функции/API</td><td>Нужно получить данные или выполнить действие</td></tr></tbody></table></div></section>
+
+<section class="section"><h2>Тонкости и нюансы Subagents</h2>
+<div class="nuance-card nc-red"><h4>Subagent не видит полный контекст главного агента</h4><p>Main agent передаёт subagent только то, что явно указано в задаче: файлы, constraints, scope. Весь предыдущий чат, Memory Bank, все Rules — subagent не получает автоматически. Если subagent нужны правила — передавай их явно в задаче или убедись что AGENTS.md загружается в его контекст.</p></div>
+<div class="nuance-card nc-orange"><h4>Summary loss — subagent возвращает не всё</h4><p>Main agent получает от subagent сжатый результат (summary), а не весь его context window. Детали, которые subagent «видел», но не включил в summary — теряются. Поэтому в задаче явно указывай нужный output формат: «Верни 3 гипотезы с evidence: имя файла + строка + команда для проверки».</p></div>
+<div class="nuance-card nc-blue"><h4>Несколько subagents редактируют один файл → конфликт</h4><p>Если параллельные subagents редактируют один и тот же файл — последний write перезапишет предыдущий (last write wins). Архитектурное правило: параллельные subagents должны работать на непересекающихся наборах файлов. Для shared файла — последовательная обработка или merge через main agent.</p></div>
+<div class="nuance-card nc-purple"><h4>Subagent может нарушить Rules если не передал их явно</h4><p>Subagent не знает о Rules main agent'а если они не включены в его task context. Он может предложить удалить тест (если Rule запрещает — main agent не знает). Main agent всегда должен верифицировать findings subagent'а против Rules/AGENTS.md перед применением.</p></div>
+<div class="nuance-card nc-green"><h4>Cost и latency: параллельность стоит больше</h4><p>Каждый subagent — отдельный LLM вызов со своим context. Параллельные subagents быстрее но дороже: 5 параллельных = 5x стоимость. Последовательные = медленнее но дешевле. Subagents оправданы когда выигрыш от изоляции контекста или параллельности перевешивает стоимость.</p></div>
+</section>
+
+<section class="section"><h2>Best practices — Делай / Не делай</h2>
+<div class="grid two">
+  <div class="card bg-green"><h3>✅ Делай</h3><ul>
+    <li>Давай subagent чёткий scope: конкретные файлы, директории, ограничения</li>
+    <li>Указывай output формат: «Верни N гипотез с evidence (файл + строка)»</li>
+    <li>Передавай нужные Rules/constraints явно в task description</li>
+    <li>Main agent всегда верифицирует findings против Rules перед применением</li>
+    <li>Используй subagents для изоляции: читает много файлов → main получает summary</li>
+    <li>Assign непересекающиеся файлы для параллельных subagents</li>
+  </ul></div>
+  <div class="card bg-red"><h3>❌ Не делай</h3><ul>
+    <li>Не давай «Проверь весь проект» — слишком широко, scope не определён</li>
+    <li>Не позволяй нескольким subagents редактировать один файл параллельно</li>
+    <li>Не принимай subagent findings без проверки против Rules</li>
+    <li>Не используй subagents для простых однофайловых задач — overhead не оправдан</li>
+    <li>Не забывай: subagent не видит Memory Bank — передавай релевантный контекст явно</li>
+  </ul></div>
+</div></section>
+
+<section class="section">
+  <h2>Cursor vs Claude Code — итоговое сравнение Subagents</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Аспект</th><th>Cursor</th><th>Claude Code</th></tr></thead>
+    <tbody>
+      <tr><td>Механизм запуска</td><td>Task tool (встроен в агент)</td><td>CLI флаги + AGENTS.md / CLAUDE.md</td></tr>
+      <tr><td>MCP наследование</td><td>Да (readonly=false) / частично (readonly=true)</td><td>Нет — нужен явный --mcp-config</td></tr>
+      <tr><td>Параллельный запуск</td><td>Несколько Task calls в одном сообщении</td><td>Параллельные claude процессы</td></tr>
+      <tr><td>Read-only режим</td><td><code>"readonly": true</code></td><td><code>--readonly</code> флаг</td></tr>
+      <tr><td>Background режим</td><td><code>"run_in_background": true</code></td><td>Фоновый процесс</td></tr>
+      <tr><td>Возврат результата</td><td>completion message</td><td>Structured output / stdout</td></tr>
+      <tr><td>Files/Constraints/Scope</td><td>В prompt task description</td><td>В prompt + CLAUDE.md поддиректории</td></tr>
+      <tr><td>Глубина иерархии</td><td>Рекомендуется max 2 уровня</td><td>Рекомендуется max 2 уровня</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><b>Главное отличие:</b> в Cursor subagents запускаются через Task tool с параметрами, MCP наследуется автоматически. В Claude Code — через CLI, MCP нужно передавать явно через --mcp-config.</div>
+</section>
+
+<section class="section">
+<h2>Вопросы по уровням</h2>
+<div class="qlevel-group">Junior — 10 вопросов</div>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое subagent?</summary>
+<div class="inside">Subagent — специализированный AI агент или изолированный agent loop, которому главный (main) агент делегирует конкретную подзадачу. Subagent работает в своём отдельном context window, выполняет задачу и возвращает результат (findings, summary, analysis) главному агенту. Аналог: руководитель (main agent) поручает специалисту (subagent) исследовать конкретный вопрос и доложить выводы.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Зачем нужны subagents?</summary>
+<div class="inside">Subagents решают несколько проблем: (1) Изоляция контекста — subagent не загрязняет context main агента шумом из исследования. (2) Параллелизм — несколько subagents работают одновременно, ускоряя задачи. (3) Специализация — каждый subagent с определённой ролью (code reviewer, security analyst, test engineer). (4) Масштаб — задача слишком большая для одного context window → разделить между subagents. (5) Compaction management — subagent исследует много, возвращает только summary → main agent экономит context.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Чем subagent отличается от main agent?</summary>
+<div class="inside">Main agent: ведёт основной диалог с пользователем, имеет полный context задачи, принимает финальные решения, проверяет findings против Rules. Subagent: получает narrow task description, имеет собственный изолированный context, фокусируется только на своей подзадаче, возвращает findings а не принимает финальные решения. Main agent несёт ответственность за финальный результат; subagent — execution специалист. Main может вызывать subagents, subagent обычно не вызывает других subagents (ограничение глубины).</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что видит subagent в своём context?</summary>
+<div class="inside">Subagent видит только то что main agent включил в task description: конкретную задачу (роль, цель, scope), разрешённые tools, constraints (что не делать), output format (что вернуть и как). Subagent НЕ видит: полный диалог main агента с пользователем, предыдущие turns основной сессии, другие subagents и их findings, Global Rules/AGENTS.md если они не включены в task description. Изолированный context — особенность и ограничение одновременно: чистый фокус, но нет полной картины.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Как main agent запускает subagent?</summary>
+<div class="inside">В Cursor: через Task tool с параметрами (description, subagent_type, prompt). В Claude Code: через специальный синтаксис делегирования. В custom системах: main agent генерирует task description → система создаёт новый agent loop с этим описанием → запускает execution. Task description = полный briefing для subagent: роль, задача, доступные данные, что вернуть. Main agent ждёт результат или продолжает работу пока subagent работает в background (async pattern).</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое task description для subagent?</summary>
+<div class="inside">Task description — полный briefing который main agent передаёт subagent. Содержит: Role (кто ты — code reviewer, security analyst), Goal (что найти/сделать), Context (нужные файлы, данные, constraints), Allowed tools (что можешь вызывать), Output format (что вернуть и в каком формате). Плохая task description: 'проверь проект'. Хорошая: 'Role: Security Reviewer. Goal: найти SQL injection уязвимости в api/handlers/. Files: api/handlers/*.py. Return: список уязвимостей с файл:строка и severity'.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что возвращает subagent?</summary>
+<div class="inside">Subagent возвращает findings — структурированный результат своей работы. Обычно: конкретные факты (не 'проверил код' а 'найдено 3 проблемы в auth.py строки 45, 78, 102'), доказательства (конкретные файлы, строки, команды, примеры), рекомендации (что делать дальше), confidence (уверенность в findings). Subagent NOT: не принимает финальные решения, не применяет изменения без полномочий. Его output = data для main агента. Main agent верифицирует и принимает решения.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое isolated context subagent'а?</summary>
+<div class="inside">Isolated context означает что subagent начинает с пустым context window, получая только то что ему передаёт main agent в task description. Он не наследует историю диалога main агента. Преимущества: чистый фокус без distraction, не тратит context на нерелевантную информацию, может исследовать много файлов не загрязняя context main. Недостатки: не знает полный контекст задачи, может упустить важные детали которые main агент считал очевидными. Решение: main agent должен тщательно включить в task description всё что subagent'у нужно знать.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Можно ли запустить несколько subagents параллельно?</summary>
+<div class="inside">Да, в поддерживающих платформах (Cursor) можно запустить несколько subagents параллельно. Условие: задачи subagents должны быть независимы (нет зависимостей между ними). Пример: subagent A исследует backend, subagent B — frontend, subagent C — infrastructure — все параллельно. Main agent ждёт все результаты и объединяет. Не параллельно: если subagent B ждёт результат subagent A (sequential dependency). Параллелизм ускоряет задачу, но умножает cost (токены суммируются).</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое coordination overhead в subagent системах?</summary>
+<div class="inside">Coordination overhead — дополнительные затраты на управление subagents: написание task descriptions, ожидание результатов, проверка findings, объединение результатов от нескольких subagents. Если overhead > выигрыш от параллелизма или изоляции → subagents не оправданы. Пример: для задачи на 10 минут overhead написания task description + verification может занять 5 минут → 50% overhead. Для задачи на 3 часа → тот же overhead = 3% → выгодно. Правило: subagents оправданы для задач достаточной сложности и размера.</div></details>
+<div class="qlevel-group">Middle — 10 вопросов</div>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Когда использовать subagents vs один агент выполняет всё?</summary>
+<div class="inside">Subagents оправданы когда: задача слишком большая для одного context window, части задачи независимы и можно параллелизировать, нужна специализация (разные роли для разных частей), исследование генерирует много шума который не нужен main agent. Один агент лучше когда: задача небольшая и умещается в context, части сильно взаимозависимы, context нужен shared (subagent не видит что сделал другой subagent без explicit sharing), overhead на coordination выше выигрыша. Практическое правило: задача > 2 часов с явными независимыми частями → рассмотреть subagents.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Что нужно передавать subagent в task description для качественного результата?</summary>
+<div class="inside">Полный briefing включает: (1) Role — кто ты, твоя специализация. (2) Goal — одно чёткое предложение что найти/сделать. (3) Scope — конкретные файлы, директории, компоненты (не 'проверь всё'). (4) Context — ключевые факты которые subagent должен знать (стек, версии, ограничения). (5) Constraints — что НЕ делать, что не трогать. (6) Allowed tools — какие tools можно вызывать. (7) Output format — структура возвращаемого результата. (8) Evidence requirement — 'возвращай конкретные файлы:строки, не общие выводы'. Без этих элементов subagent может вернуть нерелевантный или слишком общий результат.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как main agent получает и использует результат subagent?</summary>
+<div class="inside">Flow получения результата: subagent возвращает findings → они попадают в context main агента как structured message. Main agent: (1) Reads findings — читает весь результат. (2) Verifies against Rules — проверяет что findings не нарушают Rules/AGENTS.md проекта. (3) Critically evaluates — не принимает слепо: 'subagent видел только часть картины'. (4) Cross-references — если несколько subagents → сопоставляет их findings на противоречия. (5) Makes decision — на основе findings принимает решение и действует. Subagent findings = data + evidence, не final truth. Main agent = decision maker.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Когда параллелизм subagents эффективен, а когда создаёт больше проблем?</summary>
+<div class="inside">Эффективный параллелизм: задачи независимы (не зависят от результатов друг друга), примерно одинакового размера (один не заканчивается намного раньше другого), subagents работают с разными частями кодовой базы (нет конфликтов). Проблематичный параллелизм: задачи зависимы (нужно ждать result subagent A для запуска B), subagents работают с одними файлами (race condition на изменения), их findings противоречат друг другу (много overhead на reconciliation), один subagent быстро заканчивает и простаивает. Сигнал: если main agent тратит больше времени на merge results чем subagents на работу → пересмотреть архитектуру.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как использовать subagent для code exploration без загрязнения context?</summary>
+<div class="inside">Паттерн Code Explorer subagent: (1) Main agent создаёт subagent с задачей 'исследуй codebase, найди X'. (2) Subagent читает десятки файлов, выполняет grep/search, анализирует структуру — всё в своём изолированном context. (3) Subagent возвращает structured findings: 'AuthService в backend/auth/service.py строки 45–120, зависит от UserRepository'. (4) Main agent получает только summary — не весь шум от чтения файлов. Context main агента остаётся чистым. Бонус: если исследование было неуспешным (не нашли) → subagent отработал шум, main не тратил context на это.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Какие преимущества и недостатки context isolation у subagent?</summary>
+<div class="inside">Преимущества isolation: (1) Чистый фокус — subagent не distracted чужим контекстом. (2) Context economy — subagent может исследовать много не загрязняя context main. (3) Параллелизм — изолированные contexts не конфликтуют. (4) Специализация — subagent optimal для своей задачи. Недостатки isolation: (1) Нет shared context — subagent не видит что сделали другие subagents. (2) Briefing burden — main agent должен тщательно передать весь нужный контекст в task description. (3) Blind spots — subagent может не знать важного constraint который main agent считал очевидным. (4) Result integration overhead — main agent должен объединять findings из изолированных contexts.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как subagent передаёт контекст обратно main агенту?</summary>
+<div class="inside">Subagent возвращает findings как structured message. Для качественного return: (1) Structured format — заголовки по секциям: Summary, Findings, Evidence, Recommendations. (2) Specific references — не 'нашёл проблему', а 'нашёл SQL injection в api/handlers/user.py:line 78 в функции get_user_by_id'. (3) Confidence level — 'высокая уверенность' vs 'возможно, требует проверки'. (4) Actionable next steps — что конкретно делать дальше на основе findings. (5) Size control — если findings большие, summarize ключевое, детали в appendix. Main agent должен просить subagent в task description: 'структурируй результат как: Summary (3 bullet) + Detailed findings + Next steps'.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как subagents соотносятся с compaction management?</summary>
+<div class="inside">Subagents как compaction management стратегия: вместо того чтобы main agent делал всё исследование (и context быстро заполнялся → compaction) → main agent делегирует исследование subagents. Каждый subagent работает в своём context, исследует много → возвращает summary. Main agent получает только summary → context наполняется медленнее. Практика: для длинных multi-step задач → создавать subagents для каждого major research/investigation шага. Main agent собирает findings и действует. Эффект: главный диалог остаётся структурированным и чистым даже для очень длинных задач.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Какие типичные ошибки при проектировании subagent архитектуры?</summary>
+<div class="inside">Типичные ошибки: (1) Too fine-grained — subagent на каждую мелочь: overhead > benefit. (2) No scope constraints — 'проверь всё' → subagent делает всё, медленно и дорого. (3) No output format — subagent возвращает prose, main не может структурировано использовать. (4) Ignoring findings — main agent blind-trusts subagent без проверки против Rules. (5) No error handling — subagent вернул ошибку, main не заметил. (6) Sequential when parallel possible — запускают subagents по одному когда они независимы. (7) Too deep hierarchy — subagent вызывает subagent вызывает subagent → непредсказуемо и дорого. (8) Missing context — subagent не знает crucial constraint → возвращает нерелевантный результат.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Какой depth limit для subagent иерархии?</summary>
+<div class="inside">Практическое ограничение: max 2 уровня (main → sub). Глубже: (1) Стоимость экспоненциально растёт. (2) Непредсказуемость — ошибки нижних уровней cascadе вверх с искажениями. (3) Debugging impossible — сложно понять почему что-то пошло не так на 4-м уровне. (4) Context fragmentation — каждый уровень теряет часть контекста. Исключение: иногда 3 уровня оправданы для очень специализированных задач. Если нужна глубокая иерархия → сигнал: декомпозируй задачу иначе, возможно нужна другая архитектура (pipeline, workflow), не рекурсивные subagents.</div></details>
+<div class="qlevel-group">Senior — 5 вопросов</div>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как проектировать multi-agent workflow для complex engineering задачи?</summary>
+<div class="inside">Multi-agent workflow design: (1) Task decomposition — разбить задачу на atomic, независимые subtasks. Dependency graph: что от чего зависит. Независимые → параллельно, зависимые → sequential. (2) Role specialization — assign roles: Code Explorer (readonly, ищет), Implementer (пишет код), Reviewer (проверяет), Security Analyst (ищет уязвимости). (3) Communication protocol — стандартный формат передачи findings между агентами. (4) Checkpoint per subagent — каждый subagent создаёт checkpoint при завершении. Main agent агрегирует. (5) Error handling — если subagent failed: retry, fallback, или escalate. (6) Result aggregation — main agent owned: merge, conflict resolution, final decision. (7) Cost budget — estimate tokens per subagent задо запуска, stay within budget.</div></details>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как диагностировать coordination failures в multi-agent workflow?</summary>
+<div class="inside">Диагностика: (1) Result gaps — main agent ожидает X от subagent, получает Y → review task description: была ли задача однозначной? (2) Contradicting findings — два subagents возвращают противоречащие результаты → проверить scope: не было ли overlap или разного доступа к данным? (3) Missing evidence — subagent утверждает X но без конкретных references → task description не требовал evidence → исправить. (4) Timeout/hang — subagent завис → проверить: не слишком ли широкий scope? Бесконечный поиск без ограничений? (5) Rule violations — subagent предлагает нарушить Rule → он не знал о Rule → включать key constraints в task description. Debug: попросить subagent объяснить свой reasoning step-by-step.</div></details>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как агрегировать результаты нескольких subagents и разрешать противоречия?</summary>
+<div class="inside">Result aggregation strategy: (1) Collect all findings — main agent читает все subagent results полностью перед aggregation. (2) Categorize — структурируй findings по категориям: confirmed facts, hypotheses, contradictions. (3) Contradiction resolution — если subagent A и B противоречат: смотреть их scope (разные части?), уровень evidence (у кого конкретнее), запросить tie-breaker subagent если критично. (4) Confidence weighting — findings с конкретными references (file:line) > findings без доказательств. (5) Unified summary — из всех findings создать единый structured summary. (6) Gap identification — что не было покрыто ни одним subagent → дополнительный targeted subagent или direct investigation.</div></details>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как специализировать subagents — researcher, implementer, reviewer паттерн?</summary>
+<div class="inside">Specialized roles паттерн: (1) Researcher subagent (readonly) — ищет, анализирует, возвращает findings с evidence. Allowed tools: file read, search, grep. NO write access. (2) Implementer subagent — пишет код, создаёт файлы на основе spec. Gets: requirements + researcher findings. NO broader exploration. (3) Reviewer subagent — проверяет реализацию против requirements, Rules, best practices. Gets: implementation files + original requirements. NO changes, только feedback. (4) Security subagent — специализированный reviewer для security concerns. Реализация в Cursor: subagent_type определяет capabilities. Orchestration: main agent координирует всю цепочку, каждый subagent получает output предыдущего как input.</div></details>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как контролировать затраты при использовании параллельных subagents?</summary>
+<div class="inside">Cost control strategies: (1) Estimate before launch — оценить приблизительный token budget каждого subagent перед запуском. Если общий > budget → пересмотреть архитектуру. (2) Scope constraints — узкий scope = меньше токенов. 'Проверь только api/handlers/' vs 'проверь весь backend'. (3) Max iterations — задать subagent max tool calls / max files to read. (4) Sequential fallback — если cost критичен: сначала попробовать одним агентом. Параллельные subagents только если есть бюджет. (5) Monitoring — логировать tokens per subagent, identify expensive subagents. (6) Result caching — если subagent задача не изменилась → можно переиспользовать previous findings. Budget gate: не запускать subagents если cost estimate > threshold без approval.</div></details>
+<div class="qlevel-group">Lead — 5 вопросов</div>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Как выстроить governance использования subagents в команде?</summary>
+<div class="inside">Governance framework: (1) Use case policy — документировать approved use cases для subagents (code exploration, parallel review, security analysis) и НЕ approved (мелкие задачи, sequential dependent задачи). (2) Cost policy — budget per subagent task, approval для expensive workflows. (3) Output standards — стандарт что subagent должен возвращать: structured findings, конкретные references, confidence level. (4) Review requirement — critical subagent findings (security, architecture) → human review перед применением. (5) Audit trail — логировать subagent tasks: кто, что, когда, что вернул. (6) Training — инженеры знают когда и как использовать subagents. Governance document: 1 страница с do's, don'ts и approval process.</div></details>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Когда запрещать subagents с точки зрения safety и compliance?</summary>
+<div class="inside">Запрещать subagents когда: (1) Destructive actions без HITL — subagent не должен иметь право удалять файлы, деплоить в prod, выполнять irreversible operations без human approval gate. (2) PII обработка — subagent работающий с персональными данными требует audit log и data handling policy. (3) Cross-boundary access — subagent не должен выходить за пределы assigned scope (читать secret files, получать prod credentials). (4) Unverified external data — subagent не должен слепо доверять внешним источникам (prompt injection риск). (5) High-stakes decisions — финальные решения по архитектуре, security, compliance → только с explicit human review, не автономный subagent. Safety principle: least privilege — subagent получает ровно те права которые нужны для задачи.</div></details>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Как обучать команду эффективным subagent паттернам?</summary>
+<div class="inside">Training plan: (1) Foundations (45 мин) — что такое subagent, когда применять, demo хорошей task description vs плохой. (2) Anti-patterns workshop — разбор типичных ошибок: слишком широкий scope, нет output format, blind trust findings. (3) Template library — готовые task description шаблоны для частых use cases (code review, security scan, codebase exploration). (4) Hands-on — каждый инженер запускает subagent workflow для реальной задачи. (5) Code review criterion — при PR review с AI: проверить task description subagents. (6) Retrospective — при post-mortem инцидентов: был ли subagent использован правильно? Cost awareness: показать команде реальные costs subagent workflows.</div></details>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Как управлять costs при параллельных subagents в командной разработке?</summary>
+<div class="inside">Cost management: (1) Cost visibility — dashboard с AI spending per team, per engineer, per project. Subagent costs отдельной строкой. (2) Budget allocation — monthly budget per team для AI (включая subagents). Alerts при 80% использовании. (3) Approval gates — subagent workflows с estimated cost > $N → require tech lead approval. (4) Efficient patterns training — обучить команду cost-efficient паттернам: узкий scope, чёткий output format, избегать redundant subagents. (5) Cost attribution — каждый subagent task tagged с project/feature для attribution. (6) Review expensive workflows — weekly: top-5 самых дорогих subagent workflows → можно ли оптимизировать? Goal: максимальная value per token.</div></details>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Как выстроить approval gates для действий subagents в production?</summary>
+<div class="inside">Approval gates для subagent prod actions: (1) Risk classification — все действия subagents по risk: read (auto), write to non-prod (auto), write to prod или delete (require approval). (2) HITL integration — при высокорискованном действии subagent создаёт approval request: описание действия, ожидаемый результат, rollback plan. Human approves/rejects. (3) Dry-run first — subagent всегда сначала показывает план действий (dry-run) без выполнения. Human approves план → subagent выполняет. (4) Audit log — каждое approved/rejected действие logируется с: кто одобрил, время, контекст. (5) Emergency stop — механизм экстренной остановки всех active subagents. (6) Post-action verification — после выполнения → verification subagent проверяет результат.</div></details>
+<div class="qlevel-group">Architect — 5 вопросов</div>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Какие архитектурные паттерны для multi-agent систем существуют?</summary>
+<div class="inside">Основные паттерны: (1) Hub-and-Spoke — один orchestrator (main agent) координирует множество специализированных subagents. Simple, но bottleneck на orchestrator. (2) Pipeline — output одного agent → input следующего. Sequential, хорошо для задач с зависимостями. (3) Hierarchical — multi-level: main → coordinators → workers. Для очень сложных задач. (4) Peer-to-Peer — агенты общаются между собой через shared state/message queue. Сложно, но гибко. (5) Competitive — несколько агентов независимо решают одну задачу, выбирается лучший результат (Best-of-N). (6) Consensus — agents vote on decision. Для critical decisions. Выбор паттерна: Hub-and-Spoke для большинства cases; Pipeline для sequential workflows; Competitive для высоких quality requirements.</div></details>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как спроектировать платформу для orchestration subagents?</summary>
+<div class="inside">Orchestration platform components: (1) Agent Registry — каталог доступных agent types с их capabilities, tool access, cost parameters. (2) Task Queue — очередь задач для subagents с priority, deadline, dependencies. (3) Context Manager — управление context для каждого subagent: передача начального context, сбор results. (4) Communication Bus — как agents обмениваются данными: shared memory, message queue, event stream. (5) State Store — хранение checkpoint каждого agent, возможность resume. (6) Observability — distributed tracing, cost tracking, success metrics per agent type. (7) Policy Engine — что может делать каждый agent type, approval gates, rate limits. (8) Scheduler — когда и как запускать agents (parallel, sequential, conditional). Tech stack: task queue (Celery/BullMQ), state store (Redis/DynamoDB), messaging (Kafka/RabbitMQ).</div></details>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как обеспечить fault tolerance в subagent системах?</summary>
+<div class="inside">Fault tolerance design: (1) Retry logic — transient failures (timeout, rate limit) → exponential backoff retry. Permanent failures → escalate. (2) Circuit breaker — если agent type часто падает → temporary disable, не retry бесконечно. (3) Fallback strategies — если primary subagent failed: (a) retry с другим agent instance; (b) fallback к более простому (дешёвому) agent; (c) graceful degradation — partial result + notice. (4) Timeout enforcement — каждый subagent task имеет deadline. По истечении → kill + checkpoint что успел. (5) Partial success handling — 3 из 4 subagents succeeded → можно продолжить с partial data, маркировав что missing. (6) Dead letter queue — failed tasks для manual review и recovery. (7) Health checks — периодический ping subagent instances.</div></details>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как строить observability для multi-agent workflow?</summary>
+<div class="inside">Multi-agent observability stack: (1) Distributed tracing — единый trace_id через весь workflow: orchestrator → subagent → tool calls. OpenTelemetry spans. Visualize в Jaeger/Zipkin. (2) Structured logging — каждый agent action: structured JSON log с: trace_id, agent_type, task_id, action, duration, result_summary, cost_tokens. (3) Agent activity timeline — visual timeline: когда запущены subagents, сколько работали, что вернули. (4) Cost attribution — tokens per agent, per task, per team. Real-time и historical. (5) Quality metrics — subagent success rate, retry rate, findings quality score (если оценивается). (6) Anomaly detection — unusual patterns: agent работает слишком долго, excessive retries, cost spike. (7) Business metrics correlation — multi-agent workflow metrics → бизнес результаты (PR review time reduction, bug detection rate).</div></details>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как проектировать communication protocols между subagents?</summary>
+<div class="inside">Inter-agent communication design: (1) Message schema — стандартизированный формат сообщений: header (sender, receiver, trace_id, timestamp, message_type) + payload (data). JSON Schema или Protobuf. (2) Communication patterns — request-response (subagent A запрашивает data у subagent B), pub-sub (events broadcast), shared state (чтение/запись в shared store). (3) Consistency model — для shared state: eventual consistency для high throughput или strong consistency для critical data. (4) Versioning — протокол версионируется, backward compat. (5) Security — authentication между agents (shared secret или short-lived tokens), authorization (что может читать/писать каждый agent). (6) Serialization — efficient serde для больших findings (binary для performance, JSON для debuggability). (7) Backpressure — если получатель перегружен → slow down sender. Design principle: prefer simple patterns (request-response) over complex (pub-sub) unless scale requires it.</div></details>
+</section>
+<div class="pageFooter"><div class="nextPrev"><a href='../pages/agents-rules-skills.html'>← AGENTS.md / Rules / Skills</a><a href='../pages/assessment.html'>Assessment тренажёр →</a></div></div></main></div><script src="../assets/app.js"></script></body></html>

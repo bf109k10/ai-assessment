@@ -1,0 +1,914 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Построение агентских систем</title><link rel="stylesheet" href="../assets/style.css"/></head><body><div class="app"><aside class="sidebar"><div class="brand"><div class="logo">AI</div><div><h1>Agent Context Academy</h1><p>Cursor / Claude Code / AGENTS.md</p></div></div>  <div class="nav">
+    <div class="nav-title">Навигация</div>
+    <a href="home.html"><span class="ico">🏠</span><span>Главная</span></a>
+    <a href="roadmap.html"><span class="ico">🧭</span><span>Roadmap + граф</span></a>
+    <a href="prompting.html"><span class="ico">✍️</span><span>Prompt Engineering</span></a>
+    <a href="context-engineering.html"><span class="ico">&#x1F9E0;</span><span>Context Engineering</span></a>
+    <a href="context.html"><span class="ico">🧩</span><span>Контекст агента</span></a>
+    <a href="agent-loop.html"><span class="ico">&#x1F504;</span><span>Agent Loop</span></a>
+    <a href="workflow.html"><span class="ico">🔀</span><span>Explore → Plan → Code</span></a>
+    <a href="model-variance.html"><span class="ico">🎲</span><span>Почему модель ≠ модель</span></a>
+    <a href="agents-rules-skills.html"><span class="ico">📄</span><span>AGENTS / Rules / Skills</span></a>
+    <div class="nav-sub-wrap">
+      <a href="agents-md.html" class="nav-sub"><span class="ico">📋</span><span>AGENTS.md</span></a>
+      <a href="rules.html" class="nav-sub"><span class="ico">🔒</span><span>Rules</span></a>
+      <a href="hooks.html" class="nav-sub"><span class="ico">🪝</span><span>Hooks</span></a>
+      <a href="skills.html" class="nav-sub"><span class="ico">⚡</span><span>Skills</span></a>
+      <a href="agent-packages.html" class="nav-sub"><span class="ico">📦</span><span>Agent Package Manager</span></a>
+      <a href="commands.html" class="nav-sub"><span class="ico">📟</span><span>Commands</span></a>
+    </div>
+    <a href="permissions.html"><span class="ico">&#x1F6E1;&#xFE0F;</span><span>Permissions</span></a>
+    <a href="memory.html"><span class="ico">🧠</span><span>Memory Bank</span></a>
+    <div class="nav-sub-wrap">
+      <a href="memory-structure.html" class="nav-sub"><span class="ico">🗂</span><span>Структура Memory</span></a>
+    </div>
+    <a href="rag.html"><span class="ico">🔎</span><span>RAG подробно</span></a>
+    <a href="mcp.html"><span class="ico">🛠</span><span>MCP / Tools</span></a>
+    <a href="caching.html"><span class="ico">⚡</span><span>Prompt Caching</span></a>
+    <a href="checkpoints.html"><span class="ico">✅</span><span>Checkpoint / Summary</span></a>
+    <a href="subagents.html"><span class="ico">👥</span><span>Subagents</span></a>
+    <a href="agentic-systems.html" class="active"><span class="ico">🏗</span><span>Построение агентских систем</span></a>
+    <a href="conflicts.html"><span class="ico">⚠️</span><span>Конфликты контекста</span></a>
+    <a href="tool-choice.html"><span class="ico">&#x1F5C2;&#xFE0F;</span><span>Какой инструмент когда</span></a>
+    <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
+    <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
+  </div>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div><div class="progressBox"><b>Формула</b><p class="sourceNote">Задача → декомпозиция → роли → параллель/pipeline → агрегация → verification.</p></div></aside><main class="main"><section class="hero"><div class="kicker">Agent Context Academy</div><h2>Построение агентских систем</h2><p>Как из отдельных subagents собрать рабочую систему: декомпозиция задачи, выбор параллельной или последовательной схемы, дерево зависимостей, распределение файлов, чек-лист проектирования и готовые шаблоны task description.</p><div class="heroActions"><a class="btn primary" href="home.html">На главную</a><a class="btn" href="subagents.html">← Subagents</a><button class="markDone">Отметить страницу изученной</button></div></section>
+<style>
+  .schema-box{background:#0f172a;color:#e2e8f0;border-radius:16px;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.65;overflow:auto;margin:10px 0;white-space:pre-wrap}
+  .schema-box .h{color:#c084fc;font-weight:900}
+  .schema-box .c{color:#64748b}
+  .schema-box .k{color:#93c5fd}
+  .schema-box .v{color:#86efac}
+  .schema-box .s{color:#fcd34d}
+  .schema-box .r{color:#fca5a5}
+  .nuance-card{border-left:4px solid;border-radius:0 14px 14px 0;padding:12px 16px;margin:8px 0;background:#fff;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .nc-blue{border-left-color:#2563eb}.nc-red{border-left-color:#dc2626}.nc-orange{border-left-color:#f97316}.nc-green{border-left-color:#16a34a}.nc-purple{border-left-color:#7c3aed}
+  .platform-split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:12px 0}
+  .ps-col{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff}
+  .ps-head{border-radius:10px;padding:7px 14px;font-weight:800;font-size:13px;margin-bottom:10px}
+  .ps-cursor{background:#eff6ff;color:#1e40af}
+  .ps-claude{background:#f0fdf4;color:#14532d}
+  .diff-split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .req-yes{color:#dc2626;font-weight:900}
+  .req-no{color:#64748b}
+  @media(max-width:900px){.platform-split{grid-template-columns:1fr}.diff-split{grid-template-columns:1fr}}
+</style>
+
+<!-- ── Core concept ── -->
+<section class="section">
+  <h2>Что такое агентская система и зачем её строить</h2>
+  <p class="sectionIntro">Один subagent — это исполнитель одной подзадачи. <b>Агентская система</b> — это несколько агентов, объединённых оркестратором в единый рабочий процесс: кто-то ищет, кто-то пишет, кто-то проверяет. Задача построения — правильно разложить работу и связать участников.</p>
+
+  <div class="grid">
+    <div class="card bg-blue">
+      <h3>Агентская система = команда + прораб</h3>
+      <p>Оркестратор (main agent) — как прораб на стройке: он не кладёт кирпичи сам, а раздаёт задачи специалистам и собирает результат.</p>
+      <ul>
+        <li><b>Orchestrator</b> — декомпозирует задачу, раздаёт, агрегирует, принимает финальное решение.</li>
+        <li><b>Workers (subagents)</b> — каждый со своей ролью и изолированным контекстом.</li>
+        <li><b>Протокол возврата</b> — стандартный формат findings, чтобы результаты можно было собрать.</li>
+      </ul>
+    </div>
+    <div class="card bg-green">
+      <h3>Зачем строить систему, а не один агент</h3>
+      <ul>
+        <li><b>Масштаб</b> — задача не влезает в один context window.</li>
+        <li><b>Параллелизм</b> — независимые части идут одновременно → быстрее.</li>
+        <li><b>Изоляция шума</b> — воркер читает 40 файлов, main получает summary.</li>
+        <li><b>Специализация</b> — security / performance / tests как отдельные роли.</li>
+      </ul>
+    </div>
+    <div class="card bg-orange">
+      <h3>Когда система НЕ нужна</h3>
+      <ul>
+        <li>Задача на 1–2 файла — overhead координации больше выигрыша.</li>
+        <li>Шаги сильно зависят друг от друга (нет чего параллелить).</li>
+        <li>Контекст критичен и его тяжело передать воркеру.</li>
+        <li>Один агент справится за &lt;10 turns.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="nuance-card nc-blue" style="margin-top:12px">
+    <h4>Главный принцип построения</h4>
+    <p>Система оправдана тогда, когда <b>выигрыш от параллелизма или изоляции контекста перевешивает overhead координации</b> (написание task descriptions + verification + агрегация). Начинай с одного агента; выделяй воркеров только там, где видна явная независимая часть.</p>
+  </div>
+</section>
+
+<!-- ── Декомпозиция ── -->
+<section class="section">
+  <h2>Шаг 1. Декомпозиция задачи</h2>
+  <p class="sectionIntro">Построение начинается не с агентов, а с разбиения задачи на <b>атомарные подзадачи</b> и определения зависимостей между ними. Это фундамент — от него зависит, что можно параллелить.</p>
+
+  <div class="schema-box"><span class="h">Задача:</span> <span class="s">"Добавить rate limiting в публичное API"</span>
+
+<span class="c">── Декомпозиция на атомарные подзадачи ──────────────</span>
+<span class="k">T1</span> Исследовать текущую структуру middleware        <span class="c"># explore</span>
+<span class="k">T2</span> Найти где хранить счётчики (Redis? in-memory?)   <span class="c"># explore</span>
+<span class="k">T3</span> Реализовать middleware rate limiter             <span class="c"># implement</span>
+<span class="k">T4</span> Написать тесты для лимитера                      <span class="c"># implement</span>
+<span class="k">T5</span> Проверить безопасность (bypass, header spoofing) <span class="c"># review</span>
+<span class="k">T6</span> Обновить документацию API                        <span class="c"># implement</span>
+
+<span class="c">── Дерево зависимостей (DAG) ────────────────────────</span>
+  T1 ─┐
+      ├─→ T3 ─┬─→ T4
+  T2 ─┘       ├─→ T5
+              └─→ T6
+
+<span class="v">T1, T2 — независимы → параллельно</span>
+<span class="v">T3 — ждёт T1+T2 (нужны findings)</span>
+<span class="v">T4, T5, T6 — независимы после T3 → параллельно</span></div>
+
+  <div class="tableWrap" style="margin-top:12px"><table>
+    <thead><tr><th>Свойство подзадачи</th><th>Хорошо (атомарна)</th><th>Плохо (нужно дробить)</th></tr></thead>
+    <tbody>
+      <tr><td>Границы</td><td>Один чёткий результат</td><td>«Сделать всё про auth»</td></tr>
+      <tr><td>Зависимости</td><td>Явно известны входы/выходы</td><td>Непонятно, что нужно на входе</td></tr>
+      <tr><td>Файлы</td><td>Определённый набор путей</td><td>«Где-то в проекте»</td></tr>
+      <tr><td>Размер</td><td>Влезает в один context</td><td>Требует compaction внутри</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ── Параллельно vs последовательно ── -->
+<section class="section">
+  <h2>Шаг 2. Параллельно или последовательно</h2>
+  <p class="sectionIntro">Из дерева зависимостей напрямую следует топология системы. Правило простое: <b>независимые подзадачи → параллельно</b>, <b>зависимые → pipeline</b>. На практике почти всегда получается гибрид: параллельные «волны» между точками синхронизации.</p>
+
+  <div class="platform-split">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">Параллельно (fan-out)</div>
+      <p style="font-size:13px;color:#475569">Несколько воркеров запускаются одновременно, main агрегирует.</p>
+      <div class="schema-box" style="font-size:12px">Orchestrator
+   ├─→ Worker A  ─┐
+   ├─→ Worker B  ─┤ одновременно
+   └─→ Worker C  ─┘
+        ↓
+   Агрегация findings</div>
+      <p style="font-size:13px;margin-top:8px"><b>Условия:</b> подзадачи независимы, разные наборы файлов, примерно одного размера.</p>
+      <p style="font-size:12px;color:#64748b"><b>Плюс:</b> скорость. <b>Минус:</b> cost × N.</p>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">Последовательно (pipeline)</div>
+      <p style="font-size:13px;color:#475569">Output одного воркера = input следующего.</p>
+      <div class="schema-box" style="font-size:12px">Planner ──→ spec
+   ↓
+Researcher ──→ facts
+   ↓
+Coder ──→ code
+   ↓
+Reviewer ──→ report</div>
+      <p style="font-size:13px;margin-top:8px"><b>Условия:</b> каждый шаг зависит от предыдущего.</p>
+      <p style="font-size:12px;color:#64748b"><b>Плюс:</b> дешевле, предсказуемо. <b>Минус:</b> нет ускорения.</p>
+    </div>
+  </div>
+
+  <h3 style="font-size:15px;margin:16px 0 8px">Гибрид — параллельные волны (реальный случай)</h3>
+  <div class="schema-box"><span class="c">── Волна 1 (parallel) ──</span>  T1 explore ║ T2 explore
+                       ↓ <span class="v">точка синхронизации: main собрал findings</span>
+<span class="c">── Волна 2 (single)  ──</span>  T3 implement (нужны T1+T2)
+                       ↓ <span class="v">точка синхронизации</span>
+<span class="c">── Волна 3 (parallel) ──</span>  T4 tests ║ T5 security ║ T6 docs
+                       ↓
+                    Финальная агрегация + verification</div>
+
+  <div class="tableWrap" style="margin-top:12px"><table>
+    <thead><tr><th>Сигнал</th><th>Выбор топологии</th></tr></thead>
+    <tbody>
+      <tr><td>Подзадачи не зависят друг от друга</td><td>Параллельно (fan-out)</td></tr>
+      <tr><td>Каждый шаг использует результат предыдущего</td><td>Pipeline</td></tr>
+      <tr><td>Есть и то и другое</td><td>Гибрид: волны с точками синхронизации</td></tr>
+      <tr><td>Важно качество одного результата, задача неоднозначна</td><td>Best-of-N (см. паттерны на <a href="subagents.html">Subagents</a>)</td></tr>
+      <tr><td>Cost критичен</td><td>Сначала один агент; параллель только при явном выигрыше</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="nuance-card nc-orange" style="margin-top:12px">
+    <h4>Параллелизм ускоряет не всегда</h4>
+    <p>Если один воркер заканчивает за 30 сек, а второй за 5 минут — параллель даёт выигрыш лишь до размера самого долгого. А если main потом тратит больше времени на reconciliation противоречивых findings, чем воркеры на работу — параллель навредила. Балансируй размеры подзадач.</p>
+  </div>
+</section>
+
+<!-- ── Распределение файлов ── -->
+<section class="section">
+  <h2>Шаг 3. Распределение файлов между воркерами</h2>
+  <p class="sectionIntro">Ключевое правило параллельной системы: <b>параллельные воркеры работают на непересекающихся наборах файлов</b>. Иначе — гонка записи и потеря изменений.</p>
+
+  <div class="diff-split">
+    <div>
+      <h3 style="margin-bottom:10px">✅ Непересекающиеся наборы</h3>
+      <div class="schema-box"><span class="v">Worker A:</span> api/auth/**
+<span class="v">Worker B:</span> api/billing/**
+<span class="v">Worker C:</span> frontend/**
+
+<span class="c"># Пересечений нет → безопасно параллелить</span></div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:10px">❌ Пересечение файлов</h3>
+      <div class="schema-box"><span class="r">Worker A:</span> api/auth/service.py
+<span class="r">Worker B:</span> api/auth/service.py  <span class="c">← тот же файл!</span>
+
+<span class="c"># last-write-wins: B перезапишет правки A</span></div>
+    </div>
+  </div>
+
+  <div class="nuance-card nc-red" style="margin-top:12px">
+    <h4>Last-write-wins на shared файле</h4>
+    <p>Если два параллельных воркера редактируют один файл — тот, кто запишет последним, затрёт изменения первого. Никакого автоматического merge нет. Решение: (1) отдай shared файл одному воркеру; (2) или обрабатывай его последовательно через main; (3) или дай воркерам readonly, а правки собери в main.</p>
+  </div>
+
+  <div class="nuance-card nc-blue">
+    <h4>Read-write разделение снижает конфликты</h4>
+    <p>Частый безопасный паттерн: параллельные воркеры <b>только читают</b> (<code>readonly: true</code>) и возвращают findings/патчи как текст, а физические правки применяет один main agent последовательно. Так параллелизм ускоряет исследование без риска гонок записи.</p>
+  </div>
+</section>
+
+<!-- ── Чек-лист проектирования ── -->
+<section class="section">
+  <h2>Шаг 4. Чек-лист проектирования системы</h2>
+  <p class="sectionIntro">Проверенный порядок построения — от разбиения задачи до проверки результата. Пройди по пунктам перед запуском воркеров.</p>
+
+  <div class="schema-box"><span class="h">Чек-лист построения агентской системы</span>
+
+<span class="k">1. Декомпозиция</span>
+   ▢ Разбить задачу на атомарные подзадачи
+   ▢ Построить дерево зависимостей (что от чего зависит)
+
+<span class="k">2. Топология</span>
+   ▢ Независимые → параллельно, зависимые → pipeline
+   ▢ Определить точки синхронизации (волны)
+
+<span class="k">3. Роли</span>
+   ▢ Назначить роль каждому воркеру (explorer / coder / reviewer)
+   ▢ Explorer и reviewer → readonly
+
+<span class="k">4. Файлы и границы</span>
+   ▢ Непересекающиеся наборы файлов для параллельных воркеров
+   ▢ Files + Scope + Constraints для каждого (см. Subagents)
+
+<span class="k">5. Протокол возврата</span>
+   ▢ Единый output format findings (structured, с evidence: file:line)
+
+<span class="k">6. Агрегация и verification</span>
+   ▢ Main собирает findings, разрешает противоречия
+   ▢ Main проверяет findings против Rules / AGENTS.md перед применением
+
+<span class="k">7. Cost-бюджет</span>
+   ▢ Оценить токены на воркера; не запускать при явном перерасходе
+   ▢ Сначала один агент, если задача мала</div>
+
+  <div class="grid" style="margin-top:12px">
+    <div class="card bg-purple">
+      <h3>Роли-специализации</h3>
+      <ul>
+        <li><b>Explorer</b> — ищет, анализирует, readonly, возвращает findings.</li>
+        <li><b>Implementer</b> — пишет код по spec + findings, узкий scope.</li>
+        <li><b>Reviewer</b> — проверяет реализацию против требований и Rules, readonly.</li>
+        <li><b>Security / Perf</b> — специализированные reviewer'ы.</li>
+      </ul>
+    </div>
+    <div class="card bg-teal">
+      <h3>Протокол возврата findings</h3>
+      <ul>
+        <li>Structured: Summary → Findings → Evidence → Next steps.</li>
+        <li>Конкретные ссылки: <code>file:line</code>, не «нашёл проблему».</li>
+        <li>Confidence level: высокая / требует проверки.</li>
+        <li>Контроль размера: ключевое в summary, детали в appendix.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── Шаблоны task description ── -->
+<section class="section">
+  <h2>Шаг 5. Готовые шаблоны task description</h2>
+  <p class="sectionIntro">Копипастные briefing-шаблоны для трёх базовых ролей системы researcher → implementer → reviewer. Подставь Files / Scope под свою задачу.</p>
+
+  <h3 style="font-size:15px;margin:10px 0 6px">① Explorer (readonly)</h3>
+  <div class="schema-box"><span class="h">Role:</span> <span class="v">Code Explorer</span>
+<span class="h">Goal:</span> <span class="s">Найти где реализован rate limiting и как устроен middleware</span>
+<span class="h">Files:</span> <span class="k">api/middleware/**, api/config/*.py</span>
+<span class="h">Scope:</span> <span class="s">только middleware и точки его подключения; не бизнес-логика</span>
+<span class="h">Constraints:</span> <span class="k">readonly; не редактировать; не запускать команды</span>
+<span class="h">Output:</span> <span class="k">Summary + список {file:line, роль компонента} + точки расширения</span></div>
+
+  <h3 style="font-size:15px;margin:14px 0 6px">② Implementer</h3>
+  <div class="schema-box"><span class="h">Role:</span> <span class="v">Backend Implementer</span>
+<span class="h">Goal:</span> <span class="s">Реализовать middleware rate limiter (100 req/min per IP)</span>
+<span class="h">Context:</span> <span class="k">findings Explorer'а (передать сюда), Python 3.11, Redis доступен</span>
+<span class="h">Files:</span> <span class="k">api/middleware/ratelimit.py (создать), api/app.py (подключить)</span>
+<span class="h">Constraints:</span> <span class="k">не менять публичный API-контракт; не трогать тесты чужих модулей</span>
+<span class="h">Output:</span> <span class="k">изменённые файлы + краткое описание решения</span></div>
+
+  <h3 style="font-size:15px;margin:14px 0 6px">③ Reviewer (readonly)</h3>
+  <div class="schema-box"><span class="h">Role:</span> <span class="v">Security Reviewer</span>
+<span class="h">Goal:</span> <span class="s">Проверить лимитер на bypass: header spoofing, IPv6, прокси X-Forwarded-For</span>
+<span class="h">Files:</span> <span class="k">api/middleware/ratelimit.py</span>
+<span class="h">Constraints:</span> <span class="k">readonly; только анализ; не предлагать рефакторинг вне найденного</span>
+<span class="h">Output:</span> <span class="k">JSON [{issue, file:line, severity, fix_hint}], max 10</span></div>
+
+  <div class="callout" style="margin-top:12px"><b>Оркестрация этой тройки:</b> Explorer (readonly) → main передаёт findings в Implementer → Reviewer (readonly) проверяет результат. Explorer и Reviewer можно запускать параллельно с другими независимыми воркерами; Implementer — между ними, в точке синхронизации.</div>
+</section>
+
+<!-- ── Как строить оркестрацию ── -->
+<section class="section">
+  <h2>Шаг 6. Как строить саму оркестрацию</h2>
+  <p class="sectionIntro">Оркестрация — это <b>логика главного агента</b>: цикл «декомпозировать → запустить волну → дождаться → собрать → проверить → следующая волна». Ниже — как этот цикл выглядит на практике и как его закодировать в briefing оркестратора.</p>
+
+  <h3 style="font-size:15px;margin:10px 0 6px">Цикл оркестратора — шаг за шагом</h3>
+  <div class="schema-box"><span class="h">ORCHESTRATION LOOP (логика main agent)</span>
+
+<span class="k">1. PLAN</span>    Декомпозировать задачу → список подзадач + DAG зависимостей
+             <span class="c"># зафиксировать в TodoWrite / плане</span>
+        ↓
+<span class="k">2. SELECT</span>  Взять готовую «волну»: подзадачи без невыполненных зависимостей
+        ↓
+<span class="k">3. DISPATCH</span> Запустить воркеров волны:
+             • независимые → параллельно (батч Task calls, background)
+             • зависимые   → по одному
+             каждому — Role + Files + Scope + Constraints + Output
+        ↓
+<span class="k">4. AWAIT</span>   Точка синхронизации: дождаться ВСЕХ воркеров волны
+             <span class="c"># не завершать turn, пока есть незакрытые background воркеры</span>
+        ↓
+<span class="k">5. COLLECT</span> Прочитать findings, привести к общему виду
+        ↓
+<span class="k">6. VERIFY</span>  Проверить findings против Rules / AGENTS.md,
+             разрешить противоречия, отбросить нарушающее правила
+        ↓
+<span class="k">7. DECIDE</span>  Применить результат / запустить tie-breaker / скорректировать план
+        ↓
+     есть ещё волны? ──да──► к шагу 2
+        │ нет
+        ▼
+<span class="v">8. FINALIZE  Собрать итог, применить правки одним исполнителем, отчитаться</span></div>
+
+  <div class="nuance-card nc-blue" style="margin-top:10px">
+    <h4>Что такое «волна» (wave)?</h4>
+    <p><b>Волна</b> — это группа подзадач, которые можно запустить <b>одновременно</b>, потому что все их зависимости уже выполнены. Оркестратор идёт по дереву зависимостей слоями: сначала запускает все задачи без зависимостей (волна 1), ждёт их завершения (точка синхронизации), затем запускает те, что зависели от первой волны (волна 2), и так далее.</p>
+    <p style="margin-top:6px">Проще говоря: <b>волна = один «залп» параллельных воркеров</b>. Внутри волны воркеры работают параллельно и независимо; между волнами — обязательная пауза, где оркестратор собирает результаты и решает, что запускать дальше.</p>
+    <div class="schema-box" style="font-size:12px;margin-top:8px"><span class="c">Задача: добавить rate limiting</span>
+
+<span class="k">Волна 1</span>  [T1 изучить middleware] ║ [T2 выбрать хранилище]   <span class="c"># параллельно</span>
+   ▼ <span class="v">точка синхронизации — main собрал findings обеих задач</span>
+<span class="k">Волна 2</span>  [T3 реализовать лимитер]                            <span class="c"># одна задача, ждала T1+T2</span>
+   ▼ <span class="v">точка синхронизации</span>
+<span class="k">Волна 3</span>  [T4 тесты] ║ [T5 security] ║ [T6 документация]      <span class="c"># снова параллельно</span>
+   ▼
+       Финальная агрегация + проверка на Rules</div>
+    <p style="font-size:12px;color:#64748b;margin-top:6px">Почему «волны», а не «всё сразу»: T3 нельзя запустить пока не готовы T1 и T2 — иначе воркер получит пустой вход. Волны = способ соблюсти порядок зависимостей и при этом максимально распараллелить независимое.</p>
+  </div>
+
+  <div class="nuance-card nc-orange" style="margin-top:10px">
+    <h4>Оркестратор сам НЕ делает работу воркеров</h4>
+    <p>Соблазн — «заодно сам поправлю пару файлов». Тогда контекст main раздувается ровно тем шумом, ради изоляции которого и строилась система. Роль оркестратора: планировать, диспетчеризовать, агрегировать, верифицировать и принимать решение. Исполнение — воркерам.</p>
+  </div>
+
+  <h3 style="font-size:15px;margin:18px 0 8px">Синхронизация: как ждать воркеров и какие есть варианты</h3>
+  <p style="font-size:13px;color:#475569;margin:0 0 10px">Точка синхронизации — это «барьер»: оркестратор останавливается и дожидается воркеров волны, прежде чем идти дальше. Внутри волны воркеры бегут параллельно, но волну 2 нельзя начать, пока волна 1 не отдала findings.</p>
+
+  <div class="schema-box" style="font-size:12px"><span class="k">Волна 1:</span>  worker A ──┐
+          worker B ──┤ бегут параллельно
+          worker C ──┘
+             ▼
+      <span class="v">[БАРЬЕР: ждём всех, собираем findings]</span>
+             ▼
+<span class="k">Волна 2:</span>  worker D  (получает findings волны 1)</div>
+
+  <div class="nuance-card nc-red" style="margin-top:8px">
+    <h4>Главное правило синхронизации</h4>
+    <p>Оркестратор <b>не должен завершать turn, пока есть незакрытые background-воркеры</b>. Иначе их результат теряется, и агрегация будет неполной. Явно дожидайся всех запущенных воркеров волны.</p>
+  </div>
+
+  <div class="tableWrap" style="margin-top:12px"><table>
+    <thead><tr><th>Вариант</th><th>Кого ждём</th><th>Плюс</th><th>Минус</th><th>Когда</th></tr></thead>
+    <tbody>
+      <tr><td><b>Join-all (barrier)</b></td><td>всех воркеров волны</td><td>простота, полнота</td><td>по скорости самого медленного</td><td>по умолчанию</td></tr>
+      <tr><td><b>Foreground</b></td><td>одного, блокируясь</td><td>предсказуемо</td><td>нет параллелизма</td><td>pipeline (шаг за шагом)</td></tr>
+      <tr><td><b>Background + await</b></td><td>всех, не блокируя main</td><td>параллелизм, main занят делом</td><td>нельзя «забыть» дождаться</td><td>параллельная волна</td></tr>
+      <tr><td><b>First-wins / race</b></td><td>первого успешного</td><td>скорость</td><td>работа остальных впустую</td><td>Best-of-N, любой валидный ответ</td></tr>
+      <tr><td><b>Quorum (N из M)</b></td><td>большинства</td><td>fault tolerance</td><td>результат неполный</td><td>один воркер может зависнуть</td></tr>
+      <tr><td><b>Timeout</b></td><td>до дедлайна</td><td>защита от зависания</td><td>можно обрезать полезное</td><td>риск бесконечного поиска</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="platform-split" style="margin-top:14px">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor — как задать синхронизацию</div>
+      <p style="font-size:13px;color:#475569;margin:0 0 8px">Режим задаётся параметром <code>run_in_background</code> в вызове Task tool, а барьер — тем, что main <b>явно читает результаты</b> всех background-воркеров в конце turn.</p>
+      <div class="schema-box" style="font-size:11px"><span class="c">// Foreground — ждать сразу (pipeline, «волна из одного»)</span>
+{ <span class="k">"subagent_type"</span>:<span class="s">"generalPurpose"</span>, <span class="k">"run_in_background"</span>:<span class="v">false</span> }
+
+<span class="c">// Background — параллельная волна: несколько Task calls</span>
+<span class="c">// в ОДНОМ сообщении с run_in_background:true</span>
+{ <span class="k">"subagent_type"</span>:<span class="s">"explore"</span>, <span class="k">"run_in_background"</span>:<span class="v">true</span> }
+{ <span class="k">"subagent_type"</span>:<span class="s">"explore"</span>, <span class="k">"run_in_background"</span>:<span class="v">true</span> }
+<span class="c">// затем БАРЬЕР: main дожидается обоих перед волной 2</span></div>
+      <p style="font-size:12px;color:#64748b;margin-top:6px">First-wins / quorum / timeout — в UI нет прямых флагов; реализуются логикой оркестратора (описать в AGENTS.md: «продолжай, когда готовы 3 из 4»).</p>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code — как задать синхронизацию</div>
+      <p style="font-size:13px;color:#475569;margin:0 0 8px">Синхронизация — на уровне процессов: ждать <code>claude ...</code> синхронно или запустить фоном и join'ить.</p>
+      <div class="schema-box" style="font-size:11px"><span class="c"># Foreground — блокирующий вызов (pipeline)</span>
+claude --agent implementer "..."      <span class="c"># ждём завершения</span>
+
+<span class="c"># Параллельная волна + barrier (join-all)</span>
+claude --agent explorer "A" &         <span class="c"># фон</span>
+claude --agent explorer "B" &         <span class="c"># фон</span>
+<span class="k">wait</span>                                  <span class="c"># БАРЬЕР: ждём всех</span>
+
+<span class="c"># Timeout-синхронизация</span>
+timeout 120 claude --agent explorer "..."
+
+<span class="c"># Quorum/first-wins — логикой скрипта playbook</span></div>
+      <p style="font-size:12px;color:#64748b;margin-top:6px">Правила «ждать N из M» / «взять первого» описываются в самом playbook (Command) или в CLAUDE.md как политика оркестратора.</p>
+    </div>
+  </div>
+
+  <h2 style="margin-top:22px">Шаг 7. Куда класть шаги и оркестрацию</h2>
+  <p class="sectionIntro">Оркестрацию нужно где-то <b>зафиксировать</b>, иначе каждый запуск придётся объяснять заново. Но сначала важно различать две вещи: <b>сами шаги под конкретную задачу</b> (меняются каждый раз) и <b>устройство системы</b> (порядок, роли, правила — стабильны).</p>
+
+  <div class="nuance-card nc-purple">
+    <h4>Что такое «шаги» и что такое «оркестрация» — не путать</h4>
+    <p><b>Шаги (подзадачи)</b> — это результат декомпозиции <em>конкретной</em> задачи: «изучить middleware», «написать лимитер», «проверить безопасность». Они разные каждый раз и живут в <b>плане текущей задачи</b> (TodoWrite / план оркестратора), а не в файле проекта.<br>
+    <b>Оркестрация</b> — это <em>устройство</em> системы: какой порядок волн, какие роли у воркеров, как они возвращают findings, какие ограничения. Это стабильно и повторяется от задачи к задаче → это и нужно записать в файлы проекта.</p>
+  </div>
+
+  <p style="font-size:13px;color:#475569;margin:12px 0 6px"><b>Разложим по местам, что именно куда класть:</b></p>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Что кладём</th><th>Куда</th><th>Почему сюда</th></tr></thead>
+    <tbody>
+      <tr><td>Шаги под конкретную задачу (декомпозиция)</td><td><b>План оркестратора</b> (TodoWrite), не файл</td><td>Меняются каждый раз — незачем хранить в репозитории</td></tr>
+      <tr><td>Порядок волн + протокол возврата findings + правила агрегации/проверки</td><td><b>AGENTS.md / CLAUDE.md</b></td><td>Устройство системы, стабильно, действует на весь проект</td></tr>
+      <tr><td>Роль отдельного воркера (что делает, какие tools, что возвращает)</td><td><b>subagent_type</b> (Cursor) / <b>.claude/agents/*.md</b> (Claude Code)</td><td>Роль переиспользуется в разных workflow</td></tr>
+      <tr><td>Запуск всей цепочки одной командой</td><td><b>Command / Skill</b></td><td>Один и тот же сценарий запускают часто и одинаково</td></tr>
+      <tr><td>Постоянные правила для всех воркеров (нельзя нарушать никогда)</td><td><b>Rules</b></td><td>Действуют всегда, независимо от задачи и workflow</td></tr>
+      <tr><td>Разовая логика под одну задачу</td><td><b>Prompt</b> главного агента</td><td>Не нужна повторно — незачем фиксировать</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="nuance-card nc-blue" style="margin-top:10px">
+    <h4>Что такое playbook (Command / Skill)?</h4>
+    <p><b>Playbook</b> (дословно «сборник пьес/сценариев», термин из спорта и DevOps) — это <b>записанный готовый сценарий действий</b>, который можно запустить одной командой, не объясняя шаги заново. Как рецепт: «сделай A, потом B, потом C».<br>
+    В агентских системах Command / Skill — это playbook оркестрации: файл, где записано «запусти explore → передай findings в implement → потом review». Один раз описал — дальше вызываешь как <code>/feature-review</code> вместо того чтобы каждый раз вручную расписывать всю цепочку воркеров.</p>
+  </div>
+
+  <div class="nuance-card nc-green">
+    <h4>Простое правило разделения</h4>
+    <p><b>Rules</b> = что нельзя <em>никогда</em> (постоянные правила). <b>AGENTS.md</b> = как система устроена (порядок + роли + протокол). <b>Command/Skill</b> = кнопка «выполнить этот сценарий». <b>Prompt</b> = разовый случай. Не смешивай: постоянное правило в prompt забудется на следующем запуске; устройство workflow в Rules будет мешать другим задачам.</p>
+  </div>
+
+  <h3 style="font-size:15px;margin:18px 0 8px">Разделение ответственности: агенты / скиллы / AGENTS.md / Command / Rules</h3>
+  <p style="font-size:13px;color:#475569;margin:0 0 8px">Частый вопрос: «если я делаю переносимые скиллы и агентов, нужен ли ещё AGENTS.md?» — <b>Да</b>. Скиллы и агенты — это <b>переносимые capability</b> («что вообще можно делать», их шарят между проектами). AGENTS.md — это <b>привязка к конкретному проекту</b> («как здесь всё собрано и когда что звать»). Это разные слои.</p>
+
+  <div class="tableWrap"><table>
+    <thead><tr><th>Слой</th><th>Что это</th><th>Переносимо между проектами?</th><th>Отвечает на вопрос</th></tr></thead>
+    <tbody>
+      <tr><td><b>Агент</b> (роль воркера)</td><td>Кто исполнитель: tools, readonly, формат output</td><td>✅ Да</td><td>«Кто делает»</td></tr>
+      <tr><td><b>Скилл</b></td><td>Переиспользуемая процедура/playbook по шагам</td><td>✅ Да</td><td>«Как выполнить сценарий»</td></tr>
+      <tr><td><b>Command</b></td><td>Кнопка запуска: вызвать скилл/цепочку одной строкой</td><td>⚠️ Частично (может ссылаться на проект)</td><td>«Чем запустить»</td></tr>
+      <tr><td><b>AGENTS.md</b></td><td>Устройство и контекст ЭТОГО проекта, диспетчеризация</td><td>❌ Нет — своё в каждом проекте</td><td>«Как устроен проект, когда что звать»</td></tr>
+      <tr><td><b>Rules</b></td><td>Постоянные правила: что нельзя никогда</td><td>⚠️ Инварианты переносимы, проектные — нет</td><td>«Что запрещено всегда»</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="nuance-card nc-purple" style="margin-top:10px">
+    <h4>Что остаётся в AGENTS.md, даже когда есть скиллы и агенты</h4>
+    <ul style="margin:6px 0 0;padding-left:18px;font-size:13px;line-height:1.8">
+      <li><b>Контекст проекта</b>: стек, команды запуска/тестов, структура, что нельзя трогать.</li>
+      <li><b>Оркестрация</b>: порядок волн, какой агент на каком шаге, протокол findings.</li>
+      <li><b>Диспетчеризация</b>: когда какой скилл/агент применять именно здесь.</li>
+      <li><b>Проектные конвенции</b>, которые не входят в переносимый скилл.</li>
+    </ul>
+    <p style="margin-top:6px">Скиллы/агентов держи переносимыми (без хардкода под один проект), а AGENTS.md — тонкий слой, который <b>ссылается</b> на них и говорит, как применять здесь. Совсем убрать AGENTS.md обычно не стоит — теряется проектный контекст и точка входа для агента.</p>
+  </div>
+
+  <div class="schema-box"><span class="c"># AGENTS.md ССЫЛАЕТСЯ на переносимые скиллы/агентов, а не дублирует их</span>
+
+<span class="h">## Стек и запуск</span>
+Python 3.11 · tests: pytest -q · lint: ruff
+
+<span class="h">## Оркестрация фичи</span>
+Волна 1: агент <span class="k">explorer</span> (readonly) — исследовать зону
+Волна 2: агент <span class="k">implementer</span> — код по findings
+Волна 3: агент <span class="k">security-reviewer</span> (readonly)
+Запуск всего — скилл/команда <span class="k">/feature-review</span>
+
+<span class="h">## Когда что звать (диспетчеризация)</span>
+- новая фича           → скилл <span class="k">feature-review</span>
+- разбор упавшего CI    → агент <span class="k">ci-investigator</span>
+- аудит безопасности    → агент <span class="k">security-reviewer</span>
+
+<span class="c"># сами роли/процедуры — в переносимых агентах и скиллах, не тут</span></div>
+
+  <div class="platform-split" style="margin-top:14px">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor — где живёт оркестрация</div>
+      <ul style="font-size:13px;line-height:1.8;margin:0 0 10px;padding-left:18px">
+        <li><b>AGENTS.md</b> в корне / поддиректории — порядок волн, роль оркестратора, протокол findings.</li>
+        <li><b>.cursor/rules/*.mdc</b> — постоянные правила (readonly для reviewer, непересекающиеся файлы).</li>
+        <li><b>.cursor/commands</b> — playbook: запуск всей цепочки одной командой (напр. <code>/feature-review</code>).</li>
+        <li><b>Task tool</b> с <code>subagent_type</code> — роль конкретного воркера; батч вызовов = параллельная волна.</li>
+      </ul>
+      <div class="schema-box" style="font-size:11px"><span class="c"># AGENTS.md — устройство системы (стабильно)</span>
+<span class="c">## Роль: Orchestrator фичи-разработки</span>
+1. Декомпозируй задачу, построй DAG.
+2. Волна explore: Task(explore, readonly) ║ параллельно.
+3. Синхронизация → передай findings в Task(implement).
+4. Волна review: Task(security-review, readonly).
+5. Проверь findings на .cursor/rules/*, потом применяй.
+
+<span class="c">## Протокол findings (для всех воркеров)</span>
+Summary → Findings(file:line) → Evidence → Next steps</div>
+      <div class="schema-box" style="font-size:11px;margin-top:8px"><span class="c"># .cursor/commands/feature-review.md — playbook</span>
+<span class="c"># Запуск: /feature-review "добавить rate limiting"</span>
+Выполни workflow из AGENTS.md для задачи $ARGUMENTS:
+волна explore → implement → security-review,
+findings проверить на .cursor/rules перед применением.</div>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code — где живёт оркестрация</div>
+      <ul style="font-size:13px;line-height:1.8;margin:0 0 10px;padding-left:18px">
+        <li><b>CLAUDE.md</b> (= AGENTS.md) — порядок волн, роль оркестратора, протокол.</li>
+        <li><b>.claude/agents/*.md</b> — роль каждого воркера (allowed tools, output).</li>
+        <li><b>.claude/commands</b> — playbook (slash-command) для запуска всего сценария.</li>
+        <li>Воркеры — отдельные процессы (<code>claude --agent ...</code>), координируются оркестратором.</li>
+      </ul>
+      <div class="schema-box" style="font-size:11px"><span class="c"># .claude/commands/feature.md — playbook</span>
+<span class="c"># Orchestrate: explore → implement → review</span>
+1. claude --agent explorer --readonly "..."   <span class="c"># parallel</span>
+2. claude --agent implementer "... {findings}"
+3. claude --agent security-reviewer --readonly "..."
+
+<span class="c"># .claude/agents/explorer.md — роль воркера</span>
+<span class="c">## Tools: Read, Grep, Glob (no write)</span>
+<span class="c">## Output: findings с file:line</span></div>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top:12px"><b>Шпаргалка «куда класть»:</b> шаги задачи → <b>план (TodoWrite)</b>; постоянное правило → <b>Rules</b>; устройство системы → <b>AGENTS.md/CLAUDE.md</b>; запуск сценария одной командой → <b>Command/Skill (playbook)</b>; роль воркера → <b>subagent_type</b> (Cursor) / <b>.claude/agents</b> (Claude Code); разовый случай → <b>prompt</b>.</div>
+</section>
+
+<!-- ── Полный пример системы ── -->
+<section class="section">
+  <h2>Полный пример: агентская система «фича + ревью»</h2>
+  <p class="sectionIntro">Соберём всё вместе на одной задаче: <b>«Добавить rate limiting в публичное API»</b>. Ниже — какие файлы завести (AGENTS.md, Rule, Skill/Command, роли воркеров) и как это исполняется волнами. Слева Cursor, справа Claude Code — концепция одна, отличаются пути и синтаксис.</p>
+
+  <h3 style="font-size:15px;margin:12px 0 8px">Структура файлов проекта</h3>
+  <div class="platform-split">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor</div>
+      <div class="schema-box" style="font-size:12px">project/
+├── <span class="k">AGENTS.md</span>                      <span class="c"># устройство системы</span>
+├── .cursor/
+│   ├── <span class="k">rules/</span>
+│   │   └── <span class="k">orchestration.mdc</span>      <span class="c"># постоянные правила</span>
+│   └── <span class="k">commands/</span>
+│       └── <span class="k">feature-review.md</span>      <span class="c"># playbook запуска</span>
+└── api/...                        <span class="c"># код проекта</span>
+
+<span class="c"># роли воркеров — встроенный subagent_type</span>
+<span class="c"># (explore / general / security-review)</span></div>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code</div>
+      <div class="schema-box" style="font-size:12px">project/
+├── <span class="k">CLAUDE.md</span>                      <span class="c"># устройство системы</span>
+├── .claude/
+│   ├── <span class="k">rules/</span>  (или в CLAUDE.md)
+│   │   └── <span class="k">orchestration.md</span>       <span class="c"># постоянные правила</span>
+│   ├── <span class="k">agents/</span>
+│   │   ├── <span class="k">explorer.md</span>            <span class="c"># роль воркера</span>
+│   │   ├── <span class="k">implementer.md</span>
+│   │   └── <span class="k">security-reviewer.md</span>
+│   └── <span class="k">commands/</span>
+│       └── <span class="k">feature.md</span>             <span class="c"># playbook (slash)</span>
+└── api/...</div>
+    </div>
+  </div>
+
+  <h3 style="font-size:15px;margin:16px 0 8px">1. AGENTS.md / CLAUDE.md — устройство системы</h3>
+  <div class="schema-box"><span class="c"># AGENTS.md (Cursor) = CLAUDE.md (Claude Code) — текст одинаковый</span>
+
+<span class="h">## Роль: Orchestrator фичи-разработки</span>
+Ты — оркестратор. Сам код не пишешь: планируешь, раздаёшь воркерам,
+собираешь findings, проверяешь и принимаешь решение.
+
+<span class="h">## Порядок волн</span>
+Волна 1 (parallel): explorer × N — исследовать зону задачи (readonly)
+   → синхронизация: собрать findings
+Волна 2 (single):   implementer — написать код по findings
+   → синхронизация
+Волна 3 (parallel): reviewer + security-reviewer — проверить (readonly)
+   → финал: проверить findings на Rules, применить правки
+
+<span class="h">## Протокол возврата findings (для всех воркеров)</span>
+Summary → Findings (обязательно file:line) → Evidence → Next steps</div>
+
+  <h3 style="font-size:15px;margin:16px 0 8px">2. Rule — постоянные правила системы</h3>
+  <div class="platform-split">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 .cursor/rules/orchestration.mdc</div>
+      <div class="schema-box" style="font-size:12px"><span class="c">---</span>
+<span class="k">description:</span> Правила оркестрации воркеров
+<span class="k">alwaysApply:</span> true
+<span class="c">---</span>
+- Параллельные воркеры — только на
+  непересекающихся файлах.
+- reviewer и explorer — всегда readonly.
+- Правки применяет один исполнитель
+  (implementer или main), не параллельно.
+- Любой finding — с evidence (file:line),
+  иначе не принимать.
+- Findings проверять на эти Rules
+  перед применением.</div>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 .claude/rules/orchestration.md</div>
+      <div class="schema-box" style="font-size:12px"><span class="c"># Правила оркестрации (те же самые)</span>
+- Параллельные воркеры — только на
+  непересекающихся файлах.
+- reviewer и explorer — всегда readonly.
+- Правки применяет один исполнитель.
+- Finding без evidence (file:line)
+  не принимается.
+- Findings сверять с этими правилами
+  перед применением.
+
+<span class="c"># можно держать прямо в секции CLAUDE.md</span></div>
+    </div>
+  </div>
+
+  <h3 style="font-size:15px;margin:16px 0 8px">3. Роли воркеров</h3>
+  <div class="platform-split">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor — встроенные subagent_type</div>
+      <div class="schema-box" style="font-size:12px"><span class="c">// роли задаются параметром при вызове Task</span>
+explorer  → subagent_type: <span class="s">"explore"</span>, readonly:true
+implement → subagent_type: <span class="s">"generalPurpose"</span>
+security  → subagent_type: <span class="s">"security-review"</span>, readonly:true
+
+<span class="c">// доп. детали роли — в prompt задачи</span>
+<span class="c">// (Role/Files/Scope/Constraints/Output)</span></div>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code — .claude/agents/explorer.md</div>
+      <div class="schema-box" style="font-size:12px"><span class="c">---</span>
+<span class="k">name:</span> explorer
+<span class="k">description:</span> Исследует зону задачи, readonly
+<span class="k">tools:</span> Read, Grep, Glob
+<span class="c">---</span>
+Найди relevant файлы и опиши структуру.
+Ничего не редактируй.
+Output: Summary + Findings(file:line) + Next steps</div>
+    </div>
+  </div>
+
+  <div class="nuance-card nc-orange" style="margin-top:10px">
+    <h4>Важно: в Cursor роли воркеров — это НЕ файлы</h4>
+    <p>Это главное отличие от Claude Code и частый источник путаницы. В Claude Code под каждую роль заводят файл (<code>.claude/agents/explorer.md</code>). <b>В Cursor таких файлов нет.</b> Роль воркера задаётся прямо в момент вызова встроенного <b>Task tool</b> — параметром <code>subagent_type</code> (выбор из готового списка) плюс текстом в <code>prompt</code>. Никакой конфигурации на диске создавать не нужно.</p>
+    <div class="schema-box" style="font-size:11px;margin-top:8px"><span class="c">// В Cursor воркер = один вызов Task tool (не файл):</span>
+{
+  <span class="k">"description"</span>: <span class="s">"Explore middleware"</span>,
+  <span class="k">"subagent_type"</span>: <span class="s">"explore"</span>,      <span class="c">// ← готовый тип, не файл</span>
+  <span class="k">"prompt"</span>: <span class="s">"Role: Explorer. Files: api/middleware/**.
+             Constraints: readonly. Output: findings с file:line"</span>,
+  <span class="k">"readonly"</span>: <span class="v">true</span>,
+  <span class="k">"run_in_background"</span>: <span class="v">true</span>       <span class="c">// ← это и есть синхронизация</span>
+}</div>
+    <p style="font-size:12px;color:#64748b;margin-top:6px">То есть на скриншотах «Cursor — как задать синхронизацию» и «встроенные subagent_type» показаны <b>не файлы</b>, а поля одного JSON-вызова Task tool, который агент формирует на лету.</p>
+  </div>
+
+  <div class="tableWrap" style="margin-top:10px"><table>
+    <thead><tr><th>Готовый <code>subagent_type</code> в Cursor</th><th>Для чего</th></tr></thead>
+    <tbody>
+      <tr><td><code>explore</code></td><td>Быстрый readonly-поиск по коду, исследование структуры</td></tr>
+      <tr><td><code>generalPurpose</code></td><td>Универсальный воркер: и искать, и писать код, многошаговые задачи</td></tr>
+      <tr><td><code>security-review</code></td><td>Ревью изменений на уязвимости</td></tr>
+      <tr><td><code>bugbot</code></td><td>Bugbot-style ревью локальных изменений</td></tr>
+      <tr><td><code>shell</code></td><td>Выполнение команд в терминале (git и т.п.)</td></tr>
+      <tr><td><code>ci-investigator</code></td><td>Разбор одной упавшей CI-проверки PR</td></tr>
+      <tr><td><code>best-of-n-runner</code></td><td>Изолированный worktree для best-of-N попыток</td></tr>
+    </tbody>
+  </table></div>
+  <p style="font-size:12px;color:#64748b;margin-top:6px">Список типов фиксирован платформой — свой новый <code>subagent_type</code> добавить нельзя. Специализацию сверх типа задаёшь текстом в <code>prompt</code> (Role / Files / Scope / Constraints / Output). Постоянные правила для всех воркеров — в <code>.cursor/rules</code>, сценарий запуска — в <code>.cursor/commands</code>.</p>
+
+  <h3 style="font-size:15px;margin:16px 0 8px">4. Skill / Command — playbook запуска</h3>
+  <div class="platform-split">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 .cursor/commands/feature-review.md</div>
+      <div class="schema-box" style="font-size:12px"><span class="c"># Вызов: /feature-review "добавить rate limiting"</span>
+Выполни workflow из AGENTS.md для задачи:
+$ARGUMENTS
+
+1. Декомпозируй задачу, построй дерево волн.
+2. Прогони волны explore → implement → review
+   по протоколу из AGENTS.md.
+3. Findings проверь на .cursor/rules
+   перед применением правок.</div>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 .claude/commands/feature.md</div>
+      <div class="schema-box" style="font-size:12px"><span class="c"># Вызов: /feature "добавить rate limiting"</span>
+Оркеструй по CLAUDE.md для: $ARGUMENTS
+
+# Волна 1 (parallel)
+claude --agent explorer --readonly "..."
+# Волна 2
+claude --agent implementer "... {findings}"
+# Волна 3 (parallel)
+claude --agent security-reviewer --readonly "..."</div>
+    </div>
+  </div>
+
+  <h3 style="font-size:15px;margin:16px 0 8px">5. Как это исполняется — волны во времени</h3>
+  <div class="schema-box"><span class="h">/feature-review "добавить rate limiting"</span>
+
+<span class="k">─ Волна 1 ─ (parallel)</span> ────────────────────────────────
+  explorer A → api/middleware/**   findings: "лимитеров нет; hook в app.py:42"
+  explorer B → api/config/**       findings: "Redis настроен в config.py:15"
+     ▼ <span class="v">СИНХРОНИЗАЦИЯ: main собрал оба findings</span>
+
+<span class="k">─ Волна 2 ─ (single)</span> ──────────────────────────────────
+  implementer → создаёт api/middleware/ratelimit.py
+                подключает в app.py (по findings волны 1)
+     ▼ <span class="v">СИНХРОНИЗАЦИЯ</span>
+
+<span class="k">─ Волна 3 ─ (parallel)</span> ────────────────────────────────
+  reviewer          → соответствие требованиям  ✅
+  security-reviewer → bypass? header spoofing?   findings: 1 issue high
+     ▼ <span class="v">СИНХРОНИЗАЦИЯ</span>
+
+<span class="k">─ Финал ─</span> ──────────────────────────────────────────────
+  main: проверяет findings на .cursor/rules  →  fix issue  →  готово
+  <span class="c">(параллельные воркеры не трогали одни файлы — правило соблюдено)</span></div>
+
+  <h3 style="font-size:15px;margin:16px 0 8px">6. Как в этом примере задаётся синхронизация</h3>
+  <p style="font-size:13px;color:#475569;margin:0 0 8px">Волны 1 и 3 — параллельные (background + барьер), волна 2 — одиночная (foreground). Вот как это выражается в вызовах:</p>
+  <div class="platform-split">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor</div>
+      <div class="schema-box" style="font-size:11px"><span class="c">// Волна 1 — параллельно (два Task в одном сообщении)</span>
+{ <span class="k">"subagent_type"</span>:<span class="s">"explore"</span>, <span class="k">"run_in_background"</span>:<span class="v">true</span> }  <span class="c">// A</span>
+{ <span class="k">"subagent_type"</span>:<span class="s">"explore"</span>, <span class="k">"run_in_background"</span>:<span class="v">true</span> }  <span class="c">// B</span>
+<span class="v">// БАРЬЕР: main читает findings A и B</span>
+
+<span class="c">// Волна 2 — одна задача, ждём сразу</span>
+{ <span class="k">"subagent_type"</span>:<span class="s">"generalPurpose"</span>, <span class="k">"run_in_background"</span>:<span class="v">false</span> }
+<span class="v">// БАРЬЕР</span>
+
+<span class="c">// Волна 3 — параллельно (reviewer + security)</span>
+{ <span class="k">"subagent_type"</span>:<span class="s">"security-review"</span>, <span class="k">"run_in_background"</span>:<span class="v">true</span> }
+{ <span class="k">"subagent_type"</span>:<span class="s">"generalPurpose"</span>, <span class="k">"run_in_background"</span>:<span class="v">true</span> }</div>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code</div>
+      <div class="schema-box" style="font-size:11px"><span class="c"># Волна 1 — параллельно + barrier</span>
+claude --agent explorer --readonly "A" &
+claude --agent explorer --readonly "B" &
+<span class="k">wait</span>                              <span class="c"># БАРЬЕР</span>
+
+<span class="c"># Волна 2 — foreground (ждём)</span>
+claude --agent implementer "... {findings}"
+
+<span class="c"># Волна 3 — параллельно + barrier</span>
+claude --agent reviewer --readonly "..." &
+claude --agent security-reviewer --readonly "..." &
+<span class="k">wait</span>                              <span class="c"># БАРЬЕР</span></div>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top:12px"><b>Что где сработало:</b> <b>AGENTS.md</b> задал порядок волн и протокол · <b>Rule</b> гарантировал readonly-ревью и непересечение файлов · <b>subagent_type / .claude/agents</b> дали роли воркерам · <b>Command</b> запустил всё одной строкой · синхронизация волн — через <code>run_in_background</code> + барьер (Cursor) / <code>&amp; … wait</code> (Claude Code) · сами <b>шаги</b> (T1…T6) жили в плане оркестратора, а не в файлах.</div>
+</section>
+
+<!-- ── Тонкости ── -->
+<section class="section">
+  <h2>Тонкости построения систем</h2>
+  <div class="nuance-card nc-red"><h4>Coordination overhead может съесть выигрыш</h4><p>Написать task description, дождаться, проверить findings, объединить — всё это время main агента. Для задачи на 10 минут overhead в 5 минут = 50%. Для задачи на 3 часа тот же overhead = 3%. Система оправдана на задачах достаточного размера.</p></div>
+  <div class="nuance-card nc-orange"><h4>Глубина иерархии — максимум 2 уровня</h4><p>main → subagent. Глубже (subagent вызывает subagent вызывает subagent) — cost растёт экспоненциально, ошибки нижних уровней каскадят вверх с искажениями, debugging почти невозможен. Нужна глубина? Значит задачу надо декомпозировать иначе (pipeline вместо рекурсии).</p></div>
+  <div class="nuance-card nc-purple"><h4>Summary loss на каждом уровне</h4><p>Воркер возвращает не весь свой context, а сжатый findings. В pipeline с несколькими звеньями потеря накапливается: то, что увидел Explorer, но не включил в summary, Implementer уже не узнает. Лечится строгим output format с обязательным evidence.</p></div>
+  <div class="nuance-card nc-green"><h4>Cost параллели = сумма всех воркеров</h4><p>5 параллельных воркеров = 5× токенов относительно одного. Быстрее, но дороже. Последовательно — дешевле, но медленнее. Оценивай бюджет заранее; если задача помещается в один агент — не строй систему.</p></div>
+  <div class="nuance-card nc-blue"><h4>Воркеры не знают Rules автоматически</h4><p>Система — не гарантия соблюдения правил проекта. Каждый воркер стартует с чистого контекста и не видит Rules/AGENTS.md/Memory. Критичные constraints передавай в task description, а main обязан верифицировать findings против Rules перед применением.</p></div>
+</section>
+
+<!-- ── Best practices ── -->
+<section class="section"><h2>Best practices — Делай / Не делай</h2>
+<div class="grid two">
+  <div class="card bg-green"><h3>✅ Делай</h3><ul>
+    <li>Начинай с дерева зависимостей, топология выводится из него</li>
+    <li>Параллель только для независимых подзадач на разных файлах</li>
+    <li>Explorer и Reviewer держи в <code>readonly</code>, правки — через одного воркера/main</li>
+    <li>Задай единый output format findings с evidence (file:line)</li>
+    <li>Main агрегирует и верифицирует против Rules перед применением</li>
+    <li>Оценивай cost-бюджет до запуска; сначала пробуй один агент</li>
+  </ul></div>
+  <div class="card bg-red"><h3>❌ Не делай</h3><ul>
+    <li>Не давай двум параллельным воркерам один и тот же файл</li>
+    <li>Не строй иерархию глубже 2 уровней</li>
+    <li>Не параллель зависимые шаги — получишь мусорные входы</li>
+    <li>Не принимай findings воркеров без проверки против Rules</li>
+    <li>Не строй систему для задачи на 1–2 файла</li>
+    <li>Не забывай точки синхронизации между волнами</li>
+  </ul></div>
+</div></section>
+
+<!-- ── Cursor vs Claude Code ── -->
+<section class="section">
+  <h2>Cursor vs Claude Code — построение систем</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Аспект</th><th>Cursor</th><th>Claude Code</th></tr></thead>
+    <tbody>
+      <tr><td>Запуск воркеров</td><td>Несколько Task tool calls в одном сообщении</td><td>Параллельные claude процессы (Claude Max)</td></tr>
+      <tr><td>Параллельная волна</td><td>Батч Task calls с <code>run_in_background</code></td><td>Несколько CLI-процессов + ожидание</td></tr>
+      <tr><td>Роли-специализации</td><td><code>subagent_type</code> параметр</td><td>AGENTS.md/CLAUDE.md в поддиректории, <code>--agent</code></td></tr>
+      <tr><td>Readonly воркер</td><td><code>"readonly": true</code></td><td><code>--readonly</code></td></tr>
+      <tr><td>Передача findings</td><td>completion message → в контекст main</td><td>structured output / stdout → main читает</td></tr>
+      <tr><td>Точка синхронизации</td><td>main ждёт background воркеров в конце turn</td><td>main ждёт завершения процессов</td></tr>
+      <tr><td>Глубина иерархии</td><td>рекомендуется max 2</td><td>рекомендуется max 2</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><b>Главное отличие:</b> в Cursor система строится внутри одного агента через Task tool (воркеры — это Task calls, MCP наследуется). В Claude Code воркеры — отдельные процессы, координируемые оркестратором, и MCP/контекст нужно передавать каждому явно.</div>
+</section>
+
+<!-- ── Вопросы по уровням ── -->
+<section class="section">
+<h2>Вопросы по уровням</h2>
+<div class="qlevel-group">Junior — 10 вопросов</div>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое агентская система?</summary>
+<div class="inside">Агентская система — это несколько AI-агентов, объединённых оркестратором (main agent) в единый рабочий процесс для решения одной большой задачи. Оркестратор разбивает задачу на подзадачи, раздаёт их специализированным воркерам (subagents), собирает их результаты и принимает финальное решение. Отличие от одного агента: работа распараллеливается и специализируется, а контекст изолируется по воркерам.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Кто такой оркестратор?</summary>
+<div class="inside">Оркестратор — это главный агент (main agent), который управляет системой: декомпозирует задачу, назначает роли, запускает воркеров, ждёт и агрегирует их findings, разрешает противоречия и проверяет результат против Rules. Он не выполняет всю работу сам — как прораб на стройке раздаёт задачи специалистам и собирает результат.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое декомпозиция задачи?</summary>
+<div class="inside">Декомпозиция — разбиение большой задачи на маленькие атомарные подзадачи с чёткими границами и известными входами/выходами. Это первый шаг построения: пока не разбита задача и не построено дерево зависимостей, нельзя решить что параллелить, а что делать последовательно.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Чем параллельная схема отличается от последовательной?</summary>
+<div class="inside">Параллельная (fan-out): несколько воркеров работают одновременно на независимых подзадачах, main агрегирует их результаты — быстрее, но дороже (cost × N). Последовательная (pipeline): output одного воркера становится input следующего — дешевле и предсказуемо, но без ускорения. Выбор зависит от зависимостей: независимые → параллельно, зависимые → pipeline.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое дерево зависимостей (DAG)?</summary>
+<div class="inside">Дерево (точнее — направленный ациклический граф, DAG) зависимостей показывает, какая подзадача использует результат какой. Если T3 нужны выходы T1 и T2 — значит T3 идёт после них, а T1 и T2 (не зависящие друг от друга) можно выполнять параллельно. Из DAG напрямую выводится топология системы.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Почему параллельные воркеры не должны трогать один файл?</summary>
+<div class="inside">Потому что действует last-write-wins: тот воркер, который запишет файл последним, затрёт изменения другого. Автоматического merge нет. Поэтому параллельным воркерам назначают непересекающиеся наборы файлов, а общий файл отдают одному воркеру или обрабатывают последовательно через main.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое роль воркера?</summary>
+<div class="inside">Роль — специализация воркера в системе: Explorer (ищет и анализирует, readonly), Implementer (пишет код по spec), Reviewer (проверяет реализацию, readonly), Security/Performance (специализированные reviewer'ы). Роль задаётся в начале task description и определяет что воркер делает и какие у него ограничения.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое точка синхронизации?</summary>
+<div class="inside">Точка синхронизации — момент, когда оркестратор дожидается завершения всех воркеров текущей «волны» и собирает их findings, прежде чем запустить следующую волну. В гибридных системах между параллельными волнами всегда есть точки синхронизации: например, дождаться двух explorer'ов, потом запустить implementer.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Что возвращает воркер оркестратору?</summary>
+<div class="inside">Воркер возвращает findings — структурированный результат работы: summary, конкретные факты с evidence (file:line), рекомендации и уровень уверенности. Он возвращает не весь свой context, а сжатую выжимку. Поэтому важно задать ему output format, чтобы нужные детали не потерялись.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Когда НЕ стоит строить агентскую систему?</summary>
+<div class="inside">Когда задача маленькая (1–2 файла, &lt;10 turns), когда шаги сильно зависят друг от друга и нечего параллелить, когда контекст критичен и его сложно передать воркеру, или когда overhead координации (написание briefing + verification + агрегация) больше выигрыша. В таких случаях эффективнее один агент.</div></details>
+<div class="qlevel-group">Middle — 10 вопросов</div>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как из дерева зависимостей вывести топологию системы?</summary>
+<div class="inside">Правило: узлы без взаимных зависимостей группируются в параллельную «волну»; узел, зависящий от других, ставится после них. Проход по DAG слоями (топологическая сортировка) даёт последовательность волн: волна 1 — все входные независимые задачи параллельно, точка синхронизации, волна 2 — зависящие от волны 1, и т.д. Так получается гибрид parallel+pipeline.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Что такое гибридная (волновая) топология и когда она нужна?</summary>
+<div class="inside">Гибрид — чередование параллельных волн и точек синхронизации. Нужен почти всегда в реальных задачах: часть подзадач независима (explore backend ║ explore frontend), часть зависима (implement после explore). Волна 1 параллельно → синхронизация → волна 2 (single или parallel) → синхронизация → финальная агрегация. Это компромисс между скоростью параллели и корректностью pipeline.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Почему параллелизм не всегда ускоряет?</summary>
+<div class="inside">Общее время параллельной волны = время самого долгого воркера. Если один заканчивает за 30 сек, а другой за 5 минут — выигрыш ограничен. Плюс если воркеры вернут противоречивые findings, main потратит время на reconciliation, что может свести ускорение к нулю. Нужно балансировать размеры подзадач и минимизировать пересечения.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как безопасно параллелить правки кода?</summary>
+<div class="inside">Два подхода: (1) непересекающиеся наборы файлов — каждый воркер владеет своей директорией; (2) read-write разделение — параллельные воркеры readonly, возвращают патчи/findings как текст, а физические правки применяет один main agent последовательно. Второй паттерн полностью исключает гонки записи ценой того, что применение изменений не параллелится.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Что включать в task description воркера при построении системы?</summary>
+<div class="inside">Role (специализация), Goal (одно чёткое предложение), Context (findings предыдущих воркеров, если pipeline), Files (конкретные пути, непересекающиеся с другими воркерами), Scope (тематические границы), Constraints (readonly? запреты), Output format (единый для агрегации, с evidence file:line). Без единого output format собрать результаты нескольких воркеров будет тяжело.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Зачем нужен единый протокол возврата findings?</summary>
+<div class="inside">Чтобы оркестратор мог механически собрать результаты нескольких воркеров, сравнить их и разрешить противоречия. Если один вернул prose, другой JSON, третий список — агрегация превращается в ручной разбор. Единый формат (Summary → Findings → Evidence → Next steps с обязательными file:line) делает результаты сопоставимыми и проверяемыми.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как оценить, оправдана ли система по стоимости?</summary>
+<div class="inside">Прикинуть токен-бюджет каждого воркера и сравнить с выигрышем. Параллель = сумма токенов всех воркеров (5 воркеров ≈ 5×). Если задача помещается в один context и решается за десяток turns — система не нужна. Правило: overhead координации в процентах от общего времени должен быть мал; для крупных задач (часы) это оправдано, для мелких — нет.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как роли Explorer/Implementer/Reviewer работают вместе?</summary>
+<div class="inside">Explorer (readonly) исследует и возвращает findings → main передаёт их как Context Implementer'у, который пишет код в узком scope → Reviewer (readonly) проверяет результат против требований и Rules и возвращает список проблем. Explorer и Reviewer безопасно параллелить с другими независимыми воркерами; Implementer стоит между ними в точке синхронизации. Правки идут через одного исполнителя, чтобы избежать конфликтов.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Какие типичные ошибки при построении системы?</summary>
+<div class="inside">Слишком мелкая декомпозиция (overhead > benefit); параллель зависимых задач (мусорные входы); отсутствие output format (нельзя агрегировать); пересечение файлов у параллельных воркеров (гонки записи); иерархия глубже 2 уровней; blind-trust findings без verification против Rules; отсутствие точек синхронизации; передача воркеру недостаточного контекста.</div></details>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Как система помогает управлять контекстом (compaction)?</summary>
+<div class="inside">Вместо того чтобы main сам читал десятки файлов (и его context быстро заполнялся → compaction), исследование делегируется воркерам. Каждый работает в своём изолированном контексте, читает много и возвращает только summary. Main получает выжимки → его context растёт медленнее и остаётся структурированным даже на очень длинных задачах.</div></details>
+<div class="qlevel-group">Senior — 5 вопросов</div>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как спроектировать multi-agent workflow для сложной инженерной задачи?</summary>
+<div class="inside">(1) Декомпозиция на атомарные подзадачи + dependency graph. (2) Топологическая сортировка → волны parallel/sequential. (3) Назначение ролей (Explorer readonly, Implementer, Reviewer). (4) Распределение непересекающихся файлов. (5) Единый протокол возврата findings с evidence. (6) Точки синхронизации между волнами + checkpoint на завершении воркера. (7) Агрегация в main с разрешением противоречий и verification против Rules. (8) Cost-бюджет и error handling (retry/fallback/escalate).</div></details>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как агрегировать результаты нескольких воркеров и разрешать противоречия?</summary>
+<div class="inside">(1) Прочитать все findings полностью перед агрегацией. (2) Категоризировать: confirmed facts / hypotheses / contradictions. (3) При противоречии смотреть scope (разные части кода?) и уровень evidence (у кого конкретнее file:line); при критичности — запустить tie-breaker воркера. (4) Взвешивать по confidence: findings с конкретными ссылками важнее общих утверждений. (5) Собрать unified summary. (6) Выявить gaps — что не покрыл ни один воркер → targeted воркер или прямое исследование.</div></details>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как диагностировать coordination failures в системе?</summary>
+<div class="inside">Result gaps (ожидали X, получили Y) → неоднозначная task description. Contradicting findings → overlap в scope или разный доступ к данным. Missing evidence → output format не требовал ссылок. Timeout/hang → слишком широкий scope, поиск без ограничений. Rule violations → воркер не знал о Rule (не передали в task). Debug: попросить воркера объяснить reasoning step-by-step и проверить его входной briefing.</div></details>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Как контролировать затраты при параллельных воркерах?</summary>
+<div class="inside">(1) Оценить токен-бюджет до запуска; при перерасходе — пересмотреть архитектуру. (2) Узкий scope = меньше токенов. (3) Лимиты: max tool calls / max файлов на воркера. (4) Sequential fallback — сначала один агент, параллель только при бюджете. (5) Мониторинг токенов на воркера, выявление дорогих. (6) Кэширование findings, если задача не изменилась. Budget gate: не запускать систему, если estimate превышает порог без approval.</div></details>
+<details class="details"><summary><span class="q-level q-senior">Senior</span> Почему глубина иерархии ограничена двумя уровнями?</summary>
+<div class="inside">На каждом уровне: cost растёт мультипликативно, summary loss накапливается, ошибки нижних уровней каскадят вверх с искажениями, а debugging становится почти невозможным (непонятно, что пошло не так на 4-м уровне). Практический максимум — main → subagent. Если требуется бóльшая глубина, это сигнал декомпозировать задачу иначе: развернуть рекурсию в плоский pipeline или волновую топологию.</div></details>
+<div class="qlevel-group">Lead — 5 вопросов</div>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Как выстроить governance построения агентских систем в команде?</summary>
+<div class="inside">(1) Use case policy: где системы одобрены (crossbase exploration, parallel review), где нет (мелкие/зависимые задачи). (2) Cost policy: бюджет на workflow, approval для дорогих. (3) Output standards: обязательный structured findings с evidence. (4) Review requirement: критичные findings (security, архитектура) → human review. (5) Audit trail: логировать какие воркеры запускались, что вернули. (6) Template library: готовые task descriptions. (7) Training. Документ governance — 1 страница с do's/don'ts и процессом approval.</div></details>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Как обучать команду паттернам построения систем?</summary>
+<div class="inside">(1) Foundations: декомпозиция, DAG, parallel vs pipeline, demo хорошего/плохого briefing. (2) Anti-patterns workshop: пересечение файлов, глубокая иерархия, blind trust. (3) Template library для частых сценариев (review, security scan, exploration). (4) Hands-on: каждый строит систему для реальной задачи. (5) Code review criterion: проверять task descriptions воркеров при AI-PR. (6) Retrospective на инцидентах: правильно ли построена система? Показать реальные costs.</div></details>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Когда запрещать автономные агентские системы (safety/compliance)?</summary>
+<div class="inside">Когда есть destructive actions без HITL (delete, deploy в prod, необратимое) — только через approval gate; при обработке PII — audit log и data policy; при cross-boundary access (secret files, prod credentials) — least privilege; при работе с непроверенными внешними данными — риск prompt injection; при high-stakes решениях (архитектура, security, compliance) — обязательный human review, не автономный воркер. Принцип: воркер получает ровно те права, что нужны для задачи.</div></details>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Как управлять costs параллельных систем в командной разработке?</summary>
+<div class="inside">(1) Cost visibility: dashboard спенда по команде/инженеру/проекту, системы отдельной строкой. (2) Budget allocation с alerts при 80%. (3) Approval gates для workflow с estimate &gt; порога. (4) Обучение cost-efficient паттернам: узкий scope, чёткий output, без избыточных воркеров. (5) Cost attribution по tags. (6) Weekly review топ-5 дорогих workflow — что оптимизировать. Цель: максимум value per token.</div></details>
+<details class="details"><summary><span class="q-level q-lead">Lead</span> Как выстроить approval gates для действий воркеров в production?</summary>
+<div class="inside">(1) Risk classification: read (auto), write non-prod (auto), write prod/delete (approval). (2) HITL: при высокорисковом действии воркер создаёт approval request (описание, ожидаемый результат, rollback plan). (3) Dry-run first: воркер показывает план без выполнения, human одобряет → выполнение. (4) Audit log каждого approve/reject. (5) Emergency stop всех активных воркеров. (6) Post-action verification отдельным воркером.</div></details>
+<div class="qlevel-group">Architect — 5 вопросов</div>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Какие архитектурные паттерны оркестрации существуют и как выбирать?</summary>
+<div class="inside">Hub-and-Spoke (оркестратор + воркеры, просто, но bottleneck на нём); Pipeline (output→input, для зависимых шагов); Hierarchical (multi-level, для очень крупных задач, max 2–3 уровня); Peer-to-Peer (агенты общаются через shared state, гибко но сложно); Competitive/Best-of-N (N решают независимо, выбирается лучший — для качества); Consensus (голосование, для critical decisions). Выбор: Hub-and-Spoke для большинства; Pipeline для sequential; Best-of-N при высоких требованиях к качеству. Детали — на странице Subagents.</div></details>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как спроектировать платформу оркестрации воркеров?</summary>
+<div class="inside">Компоненты: Agent Registry (каталог типов агентов + capabilities/cost); Task Queue (очередь с priority/deadline/dependencies); Context Manager (передача входного контекста, сбор результатов); Communication Bus (shared memory / message queue / event stream); State Store (checkpoint каждого агента, resume); Observability (distributed tracing, cost tracking); Policy Engine (права, approval gates, rate limits); Scheduler (parallel/sequential/conditional). Стек: Celery/BullMQ, Redis/DynamoDB, Kafka/RabbitMQ.</div></details>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как обеспечить fault tolerance в агентской системе?</summary>
+<div class="inside">Retry с exponential backoff для transient failures; circuit breaker для часто падающих типов агентов; fallback strategies (другой instance, более простой агент, graceful degradation с partial result); timeout enforcement с checkpoint того, что успел; partial success handling (3 из 4 succeeded → продолжить с пометкой missing); dead letter queue для failed tasks; health checks инстансов. Цель — система деградирует плавно, а не падает целиком.</div></details>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как строить observability для multi-agent workflow?</summary>
+<div class="inside">Distributed tracing с единым trace_id через orchestrator → воркер → tool calls (OpenTelemetry, Jaeger/Zipkin). Structured logging (trace_id, agent_type, task_id, action, duration, cost_tokens). Agent activity timeline. Cost attribution по агенту/задаче/команде в реальном времени. Quality metrics (success rate, retry rate). Anomaly detection (слишком долгий агент, cost spike). Корреляция workflow-метрик с бизнес-результатами (время review, bug detection rate).</div></details>
+<details class="details"><summary><span class="q-level q-arch">Arch</span> Как проектировать communication protocols между воркерами?</summary>
+<div class="inside">Message schema: header (sender, receiver, trace_id, timestamp, type) + payload; JSON Schema или Protobuf. Паттерны: request-response, pub-sub, shared state. Consistency model: eventual для throughput или strong для critical data. Versioning с backward compat. Security: authentication (short-lived tokens) + authorization (кто что читает/пишет). Serialization: binary для performance, JSON для debuggability. Backpressure при перегрузке. Принцип: предпочитать простые паттерны (request-response) сложным, пока масштаб не требует иного.</div></details>
+</section>
+<div class="pageFooter"><div class="nextPrev"><a href="../pages/subagents.html">← Subagents</a><a href="../pages/conflicts.html">Конфликты контекста →</a></div></div></main></div><script src="../assets/app.js"></script></body></html>
