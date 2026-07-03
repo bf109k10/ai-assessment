@@ -342,6 +342,11 @@ globs: []
 <section class="section">
   <h2>Тонкости и нюансы</h2>
 
+  <div class="nuance-card nc-green">
+    <h4>Auto-attached и manual Rules — не в узком Prefix Cursor</h4>
+    <p>Правила с <code>globs</code>, Agent Requested и manual/<code>@rule</code> IDE подмешивает <b>условно</b>: когда в контексте есть подходящие файлы, вы нажали Apply или указали @. В начало окна на <b>каждый</b> запрос попадают только <code>alwaysApply: true</code> и platform-часть. Таблица: <a href="caching.html#cursor-prefix-layers">Prompt Caching → слои Cursor</a>.</p>
+  </div>
+
   <div class="nuance-card nc-blue">
     <h4>alwaysApply Rules попадают в system-prefix</h4>
     <p>Rules с <code>alwaysApply: true</code> не живут в user-чате — IDE подмешивает их в <b>начало context window</b> вместе с platform system prompt. Для модели это ведёт себя как system instructions (роль <code>system</code> / стабильный prefix), хотя файлы лежат в <code>.cursor/rules/</code> и версионируются в git. Это не то же самое, что скрытый platform prompt: вы контролируете Rules, но не platform safety. Подробнее: <a href="prompting.html#system-instructions">System instructions</a> и карта <a href="context.html">Контекст агента</a>.</p>

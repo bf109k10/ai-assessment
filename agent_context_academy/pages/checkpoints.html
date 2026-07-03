@@ -114,21 +114,23 @@
 
   <h3 style="font-size:15px;margin:16px 0 8px">Виды сжатия контекста</h3>
   <div class="schema-box"><span class="h">1. Автоматический compaction</span>  <span class="c">(срабатывает сам)</span>
-   Триггер: context window > ~80% лимита
+   Триггер: context window близок к лимиту (~80% и выше — ориентир)
    Что происходит: LLM суммаризирует старую историю
-   Контроль: минимальный (можно добавить инструкции в CLAUDE.md)
-   Сигнал: SystemMessage {subtype: "compact_boundary"} в Claude Code SDK
+   <span class="k">Cursor:</span> в breakdown контекста появляется «Summarized conversation»; кольцо у поля ввода показывает заполнение
+   <span class="k">Claude Code:</span> SystemMessage {subtype: "compact_boundary"} в SDK
+   Контроль: минимальный (инструкции что сохранять — в AGENTS.md / CLAUDE.md)
 
-<span class="h">2. Ручной /compact</span>  <span class="c">(ты вызываешь явно)</span>
-   Триггер: команда /compact в чате
-   Что происходит: то же суммаризирование, но в нужный момент
-   Контроль: высокий — ты выбираешь когда сжимать
-   Лучший момент: перед началом нового крупного этапа задачи
+<span class="h">2. Ручное сжатие</span>  <span class="c">(ты выбираешь момент)</span>
+   <span class="k">Claude Code (IDE):</span> команда <span class="v">/compact</span> в чате — то же суммаризирование, но по твоему сигналу
+   <span class="k">Cursor (IDE Agent):</span> встроенной <span class="v">/compact</span> <span class="r">нет</span> — см. блок «Cursor — compaction» ниже
+   <span class="k">Cursor CLI:</span> <span class="v">/summarize</span> или <span class="v">/compress</span> — сжать диалог вручную
+   Лучший момент: перед новым крупным этапом задачи (после context checkpoint в файл)
 
 <span class="h">3. Новая сессия</span>  <span class="c">(самое жёсткое сжатие)</span>
-   Что происходит: history = пуста, только system prompt
-   Контроль: полный — ты решаешь что передать в новую сессию
-   Инструмент: Checkpoint — передаёшь его в начало новой сессии</div>
+   Что происходит: history = пуста, только system + rules + AGENTS.md
+   Контроль: полный — ты решаешь что передать
+   <span class="k">Cursor:</span> New Chat; опционально <span class="v">@Past Chats</span> или вставка context checkpoint
+   <span class="k">Claude Code:</span> новая сессия / <span class="v">--resume</span> / checkpoint в Memory Bank</div>
 
   <h3 style="font-size:15px;margin:16px 0 8px">Что НЕ compaction-ится — стабильный контекст</h3>
   <div class="schema-box"><span class="v">Не теряются при любом compaction:</span>
@@ -144,13 +146,18 @@
   <div class="platform-split" style="margin-top:16px">
     <div class="ps-col">
       <div class="ps-head ps-cursor">🖱 Cursor — compaction</div>
-      <p style="font-size:13px;color:#334155;margin:0 0 8px">В Cursor compaction происходит автоматически когда context window заполняется. Прямого контроля меньше чем в Claude Code SDK.</p>
+      <p style="font-size:13px;color:#334155;margin:0 0 8px">Когда окно контекста почти заполнено, Cursor <b>сам</b> сжимает старые turns в summary. В <b>Agent-чате IDE</b> нет <code>/compact</code>, <code>/compress</code> и <code>/summarize</code> — эти slash-команды относятся к <b>Cursor CLI</b> (см. ниже).</p>
       <ul style="font-size:12px;line-height:1.8;margin:0;padding-left:16px;color:#475569">
-        <li>Автоматический — без явного уведомления</li>
-        <li>Ручной — см. шаги ниже</li>
-        <li>Защита: AGENTS.md всегда в context (не compaction-ится)</li>
-        <li>Инструкции для summary: добавить в AGENTS.md секцию «Summary instructions»</li>
+        <li><b>Авто:</b> кольцо контекста у поля ввода → breakdown → сегмент <b>Summarized conversation</b></li>
+        <li><b>Ручной аналог /compact в IDE:</b> (1) попроси агента сжать историю с фокусом («сохрани: файлы, решения, next step») и продолжай в том же чате; (2) <b>New Chat</b> + context checkpoint в файле или вставкой; (3) <b>@Past Chats</b> — подтянуть прошлый диалог в новый чат без копипасты всей ленты</li>
+        <li><b>Cursor CLI:</b> <code>/summarize</code> / <code>/compress</code> — <b>ручной compact</b> (сжать контекст сессии, освободить окно); не то же самое, что попросить «перескажи» в IDE. Сброс — <code>/clear</code> (<code>/new-chat</code>)</li>
+        <li>Стабильный слой: Rules, AGENTS.md, Skills — не заменяются summary</li>
+        <li>Инструкции compactor'у: секция в AGENTS.md «Summary instructions» / что всегда сохранять при сжатии</li>
       </ul>
+      <div class="schema-box" style="font-size:11px;margin-top:10px"><span class="c">Перед «жёстким» сжатием (New Chat или длинная пауза):</span>
+<span class="v">1.</span> «Сохрани context checkpoint в docs/progress/task.md по шаблону»
+<span class="v">2.</span> New Chat → @docs/progress/task.md или вставка текста
+<span class="c">→ Это замена ручного /compact + checkpoint из схемы выше</span></div>
       <div style="margin-top:10px">
         <div style="font-weight:700;font-size:12px;color:#1e40af;margin-bottom:6px">Как передать Checkpoint в новый чат (Cursor):</div>
         <div class="schema-box" style="font-size:11px"><span class="c">Шаг 1: В текущем чате — попроси создать Checkpoint</span>
@@ -179,7 +186,7 @@ Cursor: Ctrl+Shift+L или кнопка «New Chat»
 
 <span class="c">Агент читает checkpoint и продолжает с нужного места</span></div>
       </div>
-      <div style="margin-top:8px;font-size:12px">📖 <a href="https://docs.cursor.com" target="_blank" style="color:#1e40af;text-decoration:underline">Cursor Docs</a></div>
+      <div style="margin-top:8px;font-size:12px">📖 <a href="https://cursor.com/docs/agent/prompting" target="_blank" style="color:#1e40af;text-decoration:underline">Context &amp; summarization (IDE)</a> · <a href="https://cursor.com/docs/agent/overview" target="_blank" style="color:#1e40af;text-decoration:underline">UI Checkpoint</a> · <a href="https://cursor.com/docs/cli/reference/slash-commands" target="_blank" style="color:#1e40af;text-decoration:underline">CLI: /summarize, /compress</a></div>
     </div>
     <div class="ps-col">
       <div class="ps-head ps-claude">🤖 Claude Code — compaction</div>
@@ -224,6 +231,49 @@ claude "Контекст задачи:
 </section>
 
 <section class="section">
+  <h2>Два разных «Checkpoint» — не путать</h2>
+  <p class="sectionIntro">В Cursor в интерфейсе есть слово <b>Checkpoint</b>, но это <em>не</em> тот context checkpoint, о котором идёт речь на этой странице. Одинаковое название — разная задача.</p>
+
+  <div class="tableWrap"><table>
+    <thead><tr><th>Аспект</th><th>Context checkpoint <span class="c">(паттерн на этой странице)</span></th><th>Checkpoint в UI Cursor</th></tr></thead>
+    <tbody>
+      <tr><td><b>Что сохраняет</b></td><td>Смысл задачи: goal, done, decisions, next step, риски</td><td><b>Снимок файлов на диске</b> до правок агента в этой сессии</td></tr>
+      <tr><td><b>Зачем</b></td><td>Продолжить работу после compaction, New Chat, паузы, handoff</td><td><b>Откатить код</b>, если агент пошёл не туда (undo правок, не Git)</td></tr>
+      <tr><td><b>Где живёт</b></td><td>Файл, Memory Bank, вставка в новый чат</td><td>Локально в Cursor; в ленте сообщений у хода агента</td></tr>
+      <tr><td><b>Как вызвать</b></td><td>Ты просишь агента / пишешь по шаблону; <code>@file</code> в новом чате</td><td>Агент создаёт точки перед крупными edit'ами; <b>Restore Checkpoint</b> на сообщении</td></tr>
+      <tr><td><b>После restore</b></td><td>Агент снова «знает» задачу из текста checkpoint</td><td>Файлы как до этого хода; <span class="r">история чата и summary compaction не откатываются</span></td></tr>
+      <tr><td><b>Аналог</b></td><td>Структурированный handoff / commit message для задачи</td><td>Локальный snapshot workspace (как «машина времени» для файлов)</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="nuance-card nc-red">
+    <h4>Типичная ошибка</h4>
+    <p>Нажал <b>Restore Checkpoint</b> в Cursor и ждёшь, что агент «вспомнит» все решения из середины длинного чата. UI checkpoint откатывает только <b>изменённые файлы</b>. Чтобы не потерять логику задачи при compaction или новом чате — нужен отдельный <b>context checkpoint</b> (файл / Memory Bank). Оба инструмента полезны: UI — когда код испорчен; context — когда испорчен или переполнен <em>контекст</em>.</p>
+  </div>
+
+  <div class="platform-split" style="margin-top:12px">
+    <div class="ps-col">
+      <div class="ps-head ps-cursor">🖱 Cursor — Restore Checkpoint</div>
+      <p style="font-size:13px;margin:0 0 8px">Перед значимыми правками Agent сохраняет snapshot. В истории чата у сообщения — восстановление состояния <b>репозитория</b> на момент до следующих edit'ов агента.</p>
+      <ul style="font-size:12px;line-height:1.8;margin:0;padding-left:16px;color:#475569">
+        <li>Не заменяет Git — для коммитов и веток по-прежнему Git</li>
+        <li>Не переносит задачу в новый чат — для этого context checkpoint</li>
+        <li>Можно комбинировать: Restore UI checkpoint (код) + тот же context checkpoint в AGENTS.md (решения)</li>
+      </ul>
+    </div>
+    <div class="ps-col">
+      <div class="ps-head ps-claude">🤖 Claude Code — file checkpointing</div>
+      <p style="font-size:13px;margin:0 0 8px">У Claude Code тоже есть <b>откат файлов</b> (checkpointing кода) — это отдельно от <code>/compact</code> и от текстового handoff в CLAUDE.md / Memory Bank.</p>
+      <ul style="font-size:12px;line-height:1.8;margin:0;padding-left:16px;color:#475569">
+        <li><code>/compact</code> — сжатие <b>истории чата</b>, не откат файлов</li>
+        <li>Context checkpoint — твой markdown / memory-bank, как в академии</li>
+        <li>📖 <a href="https://code.claude.com/docs/en/checkpointing" target="_blank">Checkpointing (files)</a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section">
   <h2>Что такое Checkpoint, Summary и Compression</h2>
 
   <div class="grid">
@@ -259,13 +309,56 @@ claude "Контекст задачи:
     </div>
   </div>
 
+  <h3 style="font-size:15px;margin:18px 0 10px">Summary и Compact — не одно и то же</h3>
+
+  <div class="grid two" style="margin-bottom:14px">
+    <div class="card bg-orange" style="margin:0">
+      <h4 style="margin:0 0 6px;font-size:14px">Summary = «перескажи»</h4>
+      <p style="font-size:13px;margin:0">Краткое содержание разговора или задачи — для человека, документации или переноса в новый чат.</p>
+    </div>
+    <div class="card bg-purple" style="margin:0">
+      <h4 style="margin:0 0 6px;font-size:14px">Compact = «сожми контекст, освободи место»</h4>
+      <p style="font-size:13px;margin:0">Механизм управления context window: старая часть чата заменяется сжатым summary, чтобы работа в <b>том же</b> треде могла продолжиться.</p>
+    </div>
+  </div>
+
+  <div class="callout warn" style="margin-bottom:14px"><b>При compaction</b> часть деталей может потеряться. Для важных задач делай явный <a href="#checkpoint-template">checkpoint</a> в файле или Memory Bank — не полагайся только на авто-summary после compact.</div>
+
+  <div class="tableWrap"><table>
+    <thead><tr><th>Пункт</th><th>Summary</th><th>Compact / compaction</th></tr></thead>
+    <tbody>
+      <tr><td><b>Что это?</b></td><td>Краткое содержание — абзац или структурированный текст</td><td>Сжатие <b>рабочего контекста</b> (старые turns выкидываются или заменяются)</td></tr>
+      <tr><td><b>Кто запускает?</b></td><td>Ты или агент <b>по просьбе</b>; либо модель как шаг внутри compact</td><td><b>Система</b> (авто при переполнении), <b>команда</b> (<code>/compact</code> в Claude Code, <code>/summarize</code> / <code>/compress</code> в Cursor CLI)</td></tr>
+      <tr><td><b>Цель</b></td><td>Объяснить, передать факты, зафиксировать «что было»</td><td><b>Освободить место</b> в context window, чтобы диалог мог продолжиться</td></tr>
+      <tr><td><b>Видно пользователю?</b></td><td>Да — как обычное сообщение или блок, который ты копируешь</td><td>Не всегда: в Cursor IDE — сегмент «Summarized conversation» в breakdown; полный текст замены может быть не в ленте</td></tr>
+      <tr><td><b>Можно контролировать?</b></td><td>Да — шаблон, поля, «включи файлы и решения»</td><td>Частично — инструкции в AGENTS.md / CLAUDE.md; в Claude Code ещё PreCompact hook</td></tr>
+      <tr><td><b>Может потерять детали?</b></td><td>Да, если не просить явно</td><td>Да — детали теряются при замене истории на короткий summary</td></tr>
+      <tr><td><b>Для нового чата?</b></td><td>Да — вставить summary или <b>лучше checkpoint</b> в первое сообщение</td><td>Обычно для <b>продолжения текущего</b> чата; новый чат = другой способ «обнулить» историю (+ checkpoint)</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="schema-box" style="margin-top:12px"><span class="h">Как связаны (одна линия времени)</span>
+
+<span class="c">Длинный чат в одном треде</span>
+    → контекст заполнился
+    → <span class="r">COMPACT</span> (процесс)
+    → в окне остаётся <span class="v">SUMMARY</span> (артефакт) + недавние сообщения
+    → агент продолжает <span class="c">в том же чате</span>
+
+<span class="c">Ты сам до compact</span>
+    → просишь <span class="v">summary</span> или пишешь <span class="v">checkpoint</span> в файл
+    → <span class="k">New Chat</span> + @checkpoint
+    → это <span class="c">не compact</span>, а смена сессии с переносом смысла</div>
+
+  <div class="callout" style="margin-top:12px"><b>Главное отличие:</b> summary — пересказ для человека и переноса смысла; compact — инженерия context window в текущем чате. Для точного продолжения задачи summary часто слабоват — нужен <b>checkpoint</b> (next step, decisions, evidence).</div>
+
   <h3 style="font-size:15px;margin:18px 0 10px">Сравнение: чем отличаются</h3>
   <div class="tableWrap"><table>
     <thead><tr><th>Понятие</th><th>Кто создаёт</th><th>Цель</th><th>Детализация</th><th>Выживает compaction?</th></tr></thead>
     <tbody>
       <tr><td><b>Checkpoint</b></td><td>Агент или пользователь — явно</td><td>Продолжить работу точно отсюда</td><td>Высокая — файлы, строки, решения</td><td>✅ Да — если сохранён в файл/Memory</td></tr>
-      <tr><td><b>Summary</b></td><td>Система — автоматически</td><td>Сжать историю и освободить context</td><td>Низкая — общий смысл</td><td>⚠️ Он и есть результат compaction</td></tr>
-      <tr><td><b>Compression</b></td><td>Система — автоматически</td><td>Не дать context overflow</td><td>—</td><td>— это сам процесс</td></tr>
+      <tr><td><b>Summary</b></td><td>По запросу или как побочный текст внутри compact</td><td>Пересказать «что было»</td><td>Низкая — общий смысл</td><td>⚠️ В чате — часть compact; в файле — да</td></tr>
+      <tr><td><b>Compression</b></td><td>Система или команда compact</td><td>Не дать context overflow</td><td>—</td><td>— это сам процесс (≈ compact)</td></tr>
       <tr><td><b>Memory Bank</b></td><td>Агент по протоколу</td><td>Хранить устойчивые знания между сессиями</td><td>Средняя — структурированные факты</td><td>✅ Да — файл вне context</td></tr>
     </tbody>
   </table></div>
@@ -273,6 +366,10 @@ claude "Контекст задачи:
   <div class="nuance-card nc-blue" style="margin-top:12px">
     <h4>Ключевое отличие Checkpoint от Summary</h4>
     <p><b>Summary</b> говорит «что было» — он описательный. <b>Checkpoint</b> говорит «откуда продолжать» — он операционный. Summary создаётся системой автоматически и оптимизирован для сжатия. Checkpoint создаётся намеренно и оптимизирован для возобновления работы. Плохой Checkpoint: «Мы работали над auth». Хороший Checkpoint: «Next: implement refresh token в <code>api/auth/refresh.py</code>, JWT secret в env, тест в <code>tests/test_auth.py:45</code>».</p>
+  </div>
+  <div class="nuance-card nc-orange">
+    <h4>Summary vs Compact — частая путаница</h4>
+    <p>«Сделай summary» ≠ <code>/compact</code> и ≠ авто-compaction: пересказ в ленте не обязан <b>освободить</b> context window. Compact <b>выбрасывает</b> старые turns и подставляет сжатое summary — модель в следующих шагах уже не видит исходные детали. Summary удобно копировать в доку или новый чат; compact — чтобы не рвать длинный тред. Оба могут терять детали → явный checkpoint в файле.</p>
   </div>
 </section>
 <section class="section">
@@ -328,15 +425,16 @@ Compaction → summary потеряет детали
 Checkpoint в Memory Bank → читай его</div>
     </div>
     <div class="ps-col" style="border-left:4px solid #7c3aed">
-      <div style="font-weight:800;font-size:14px;color:#6d28d9;margin-bottom:8px">📋 Стратегия 2<br>CLAUDE.md как вечный checkpoint</div>
-      <p style="font-size:13px;margin:0 0 8px">Критичные решения дублируй прямо в CLAUDE.md — он перезагружается при каждом запросе и <em>никогда</em> не compaction-ится.</p>
-      <div class="schema-box" style="font-size:11px"># CLAUDE.md
+      <div style="font-weight:800;font-size:14px;color:#6d28d9;margin-bottom:8px">📋 Стратегия 2<br>AGENTS.md + Memory Bank</div>
+      <p style="font-size:13px;margin:0 0 8px">Не только чат: <b>checkpoint.md</b> в Memory Bank — state задачи; принятые навсегда решения — в <b>AGENTS.md</b> / <b>memory.md</b> / <b>decisions.md</b>. Файлы и AGENTS не подменяются conversation summary.</p>
+      <div class="schema-box" style="font-size:11px">memory-bank/checkpoint.md  ← текущая задача (временно)
+memory-bank/decisions.md   ← устойчивые решения
+AGENTS.md                  ← workflow + @include memory
+
+# AGENTS.md (фрагмент)
 ## Permanent decisions
 - DB: PostgreSQL (JOIN needed)
-- Auth: JWT not sessions
-- API: REST not GraphQL
-  
-← Это выживет любой compaction</div>
+← выживет любой compaction</div>
     </div>
     <div class="ps-col" style="border-left:4px solid #16a34a">
       <div style="font-weight:800;font-size:14px;color:#15803d;margin-bottom:8px">🔄 Стратегия 3<br>PreCompact hook (Claude Code)</div>
@@ -389,6 +487,63 @@ Checkpoint в Memory Bank → читай его</div>
 2. Что проверить после него.
 3. Как понять, что задача завершена.</pre></section>
 <section class="section"><h2>Когда делать checkpoint</h2><div class="grid two"><div class="card good"><h3>Обязательно</h3><ul><li>Перед паузой.</li><li>Перед compaction.</li><li>Перед передачей subagent'у.</li><li>После важного решения.</li><li>Перед destructive action.</li></ul></div><div class="card warn"><h3>Желательно</h3><ul><li>После incident investigation.</li><li>После refactoring.</li><li>Перед PR summary.</li><li>Перед сменой гипотезы.</li></ul></div></div></section>
+
+<section class="section">
+  <h2>Тот же чат или новый — когда что выбирать</h2>
+  <p class="sectionIntro">Context checkpoint <b>создают в файл</b> (репозиторий, Memory Bank) — так он работает и в текущем чате, и после New Chat. Вопрос не «куда писать checkpoint», а <b>где продолжать работу</b> после того как он сохранён.</p>
+
+  <div class="tableWrap"><table>
+    <thead><tr><th>Ситуация</th><th>Рекомендация</th><th>Как подключить checkpoint</th></tr></thead>
+    <tbody>
+      <tr><td>Контекст ещё не забит; идёшь к <b>Next step</b> без смены этапа</td><td><b>Тот же чат</b></td><td>Файл уже обновлён → «прочитай <code>@docs/…/checkpoint.md</code> и выполни Next step»</td></tr>
+      <tr><td>Страховка на ~60–70% окна, работа продолжается в том же потоке</td><td><b>Тот же чат</b></td><td>Сохранить checkpoint в файл → продолжить; при compaction агент снова читает файл по запросу</td></tr>
+      <tr><td>Нужен лёгкий «ручной compact» без смены треда (Cursor без <code>/compact</code>)</td><td><b>Тот же чат</b></td><td>Checkpoint в файл + просьба: «сожми историю, сохрани решения в summary, дальше по checkpoint»</td></tr>
+      <tr><td>Кольцо контекста почти полное, много <b>Summarized conversation</b></td><td><b>Новый чат</b></td><td>New Chat → первое сообщение: <code>@checkpoint.md</code> + «продолжи с Next step»</td></tr>
+      <tr><td>Новый <b>крупный этап</b> (research → implement → review)</td><td><b>Новый чат</b></td><td>Свежий prefix: Rules + AGENTS.md + один checkpoint-файл, без старого шума tool output</td></tr>
+      <tr><td>Агент <b>дрейфует</b>, путает факты, повторяет отклонённые гипотезы</td><td><b>Новый чат</b></td><td>Актуализировать checkpoint (решения + next) → новый тред только с файлом</td></tr>
+      <tr><td>Пауза <b>&gt; нескольких часов</b> или другая задача, потом возврат</td><td><b>Новый чат</b></td><td>Checkpoint в git/Memory Bank; не продолжать месячную ленту</td></tr>
+      <tr><td>Нужен откат <b>кода</b> после неудачных правок агента</td><td><b>Тот же чат</b></td><td><b>Restore Checkpoint</b> в UI Cursor (файлы), не путать с context checkpoint в markdown</td></tr>
+      <tr><td>Нужен откат <b>смысла задачи</b> после compaction</td><td><b>Тот же или новый</b></td><td>Только <b>context checkpoint в файле</b>; UI Restore чат не восстанавливает</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="grid two" style="margin-top:14px">
+    <div class="card bg-blue">
+      <h3>Оставайся в том же чате</h3>
+      <ul>
+        <li>Ещё есть запас по context ring, мало summarized history.</li>
+        <li>Checkpoint — маркер этапа, следующий шаг сразу в этом треде.</li>
+        <li>Откат файлов через UI Checkpoint — только здесь.</li>
+      </ul>
+      <p style="font-size:13px;margin:10px 0 0"><b>Не полагайся</b> на checkpoint только как на сообщение в ленте — после compaction оно может уйти в summary.</p>
+    </div>
+    <div class="card bg-green">
+      <h3>Открывай новый чат</h3>
+      <ul>
+        <li>Контекст переполнен или уже сжимался — чистый старт дешевле, чем ещё 30 turns.</li>
+        <li>Смена фазы задачи или смена «режима» (explore vs implement).</li>
+        <li>Cursor: <code>@Past Chats</code> — если нужен кусок старого диалога, но не вся лента.</li>
+      </ul>
+      <p style="font-size:13px;margin:10px 0 0"><b>Шаблон первого сообщения:</b> «Продолжи задачу. Контекст в <code>@…/checkpoint.md</code>. Начни с Next step, не повторяй Done.»</p>
+    </div>
+  </div>
+
+  <div class="schema-box" style="margin-top:12px"><span class="h">Порядок действий (универсально)</span>
+
+<span class="v">1.</span> Создать / обновить checkpoint <span class="k">в файле</span> (не только в чате)
+<span class="v">2.</span> Оценить context ring + качество ответов агента
+         ↓
+   <span class="c">запас есть, этап тот же?</span>  → <span class="v">тот же чат</span> + @файл при необходимости
+         ↓
+   <span class="c">переполнение / новый этап / дрейф?</span>  → <span class="v">New Chat</span> + @checkpoint.md
+<span class="v">3.</span> Решения навсегда → <span class="k">Memory Bank</span> (<code>decisions.md</code>) и/или AGENTS.md / CLAUDE.md; не копи завершённые checkpoint в <code>memory.md</code></div>
+
+  <div class="nuance-card nc-blue">
+    <h4>Один файл — два сценария</h4>
+    <p>Один и тот же <code>checkpoint.md</code> можно читать в старом чате («обнови прогресс и иди дальше») и в новом (единственный источник правды о задаче). Новый чат не «восстанавливает» checkpoint автоматически — ты явно даёшь <code>@</code> или вставку. В старом чате после compaction без файла агент опирается на summary и может потерять детали.</p>
+  </div>
+</section>
+
 <section class="section"><h2>Примеры</h2><div class="grid two"><div class="card danger"><h3>Плохой summary</h3><p>“Мы разбирали CI, там что-то падало, нужно дальше смотреть.”</p></div><div class="card good"><h3>Хороший checkpoint</h3><p>“Goal: найти причину job X. Done: проверены logs A/B. Decision: infra не причина. Next: проверить test Y после commit abc.”</p></div></div></section>
 <section class="section">
 <h2>Тонкости и нюансы Checkpoint / Summary</h2>
@@ -409,9 +564,35 @@ Checkpoint в Memory Bank → читай его</div>
   <p>Если агент ушёл не туда до checkpoint — checkpoint зафиксирует неверный прогресс. Checkpoint полезен только при валидированном состоянии. Сначала убедись что прогресс правильный, затем делай checkpoint.</p>
 </div>
 <div class="nuance-card nc-green">
-  <h4>CLAUDE.md как персистентный checkpoint</h4>
-  <p>CLAUDE.md перезагружается при каждом запросе и не compaction-ится. Критичные решения, принятые однажды, лучше фиксировать в CLAUDE.md, а не только в summary — так они выживают любое количество сжатий контекста.</p>
+  <h4>AGENTS.md, CLAUDE.md и Memory Bank — что переживает compaction</h4>
+  <p>История чата при compaction сжимается в summary. <b>Не в чате</b> храни то, что нельзя потерять — три слоя с разными ролями (подробнее: <a href="memory.html">Memory Bank</a>, <a href="memory-structure.html">структура файлов</a>):</p>
+  <ul style="font-size:13px;line-height:1.75;margin:8px 0 0;padding-left:18px">
+    <li><b>AGENTS.md / CLAUDE.md</b> — в контексте <em>каждого</em> запроса: как работать в репо, workflow, лимиты, <code>Summary instructions</code>, ссылки на файлы Memory Bank. Сюда — короткие <b>постоянные</b> нормы, не дневник задачи.</li>
+    <li><b>Memory Bank — checkpoint.md</b> — тот же смысл, что context checkpoint: goal, done, decisions, next <b>текущей</b> задачи. Обновляется по ходу работы; после done — выжимка в <code>decisions.md</code>, сам checkpoint архивируют или удаляют.</li>
+    <li><b>Memory Bank — memory.md / decisions.md</b> — устойчивые факты и решения проекта между сессиями. На диске, summary их не стирает; агент подтягивает через протокол в AGENTS.md или <code>@memory-bank/…</code>.</li>
+  </ul>
+  <p style="font-size:13px;margin:10px 0 0"><b>Не путать:</b> «персистентный checkpoint» — не один файл. <em>Временный</em> прогресс → <code>checkpoint.md</code>; <em>навсегда</em> → Memory Bank + AGENTS.md. Дублировать одно и то же в трёх местах не нужно — один источник правды на факт.</p>
 </div>
+<div class="nuance-card nc-red">
+  <h4>Cursor UI Checkpoint ≠ context checkpoint</h4>
+  <p><b>Restore Checkpoint</b> в ленте Agent чата откатывает файлы на диске, а не «сохранённое состояние задачи» в тексте. Для compaction и New Chat используй context checkpoint в файле; UI checkpoint — когда нужно отменить пачку правок агента.</p>
+</div>
+</section>
+
+<section class="section">
+  <h2>Cursor vs Claude Code — сравнение</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Аспект</th><th>Cursor</th><th>Claude Code</th></tr></thead>
+    <tbody>
+      <tr><td>Авто-сжатие истории</td><td>Да; в UI — «Summarized conversation»</td><td>Да; SDK — <code>compact_boundary</code></td></tr>
+      <tr><td>Ручное сжатие чата</td><td>IDE: нет <code>/compact</code>; CLI: <code>/summarize</code>, <code>/compress</code></td><td><code>/compact</code> в чате</td></tr>
+      <tr><td>Новая сессия + перенос</td><td>New Chat, <code>@Past Chats</code>, context checkpoint</td><td>Новая сессия, <code>--resume</code>, memory-bank</td></tr>
+      <tr><td>«Checkpoint» в продукте</td><td><b>UI:</b> откат <b>файлов</b> агента</td><td>File checkpointing + отдельно handoff в markdown</td></tr>
+      <tr><td>Инструкции compactor'у</td><td>AGENTS.md, Rules</td><td>CLAUDE.md, hooks PreCompact</td></tr>
+      <tr><td>Уникальная фича</td><td>Кольцо контекста с разбивкой по категориям</td><td>PreCompact hook, явный <code>/compact</code></td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><b>Главное отличие:</b> в Cursor нет IDE-аналога <code>/compact</code> — ручное управление сжатием через New Chat + context checkpoint, @Past Chats или CLI. Слово <b>Checkpoint</b> в Cursor UI про <b>код</b>, не про markdown handoff задачи.</div>
 </section>
 
 <section class="section">
@@ -422,7 +603,8 @@ Checkpoint в Memory Bank → читай его</div>
     <ul>
       <li>Создавай checkpoint после каждого <strong>валидированного</strong> этапа.</li>
       <li>Явно указывай что включить в summary (файлы, команды, решения).</li>
-      <li>Используй CLAUDE.md для персистентных решений — дублируй ключевые факты туда.</li>
+      <li>Держи прогресс задачи в <strong>checkpoint.md</strong> (Memory Bank или <code>docs/progress/</code>), не только в ленте чата.</li>
+      <li>После валидации этапа — устойчивые решения в <strong>Memory Bank</strong> (<code>decisions.md</code>) и при необходимости в AGENTS.md / CLAUDE.md.</li>
       <li>Делай checkpoint перед рискованными или необратимыми операциями.</li>
       <li>Проси агента назвать что было сделано перед созданием checkpoint.</li>
     </ul>
@@ -432,7 +614,7 @@ Checkpoint в Memory Bank → читай его</div>
     <ul>
       <li>Не делай checkpoint слишком часто — overhead перевешивает пользу на коротких задачах.</li>
       <li>Не доверяй summary без проверки критичных деталей — всегда верифицируй.</li>
-      <li>Не используй checkpoint как единственное место для важных фактов — дублируй в CLAUDE.md.</li>
+      <li>Не используй чат как единственное хранилище — дублируй в файл; постоянные факты — в Memory Bank / AGENTS.md, не в <code>checkpoint.md</code>.</li>
       <li>Не создавай checkpoint если агент ушёл не туда — сначала откорректируй направление.</li>
     </ul>
   </div>
@@ -443,9 +625,13 @@ Checkpoint в Memory Bank → читай его</div>
 <h2>Вопросы по уровням</h2>
 <div class="qlevel-group">Junior — 10 вопросов</div>
 <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое Checkpoint в контексте AI агентов?</summary>
-<div class="inside">Checkpoint — это структурированная запись текущего состояния задачи: что уже сделано, какие решения приняты, что осталось сделать и какой следующий шаг. Checkpoint создаётся в момент паузы в работе, чтобы продолжить с той же точки позже — без потери контекста. Аналог из разработки: commit с описанием что сделано. Разница с простой заметкой: Checkpoint структурирован так, чтобы агент мог по нему восстановить полный контекст задачи.</div></details>
+<div class="inside">Checkpoint — это структурированная запись текущего состояния задачи: что уже сделано, какие решения приняты, что осталось сделать и какой следующий шаг. Checkpoint создаётся в момент паузы в работе, чтобы продолжить с той же точки позже — без потери контекста. Аналог из разработки: commit с описанием что сделано. Разница с простой заметкой: Checkpoint структурирован так, чтобы агент мог по нему восстановить полный контекст задачи. <b>Не путать</b> с кнопкой Restore Checkpoint в Cursor — та откатывает файлы на диске, а не текстовый handoff задачи.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Есть ли в Cursor команда /compact как в Claude Code?</summary>
+<div class="inside">В Agent-чате Cursor IDE встроенной команды <code>/compact</code> нет. Сжатие истории происходит автоматически, когда контекст почти заполнен (в breakdown видно «Summarized conversation»). Ручные аналоги: попросить агента сделать структурированное summary с фокусом на решения и next step; открыть New Chat и передать context checkpoint из файла или через <code>@Past Chats</code>; в Cursor CLI — <code>/summarize</code> или <code>/compress</code>. В Claude Code в IDE есть явный <code>/compact</code>.</div></details>
 <details class="details"><summary><span class="q-level q-junior">Junior</span> Зачем нужен Checkpoint — какую проблему он решает?</summary>
 <div class="inside">Checkpoint решает проблему потери контекста при compaction, паузах и передаче задачи. Без Checkpoint: агент сжимает длинный диалог (compaction) → теряет детали принятых решений и промежуточный прогресс. Новая сессия начинается с нуля. С Checkpoint: даже после compaction агент читает Checkpoint и знает: цель, что сделано, ключевые решения, что дальше. Checkpoint = survivor механизм для длинных задач.</div></details>
+<details class="details"><summary><span class="q-level q-junior">Junior</span> Чем Summary отличается от Compact (compaction)?</summary>
+<div class="inside"><b>Summary</b> — «перескажи»: краткое содержание для человека, документации или вставки в новый чат. <b>Compact / compaction</b> — «сожми контекст»: старая часть чата заменяется сжатым summary, чтобы освободить context window и продолжить в том же треде. Compact может использовать summary внутри, но цель compact — уменьшить активный контекст, а не просто пересказать. При compaction детали могут потеряться → для важных задач явный checkpoint в файле. <b>Исключение по имени:</b> в Cursor CLI <code>/summarize</code> и <code>/compress</code> — это ручной compact, не «summary для человека». В IDE фраза «сделай summary» compact обычно не запускает. Claude Code: /compact; Cursor IDE: авто-compaction.</div></details>
 <details class="details"><summary><span class="q-level q-junior">Junior</span> Чем Checkpoint отличается от Summary?</summary>
 <div class="inside">Summary — краткое содержание: пересказывает что было. Checkpoint — структурная точка продолжения: фиксирует состояние достаточно детально для продолжения работы. Summary отвечает на 'что происходило', Checkpoint на 'откуда продолжать'. Пример: Summary — 'мы исследовали проблему с CI'. Checkpoint — 'Goal: fix CI job X. Done: проверены logs A/B (не причина). Decision: infra ok. Blocker: нужен access к test env Y. Next: запустить тест Z с флагом --verbose'.</div></details>
 <details class="details"><summary><span class="q-level q-junior">Junior</span> Когда нужно делать Checkpoint?</summary>
@@ -463,6 +649,8 @@ Checkpoint в Memory Bank → читай его</div>
 <details class="details"><summary><span class="q-level q-junior">Junior</span> Что такое structured state в контексте Checkpoint?</summary>
 <div class="inside">Structured state — формализованное, машиночитаемое представление состояния задачи. Это когда Checkpoint оформлен не как свободный текст, а со стандартными полями (Goal, Done, Decisions, Next). Преимущества structured state: агент легче parsit и использует поля; команда имеет предсказуемый формат; можно автоматически обрабатывать (например, генерировать отчёт о прогрессе). Пример: вместо 'мы почти дошли до решения' → 'Status: 70% complete. Next: implement auth middleware (ref: backend/auth/middleware.py)'.</div></details>
 <div class="qlevel-group">Middle — 10 вопросов</div>
+<details class="details"><summary><span class="q-level q-middle">Middle</span> Context checkpoint — продолжать в том же чате или открыть новый?</summary>
+<div class="inside">Сначала сохрани checkpoint в файл — это работает в обоих сценариях. <b>Тот же чат:</b> контекст не забит, тот же этап задачи, нужна только страховка или лёгкое сжатие без смены треда; откат кода через UI Restore Checkpoint — только в текущей сессии. <b>Новый чат:</b> кольцо контекста почти полное, уже есть Summarized conversation, смена крупного этапа, дрейф агента, долгая пауза или другая задача — чистый prefix (Rules + AGENTS.md + @checkpoint.md) надёжнее длинной ленты. Не храни единственную копию checkpoint только в истории сообщений — после compaction она деградирует. Постоянные решения — в Memory Bank (<code>decisions.md</code>) и/или AGENTS.md, текущая задача — в <code>checkpoint.md</code>.</div></details>
 <details class="details"><summary><span class="q-level q-middle">Middle</span> Как структурировать эффективный Checkpoint для сложной технической задачи?</summary>
 <div class="inside">Эффективная структура Checkpoint для технической задачи: [# Checkpoint — <task name>] с полями: Goal (1 строка), Status (In Progress/Blocked/Done), Done (bulleted список с конкретными артефактами: файлы, commits, тесты, PR), Key Decisions (каждое решение + rationale: 'выбрали Redis вместо Memcached потому что TTL + persistence'), Current State (важные факты: 'auth service на порту 8080, DB на 5432'), Blockers (если есть: 'нет доступа к prod logs'), Next Step (одно конкретное действие с файлом и функцией если применимо), References. Объём: 200–400 слов — достаточно для полного восстановления контекста.</div></details>
 <details class="details"><summary><span class="q-level q-middle">Middle</span> Когда лучше делать Checkpoint — в середине задачи или только в конце?</summary>

@@ -148,7 +148,8 @@
           ["Ниже по смыслу", "Вложенный subagent → subagent возможен, но редко и с лимитом глубины. На карте слоёв main это не «уровень 9 в окне модели» — снова делегирование и возврат findings."]
         ],
         cases: [["Assessment", "Findings subagent не отменяют Rule: main обязан проверить перед действием."], ["Параллель", "Несколько workers → fan-in у main; см. agentic-systems.html"]],
-        chips: ["изоляция", "findings не autopilot", "permissions", "agent loop"]
+        chips: ["изоляция", "findings не autopilot", "permissions", "agent loop"],
+        pageHref: "subagents.html#inside-subagent"
       }
     };
 
@@ -189,6 +190,7 @@
         ${cases}
         ${table}
         <div class="chips">${item.chips.map(c => `<span class="chip">${c}</span>`).join("")}</div>
+        ${item.pageHref ? `<p style="margin-top:14px"><a class="btn primary" href="${item.pageHref}">Полное описание на Subagents →</a></p>` : ""}
         <div class="detail-float-footer">
           <button type="button" class="detail-float-ok" id="detailFloatOk">Понятно, закрыть</button>
         </div>

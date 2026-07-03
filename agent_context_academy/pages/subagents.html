@@ -33,7 +33,7 @@
     <a href="tricky-questions.html"><span class="ico">🧨</span><span>Каверзные вопросы</span></a>
     <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
   </div>
-<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div><div class="progressBox"><b>Формула</b><p class="sourceNote">System → AGENTS/Rules → Current task → Memory/RAG/MCP/Skills → Subagent findings.</p></div></aside><main class="main"><section class="hero"><div class="kicker">Agent Context Academy</div><h2>Subagents</h2><p>Как работают подагенты: отдельный контекст, делегирование, ограничения, tools, permissions, foreground/background и проверка результата.</p><div class="heroActions"><a class="btn primary" href="home.html">На главную</a><a class="btn" href="assessment.html">К assessment</a><button class="markDone">Отметить страницу изученной</button></div></section>
+<div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div><div class="progressBox"><b>Формула</b><p class="sourceNote">System → AGENTS/Rules → Current task → Memory/RAG/MCP/Skills → Subagent findings.</p></div></aside><main class="main"><section class="hero"><div class="kicker">Agent Context Academy</div><h2>Subagents</h2><p>Как работают подагенты: отдельный контекст, делегирование, ограничения, tools, permissions, foreground/background и проверка результата.</p><div class="heroActions"><a class="btn primary" href="home.html">На главную</a><a class="btn" href="#inside-subagent">4 шага внутри subagent</a><a class="btn" href="context.html#contextSchemaSection">Карта на «Контекст агента»</a><a class="btn" href="assessment.html">К assessment</a><button class="markDone">Отметить страницу изученной</button></div></section>
 <style>
   .schema-box{background:#0f172a;color:#e2e8f0;border-radius:16px;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.65;overflow:auto;margin:10px 0;white-space:pre-wrap}
   .schema-box .h{color:#c084fc;font-weight:900}
@@ -49,10 +49,18 @@
   .ps-cursor{background:#eff6ff;color:#1e40af}
   .ps-claude{background:#f0fdf4;color:#14532d}
   @media(max-width:900px){.platform-split{grid-template-columns:1fr}}
+  .inside-sub-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}
+  .inside-sub-card{border:2px solid #bae6fd;border-radius:16px;padding:12px 14px;background:linear-gradient(180deg,#f0f9ff,#fff 70%);display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:1.4;color:#475569}
+  .inside-sub-card .isc-icon{font-size:26px;line-height:1}
+  .inside-sub-card b{color:#0c4a6e;font-size:14px}
+  .inside-sub-card a{align-self:flex-start;margin-top:4px;font-size:12px;font-weight:800;color:#1d4ed8}
+  .inside-sub-return{text-align:center;margin:10px 0 4px;font-size:15px;font-weight:900;color:#2563eb}
+  @media(max-width:900px){.inside-sub-grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:520px){.inside-sub-grid{grid-template-columns:1fr}}
 </style>
 
 <!-- ── С нуля: Agent Loop ── -->
-<section class="section">
+<section class="section" id="subagent-agent-loop">
   <h2>С нуля: что такое Agent Loop — Claude Code / Cursor</h2>
   <p class="sectionIntro">Прежде чем разобраться в subagents — нужно понять базу: как вообще работает агент изнутри. Это и есть <b>agent loop</b>. Концепция одинакова в Claude Code и Cursor — разница только в деталях реализации.</p>
 
@@ -208,7 +216,48 @@ Claude: <span class="s">"Fixed the auth bug, all three tests pass now."</span>
   </div>
 </section>
 
-<section class="section"><h2>Subagents: что это</h2><p class="sectionIntro">Subagent — отдельный специализированный агент или изолированный image.png, которому main agent делегирует focused subtask. Он работает со своим контекстом и возвращает findings/summary.</p><div class="diagram"><div class="stack"><div class="layer bg-gray">Main agent <small>видит основную задачу и принимает финальное решение</small></div><div class="layer bg-blue">Task A → Code search subagent <small>ищет классы/методы</small></div><div class="layer bg-green">Task B → Test analyst <small>анализирует CI/test logs</small></div><div class="layer bg-purple">Task C → Security reviewer <small>проверяет риски</small></div><div class="layer bg-gray">Summaries return <small>main объединяет и проверяет</small></div></div></div></section>
+<section class="section"><h2>Subagents: что это</h2><p class="sectionIntro">Subagent — отдельный специализированный агент или изолированный <b>agent loop</b>, которому main agent делегирует focused subtask. Он работает со своим контекстом и возвращает findings/summary.</p><div class="diagram"><div class="stack"><div class="layer bg-gray">Main agent <small>видит основную задачу и принимает финальное решение</small></div><div class="layer bg-blue">Task A → Code search subagent <small>ищет классы/методы</small></div><div class="layer bg-green">Task B → Test analyst <small>анализирует CI/test logs</small></div><div class="layer bg-purple">Task C → Security reviewer <small>проверяет риски</small></div><div class="layer bg-gray">Summaries return <small>main объединяет и проверяет</small></div></div></div></section>
+
+<section class="section" id="inside-subagent">
+  <h2>Внутри subagent — четыре шага</h2>
+  <p class="sectionIntro">Та же схема, что на <a href="context.html#contextSchemaSection">«Контекст агента»</a> (зона <b>8a</b> и слой <b>7 · Внутри subagent</b> на карте): это <b>не</b> ещё один слой в context window main-модели, а <b>отдельное окно</b> worker'а. Main делегирует → subagent крутит свой loop → в main попадают только <b>findings</b>.</p>
+  <div class="inside-sub-grid">
+    <div class="inside-sub-card">
+      <span class="isc-icon">📝</span>
+      <b>1 · Task brief</b>
+      <span>Срез задачи: role, scope, constraints, формат ответа. Без полной истории чата.</span>
+      <a href="#subagent-inheritance">Наследование и task description ↓</a>
+    </div>
+    <div class="inside-sub-card">
+      <span class="isc-icon">🛡️</span>
+      <b>2 · Permissions</b>
+      <span><code>readonly</code>, урезанные tools, scope файлов — часто не как у main.</span>
+      <a href="#subagent-inheritance">Таблица tools / Rules ↓</a>
+    </div>
+    <div class="inside-sub-card">
+      <span class="isc-icon">🔄</span>
+      <b>3 · Subagent loop</b>
+      <span>think → tool/MCP → observe в изолированном окне; шум не раздувает main.</span>
+      <a href="#subagent-agent-loop">Agent loop с нуля ↓</a>
+    </div>
+    <div class="inside-sub-card">
+      <span class="isc-icon">📤</span>
+      <b>4 · Findings → main</b>
+      <span>Structured summary в чат main; main сверяет с Rules перед edit.</span>
+      <a href="#subagent-foreground">Foreground / background ↓</a>
+    </div>
+  </div>
+  <p class="inside-sub-return">↑ findings в текущий чат main-агента</p>
+  <div class="callout" style="margin-top:8px">
+    <b>Дальше по теме:</b>
+    <a href="#subagent-task-scope">Files · Scope · Constraints</a> ·
+    <a href="#subagent-orchestration">Паттерны оркестрации</a> ·
+    <a href="agentic-systems.html">Параллель / pipeline</a> ·
+    <a href="permissions.html">Permissions</a> ·
+    <a href="agent-loop.html">Agent Loop (отдельная тема)</a>
+  </div>
+</section>
+
 <!-- ── Platform split ── -->
 <section class="section">
   <h2>Cursor vs Claude Code — как запускать subagents</h2>
@@ -267,7 +316,7 @@ claude --agent "security-reviewer" \
 </section>
 
 <!-- ── Foreground vs Background ── -->
-<section class="section">
+<section class="section" id="subagent-foreground">
   <h2>Foreground vs Background выполнение</h2>
   <p class="sectionIntro">Subagent может работать в двух режимах. Выбор влияет на flow взаимодействия с пользователем и эффективность параллелизма.</p>
 
@@ -313,7 +362,7 @@ Main агрегирует все findings</div>
 </section>
 
 <!-- ── Наследование от main agent ── -->
-<section class="section">
+<section class="section" id="subagent-inheritance">
   <h2>Что наследует subagent от main agent — модель передачи контекста</h2>
   <p class="sectionIntro">Subagent — это <em>чистый старт</em>. Он не получает историю диалога, Memory Bank или Rules автоматически. Всё что ему нужно — main agent обязан передать явно в task description.</p>
 
@@ -467,7 +516,7 @@ claude --mcp-config ./mcp-readonly.json \
 </section>
 
 <!-- ── Files, Constraints, Scope ── -->
-<section class="section">
+<section class="section" id="subagent-task-scope">
   <h2>Files, Constraints, Scope — три ключевых параметра задачи</h2>
   <p class="sectionIntro">Любая хорошая task description для subagent строится на трёх концептах: <b>Files</b> (с чем работать), <b>Scope</b> (в каких границах), <b>Constraints</b> (что запрещено). Это три разных уровня ограничения — часто путают.</p>
 
@@ -563,7 +612,7 @@ OUT of scope:
 </section>
 
 <!-- ── Паттерны оркестрации ── -->
-<section class="section">
+<section class="section" id="subagent-orchestration">
   <h2>Паттерны оркестрации subagents</h2>
   <p class="sectionIntro">Паттерны — проверенные способы организации multi-agent workflows. Выбирай по структуре задачи.</p>
 

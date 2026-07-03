@@ -473,7 +473,8 @@ You are a [role] working on [project].
     <tbody>
       <tr><td><b>Project instructions</b></td><td><code>AGENTS.md</code></td><td><code>CLAUDE.md</code></td><td>Markdown</td><td>Каждый запрос</td></tr>
       <tr><td><b>Always-on policy</b></td><td><code>.cursor/rules/*.mdc</code> alwaysApply:true</td><td>Секция MUST в CLAUDE.md + Hooks</td><td>.mdc / Markdown</td><td>Каждый запрос</td></tr>
-      <tr><td><b>Context policy</b></td><td><code>.cursor/rules/*.mdc</code> globs:[...]</td><td>Нет аналога</td><td>.mdc</td><td>При совпадении файлов с globs</td></tr>
+      <tr><td><b>Context policy</b></td><td><code>.cursor/rules/*.mdc</code> globs:[...]</td><td>Нет аналога</td><td>.mdc</td><td>При совпадении файлов с globs — <b>не</b> в prefix каждый запрос</td></tr>
+      <tr><td><b>Memory Bank</b></td><td><code>memory-bank/</code>, <code>memory.md</code> + протокол в AGENTS.md</td><td>@include в CLAUDE.md, Project Knowledge</td><td>Markdown</td><td>Только если подключили — <a href="memory.html#how-loaded">механика</a></td></tr>
       <tr><td><b>Hard enforcement</b></td><td>Team Rules (Cursor Business)</td><td><code>.claude/settings.json</code> Hooks</td><td>UI / JSON + shell</td><td>До/после каждого tool call</td></tr>
       <tr><td><b>Commands</b></td><td><code>.cursor/commands/*.md</code></td><td><code>.claude/commands/*.md</code></td><td>Markdown (+ YAML в Claude)</td><td>/имя-команды</td></tr>
       <tr><td><b>AI filter</b></td><td><code>.cursorignore</code></td><td><code>.claudeignore</code></td><td>gitignore-синтаксис</td><td>При индексации (RAG)</td></tr>

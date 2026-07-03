@@ -120,7 +120,7 @@
     </div>
     <div class="card bg-green">
       <h3>Что такое Memory Bank</h3>
-      <p>Memory Bank — <strong>внешний файл</strong> (обычно <code>memory.md</code>) с записанными знаниями о проекте. Агент читает его при каждом запросе и "знает" всё что там написано. Это искусственная долговременная память.</p>
+      <p>Memory Bank — <strong>внешний файл</strong> (обычно <code>memory.md</code>) с записанными знаниями о проекте. Попадает в окно только если вы подключили загрузку (<a href="#how-loaded">механика</a>). Тогда агент «знает» записанное между сессиями — это искусственная долговременная память.</p>
       <ul>
         <li>Физически: markdown-файл в репозитории</li>
         <li>Загружается в context window каждый раз</li>
@@ -154,25 +154,31 @@
 </section>
 
 <!-- ═══════════════════════════════════════════════════════ КАК ЭТО РАБОТАЕТ -->
-<section class="section">
+<section class="section" id="how-loaded">
   <h2>Как Memory Bank попадает к агенту — механика</h2>
 
   <div class="nuance-card nc-blue">
-    <h4>Простыми словами: агент читает файл как ты читаешь инструкцию</h4>
-    <p>Memory Bank не «встроен» в модель — это обычный текстовый файл. Он добавляется в context window в начале каждого запроса. Агент видит его как часть своего «системного промпта» и принимает как данность всё что там написано.</p>
+    <h4>Простыми словами: файл на диске ≠ текст в окне</h4>
+    <p>Memory Bank — обычные markdown-файлы в репозитории. Модель их <b>не видит</b>, пока IDE или агент не положит содержимое в context window (как @mention, read tool или автоподмешивание по правилам в <a href="agents-md.html">AGENTS.md</a>). Это не то же самое, что <code>alwaysApply</code> Rules и не «встроенная память» провайдера.</p>
+  </div>
+
+  <div class="nuance-card nc-orange">
+    <h4>Не путать с Prefix Cursor и Prompt Caching</h4>
+    <p><b>Prefix Cursor</b> (узко) = platform + <code>alwaysApply</code> Rules — см. <a href="prompting.html#system-instructions">System instructions</a> и <a href="context.html#context-layers-table">таблицу слоёв</a>. Memory Bank в этот узкий prefix <b>не входит</b>, если вы явно не настроили постоянную подгрузку. Если <code>memory.md</code> стабильно инжектится каждый запрос — он становится частью <b>stable prefix для кеша</b> (<a href="caching.html#cursor-prefix-layers">кеш → слои Cursor</a>), но это ваше решение по wiring, не дефолт IDE.</p>
   </div>
 
   <div class="context-flow">
     <p style="font-size:14px;color:#334155;margin:0 0 8px"><b>Как агент получает Memory Bank</b></p>
     <ul class="context-flow-steps">
       <li><span class="cf-arrow">↓</span> Ты отправляешь вопрос</li>
-      <li><span class="cf-arrow">↓</span> Cursor / Claude Code читает: AGENTS.md → memory.md → rules → …</li>
-      <li><span class="cf-arrow">↓</span> Собирает <strong>context window</strong> (слои снизу вверх — как стопка):</li>
+      <li><span class="cf-arrow">↓</span> Cursor / Claude Code собирает окно: platform, Rules (alwaysApply), AGENTS.md, …</li>
+      <li><span class="cf-arrow">↓</span> <strong>Memory Bank</strong> — только если подключён (см. справа): иначе агент файл не видит</li>
+      <li><span class="cf-arrow">↓</span> Слои в стопке (упрощённо):</li>
     </ul>
     <div class="context-stack" role="img" aria-label="Слои context window">
       <div class="ctx-layer">System prompt <small>(роль агента)</small></div>
       <div class="ctx-layer">AGENTS.md <small>(workflow, стек)</small></div>
-      <div class="ctx-layer ctx-highlight">memory.md <small>← Memory Bank</small></div>
+      <div class="ctx-layer ctx-highlight">memory.md <small>← только если в окне</small></div>
       <div class="ctx-layer">Rules / Skills</div>
       <div class="ctx-layer">История чата</div>
       <div class="ctx-layer ctx-highlight">Твой вопрос <small>← здесь</small></div>
@@ -467,7 +473,7 @@ Risks:
 <!-- ═══════════════════════════════════════════════════════ AGENTS vs MEMORY -->
 <section class="section">
   <h2>Memory Bank vs AGENTS.md — когда что выбирать</h2>
-  <p class="sectionIntro">Оба файла попадают в context window при каждом запросе. Путаница между ними — главная причина дублей и устаревших команд. <strong>AGENTS.md</strong> (в Claude Code — <strong>CLAUDE.md</strong>) = «как работать здесь»; <strong>memory.md</strong> = «что мы накопили о проекте».</p>
+  <p class="sectionIntro"><strong>AGENTS.md</strong> (в Claude Code — <strong>CLAUDE.md</strong>) IDE подмешивает почти каждый запрос. <strong>memory.md</strong> — только если подключили. Путаница между ними — главная причина дублей и устаревших команд. AGENTS = «как работать»; Memory = «что накопили».</p>
 
   <div class="tableWrap"><table>
     <thead><tr><th>Ситуация или тип контента</th><th>AGENTS.md / CLAUDE.md</th><th>Memory Bank (memory.md)</th></tr></thead>

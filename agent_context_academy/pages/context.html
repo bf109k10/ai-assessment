@@ -165,7 +165,7 @@
           <div class="sys-title">0. System instructions → Prompt · Prefix Cursor · Prefix Claude Code</div>
           <div class="sys-grid">
             <div><b>System Prompt:</b> скрытый platform layer (safety, tools).</div>
-            <div><b>Prefix Cursor:</b> склейка окна + alwaysApply Rules — <a href="caching.html#prefix-example">пример prefix</a>.</div>
+            <div><b>Prefix Cursor (узко):</b> platform + <code>alwaysApply</code> Rules. <b>AGENTS.md</b> — отдельно, почти каждый запрос. <a href="caching.html#cursor-prefix-layers">Что не в prefix</a>.</div>
             <div><b>Prefix Claude Code:</b> platform + settings + CLAUDE.md/metadata.</div>
           </div>
         </button>
@@ -244,7 +244,7 @@
             <p class="sub-delegate-links">
               <button type="button" class="sub-delegate-more clickable" data-key="subagent-inner">Подробнее → внутри subagent</button>
               <span class="sub-delegate-sep">·</span>
-              <a href="subagents.html">Subagents</a>
+              <a href="subagents.html#inside-subagent"><b>Полное описание на Subagents →</b></a>
               <span class="sub-delegate-sep">·</span>
               <a href="agent-loop.html">Agent Loop</a>
               <span class="sub-delegate-sep">·</span>
@@ -300,18 +300,21 @@
     </div>
   </section>
 
-  <section class="section">
+  <section class="section" id="context-layers-table">
     <h2>Слои в одной таблице</h2>
+    <p class="sectionIntro">Приоритет при конфликте — не то же самое, что «попадает в каждый запрос». Для stable prefix и кеша: <a href="caching.html#cursor-prefix-layers">Prompt Caching → слои Cursor</a>. Термины system / Prefix Cursor: <a href="prompting.html#system-instructions">Prompt Engineering</a>.</p>
     <div class="tableWrap"><table>
-      <thead><tr><th>Слой</th><th>Роль</th><th>При конфликте</th></tr></thead>
+      <thead><tr><th>Слой</th><th>Роль</th><th>Каждый запрос (Cursor)?</th><th>При конфликте</th></tr></thead>
       <tbody>
-        <tr><td>System Prompt</td><td>Платформа, safety, tools</td><td>Выше всего</td></tr>
-        <tr><td>Team / Project Rules</td><td>Policy, compliance</td><td>Выше AGENTS.md и чата</td></tr>
-        <tr><td>AGENTS.md / CLAUDE.md</td><td>Workflow проекта</td><td>Выше Skills и RAG</td></tr>
-        <tr><td>Current chat</td><td>Текущая цель</td><td>Не отменяет Rules</td></tr>
-        <tr><td>Memory / RAG / MCP</td><td>Факты и live data</td><td>Freshness &gt; stale</td></tr>
-        <tr><td>Skills</td><td>Commands</td><td>Ниже Rules</td></tr>
-        <tr><td>Subagent findings</td><td>Делегированные выводы</td><td>Проверяет main agent</td></tr>
+        <tr><td>System Prompt</td><td>Платформа, safety, tools</td><td>Да</td><td>Выше всего</td></tr>
+        <tr><td>Rules <code>alwaysApply</code></td><td>Policy, compliance</td><td>Да</td><td>Выше AGENTS.md и чата</td></tr>
+        <tr><td>Rules auto / manual</td><td>Контекстная политика</td><td><b>Нет</b> — globs / @ / Apply</td><td>Как Rules, когда в окне</td></tr>
+        <tr><td>AGENTS.md / CLAUDE.md</td><td>Workflow проекта</td><td>Да (каскад)</td><td>Выше Skills и RAG</td></tr>
+        <tr><td>Memory Bank</td><td>Устойчивые факты между сессиями</td><td><b>Нет</b> — только если подключили</td><td>Ниже Rules; факты vs freshness</td></tr>
+        <tr><td>Current chat</td><td>Текущая цель</td><td>Да</td><td>Не отменяет Rules</td></tr>
+        <tr><td>RAG / MCP</td><td>Факты и live data</td><td>По запросу / tool call</td><td>Freshness &gt; stale</td></tr>
+        <tr><td>Skills</td><td>Commands</td><td>Нет — по вызову</td><td>Ниже Rules</td></tr>
+        <tr><td>Subagent findings</td><td>Делегированные выводы</td><td>Когда делегировали</td><td>Проверяет main agent</td></tr>
       </tbody>
     </table></div>
   </section>

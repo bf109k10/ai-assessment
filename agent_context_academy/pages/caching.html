@@ -9,6 +9,8 @@
 .bar-new{background:#2563eb}
 .bar-total{background:#94a3b8}
 .cost-badge{font-size:11px;font-weight:900;padding:3px 8px;border-radius:999px;border:1px solid var(--line)}
+.req-yes{color:#dc2626;font-weight:900}
+.req-no{color:#64748b}
 </style>
 </head><body><div class="app">
 <aside class="sidebar">
@@ -76,12 +78,31 @@
   <h3 id="prefix-example" style="font-size:15px;margin:16px 0 8px">Пример: один prefix — два запроса</h3>
   <div class="schema-box" style="font-size:12px;line-height:1.55;white-space:pre-wrap;background:#0f172a;color:#e2e8f0;border-radius:16px;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;overflow:auto;margin:10px 0">┌─ PREFIX (одинаковый → KV из кеша, ~10% цены) ─────────────────┐
 │ [system] Ты senior-разработчик, отвечай на русском              │
-│ [.cursor/rules] alwaysApply: не коммить секреты, минимальный diff │
+│ [.cursor/rules] только alwaysApply — не коммить секреты, …        │
 │ [AGENTS.md] Стек: Node 20, тесты: npm test                      │
 │ [tools] read_file, grep, run_terminal_cmd …                       │
 └─────────────────────────────────────────────────────────────────┘
+<span class="c">  ← Rules с globs / @rule — не в этом блоке, пока IDE не подмешала.
+     memory.md — только если подключён (AGENTS.md / @ / протокол).</span>
   SUFFIX запрос 1: User: «Почини падающий тест в auth.test.ts»
   SUFFIX запрос 2: User: «Добавь JSDoc к export в utils.mjs»</div>
+
+  <h3 id="cursor-prefix-layers" style="font-size:15px;margin:16px 0 8px">Cursor: что в stable prefix, что нет</h3>
+  <p class="sectionIntro">Для <b>кеша</b> важен не приоритет слоёв, а <b>byte-for-byte стабильное начало</b>. Ниже — типичная сборка Cursor Agent. Слои и приоритеты: <a href="context.html#context-layers-table">Контекст агента → таблица</a>. Термины: <a href="prompting.html#system-instructions">System instructions</a>.</p>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Слой</th><th>В начале окна почти каждый запрос?</th><th>Влияние на cache prefix</th></tr></thead>
+    <tbody>
+      <tr><td>Platform system prompt</td><td class="req-yes">✓</td><td>Стабилен → кешируется</td></tr>
+      <tr><td>Rules <code>alwaysApply: true</code></td><td class="req-yes">✓</td><td>Стабилен до коммита в <code>.cursor/rules/</code></td></tr>
+      <tr><td>Схемы tools / MCP</td><td class="req-yes">✓</td><td>Меняется при смене подключённых серверов → cache miss</td></tr>
+      <tr><td><a href="agents-md.html">AGENTS.md</a></td><td class="req-yes">✓ в репо</td><td>Стабилен → часть prefix для кеша</td></tr>
+      <tr><td>Rules auto-attached (<code>globs</code>)</td><td class="req-no">— только при match</td><td>Меняет prefix при другом наборе файлов в контексте</td></tr>
+      <tr><td>Rules manual / <code>@rule</code></td><td class="req-no">— по действию пользователя</td><td>Не в базовом prefix</td></tr>
+      <tr><td><a href="memory.html#how-loaded">Memory Bank</a></td><td class="req-no">— если не подключили</td><td>Если всегда инжектите <code>memory.md</code> — входит в stable prefix; иначе нет</td></tr>
+      <tr><td>История чата, RAG, tool results</td><td class="req-no">— растёт / меняется</td><td>Suffix, не «ядро» prefix</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout" style="margin-top:10px"><b>Главное:</b> Prompt cache ≠ Memory Bank. Кеш — временные KV на сервере провайдера при совпадении текста; Memory Bank — файлы в git, которые вы сами решаете, когда класть в окно.</div>
 
   <div class="diagram">
     <div class="cache-diagram">

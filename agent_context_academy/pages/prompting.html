@@ -117,30 +117,10 @@ Say "not sure" if evidence is insufficient (Q).</pre>
   <p class="sectionIntro">LLM API принимает не один текст, а список сообщений с ролями. Роль определяет «вес» инструкции: одна и та же фраза в <code>system</code> соблюдается надёжнее, чем та же фраза в середине <code>user</code>.</p>
 
   <div class="nuance-card nc-blue">
-    <h4>System instructions — что это и какие бывают названия</h4>
-    <p><b>System instructions</b> (системные инструкции) — общий термин для текста, который модель получает <b>до</b> пользовательского диалога и который задаёт рамку поведения: роль, формат, safety, описание инструментов. В документации и API встречаются синонимы: <em>system prompt</em>, <em>system message</em> (роль <code>system</code>), <em>platform instructions</em>.</p>
-    <p>В IDE (Cursor, Claude Code) вы редко видите один файл «system.txt» — платформа <b>склеивает prefix</b> в начало context window. Различайте два смысла:</p>
-    <ul>
-      <li><b>Platform system prompt</b> — скрытый слой платформы (безопасность, harness, tools). Пользователь не редактирует.</li>
-      <li><b>Собранный system-prefix</b> — platform + ваши <code>alwaysApply</code> <a href="rules.html">Rules</a> + иногда project instructions. Для модели это всё ведёт себя как «начало окна»; в <a href="caching.html#prefix-example">Prompt Caching</a> этот стабильный блок часто называют <em>prefix</em> (см. <a href="caching.html#prefix-example">пример: один prefix — два запроса</a>).</li>
-    </ul>
-    <p><b>Не путать:</b> <code>user</code> — задача на этот turn; <code>assistant</code> — история ответов; RAG и tool results — <b>данные</b>, не «конституция». На <a href="context.html">карте контекста</a> сверху узел <b>System instructions</b>, под ним — <b>System Prompt</b>, <b>Prefix Cursor</b> и <b>Prefix Claude Code</b>.</p>
-  </div>
-
-  <div class="callout" style="margin-top:10px"><b>На практике:</b> как в одном prefix оказываются <code>[system]</code>, <code>[.cursor/rules]</code>, <code>[AGENTS.md]</code> и <code>[tools]</code>, а в хвосте меняется только user — <a href="caching.html#prefix-example">пример «один prefix — два запроса»</a> на странице Prompt Caching.</div>
-
-  <div class="tableWrap" style="margin-top:12px">
-    <table>
-      <thead><tr><th>Термин</th><th>Где встречается</th><th>Кто контролирует</th></tr></thead>
-      <tbody>
-        <tr><td><b>System instructions</b> (зонтик)</td><td>Кеш, CE, assessment</td><td>Платформа + частично вы (Rules в prefix)</td></tr>
-        <tr><td><b>System message / поле <code>system</code></b></td><td>Anthropic/OpenAI API</td><td>Вы в своём приложении; в IDE — сборка платформы</td></tr>
-        <tr><td><b>Platform system prompt</b></td><td>Cursor, Claude Code, claude.ai</td><td>Только платформа</td></tr>
-        <tr><td><b>Prefix Cursor</b></td><td>Начало окна в Cursor</td><td>Платформа + <code>alwaysApply</code> Rules в сборке IDE</td></tr>
-        <tr><td><b>Prefix Claude Code</b></td><td>System-сборка Claude Code</td><td>Платформа + settings + CLAUDE.md/metadata skills</td></tr>
-        <tr><td><b>AGENTS.md / CLAUDE.md</b></td><td>Репозиторий</td><td>Команда; отдельный слой на <a href="context.html">карте</a> (workflow), не синоним platform prompt</td></tr>
-      </tbody>
-    </table>
+    <h4>System instructions</h4>
+    <p>Текст <b>до</b> user-диалога: роль, формат, safety, tools. Синонимы: <em>system prompt</em>, <em>system message</em> (<code>system</code>), <em>platform instructions</em>. В Cursor/Claude Code платформа <b>склеивает prefix</b> в начало context window — вы не видите один файл «system.txt».</p>
+    <p><b>Два термина:</b> <em>Platform system prompt</em> — только платформа, не редактируется. <em>Prefix Cursor</em> (узко, для карты и assessment) — platform + <code>alwaysApply</code> Rules + схемы tools. AGENTS.md, условные Rules и Memory — отдельные слои: <a href="context.html#context-layers-table">кто в каждый запрос</a>, <a href="caching.html#cursor-prefix-layers">stable prefix и кеш</a>. Пример склейки: <a href="caching.html#prefix-example">один prefix — два запроса</a>. Карта: <a href="context.html">Контекст агента</a>.</p>
+    <p style="margin-top:8px;font-size:13px;color:#64748b"><code>user</code> — задача turn; <code>assistant</code> — история; RAG и tool results — данные, не «конституция». Свой API: поле <code>system</code> собираете вы. Claude Code: <em>Prefix Claude Code</em> = platform + CLAUDE.md + settings — см. <a href="agents-md.html">AGENTS.md / CLAUDE.md</a>.</p>
   </div>
 
   <!-- Три роли — три карточки -->
