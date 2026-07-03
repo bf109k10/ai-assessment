@@ -53,10 +53,110 @@
   @media(max-width:900px){.platform-split,.diff-split{grid-template-columns:1fr}}
 </style>
 
+<section class="section">
+  <h2>Что такое Checkpoint, Summary и Compression</h2>
+
+  <div class="grid">
+    <div class="card bg-blue">
+      <h3>Checkpoint = точка возобновления</h3>
+      <p>Структурированная запись состояния задачи в конкретный момент: что сделано, какие решения приняты, что осталось и <em>конкретно</em> следующий шаг. Создаётся намеренно — человеком или агентом.</p>
+      <ul>
+        <li><b>Отвечает на:</b> «Откуда продолжать?»</li>
+        <li><b>Содержит:</b> Goal, Done, Decisions, Next step, Evidence</li>
+        <li><b>Создаётся:</b> явно, перед паузой или compaction</li>
+        <li><b>Аналог:</b> git commit с подробным описанием</li>
+      </ul>
+    </div>
+    <div class="card bg-orange">
+      <h3>Summary = краткий пересказ</h3>
+      <p>Сжатый пересказ того что происходило. Бывает ручным (агент по запросу) и автоматическим (генерируется при compaction). Теряет детали — это его природа.</p>
+      <ul>
+        <li><b>Отвечает на:</b> «Что происходило?»</li>
+        <li><b>Содержит:</b> общий смысл, высокоуровневые выводы</li>
+        <li><b>Создаётся:</b> автоматически при compaction или по запросу</li>
+        <li><b>Аналог:</b> краткое содержание главы книги</li>
+      </ul>
+    </div>
+    <div class="card bg-purple">
+      <h3>Compression / Compaction = сжатие</h3>
+      <p>Технический процесс уменьшения объёма context window. Старая история заменяется summary. Неизбежен при длинных задачах. Checkpoint — инструмент защиты от потерь при compaction.</p>
+      <ul>
+        <li><b>Триггер:</b> context window ~80% заполнен</li>
+        <li><b>Результат:</b> старые turns → summary (~5–10k токенов)</li>
+        <li><b>Потери:</b> конкретные детали, решения, отклонённые пути</li>
+        <li><b>Аналог:</b> старые письма уничтожены, остался только пересказ</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="font-size:15px;margin:18px 0 10px">Summary и Compact — не одно и то же</h3>
+
+  <div class="grid two" style="margin-bottom:14px">
+    <div class="card bg-orange" style="margin:0">
+      <h4 style="margin:0 0 6px;font-size:14px">Summary = «перескажи»</h4>
+      <p style="font-size:13px;margin:0">Краткое содержание разговора или задачи — для человека, документации или переноса в новый чат.</p>
+    </div>
+    <div class="card bg-purple" style="margin:0">
+      <h4 style="margin:0 0 6px;font-size:14px">Compact = «сожми контекст, освободи место»</h4>
+      <p style="font-size:13px;margin:0">Механизм управления context window: старая часть чата заменяется сжатым summary, чтобы работа в <b>том же</b> треде могла продолжиться.</p>
+    </div>
+  </div>
+
+  <div class="callout warn" style="margin-bottom:14px"><b>При compaction</b> часть деталей может потеряться. Для важных задач делай явный <a href="#checkpoint-template">checkpoint</a> в файле или Memory Bank — не полагайся только на авто-summary после compact.</div>
+
+  <div class="tableWrap"><table>
+    <thead><tr><th>Пункт</th><th>Summary</th><th>Compact / compaction</th></tr></thead>
+    <tbody>
+      <tr><td><b>Что это?</b></td><td>Краткое содержание — абзац или структурированный текст</td><td>Сжатие <b>рабочего контекста</b> (старые turns выкидываются или заменяются)</td></tr>
+      <tr><td><b>Кто запускает?</b></td><td>Ты или агент <b>по просьбе</b>; либо модель как шаг внутри compact</td><td><b>Система</b> (авто при переполнении), <b>команда</b> (<code>/compact</code> в Claude Code, <code>/summarize</code> / <code>/compress</code> в Cursor CLI)</td></tr>
+      <tr><td><b>Цель</b></td><td>Объяснить, передать факты, зафиксировать «что было»</td><td><b>Освободить место</b> в context window, чтобы диалог мог продолжиться</td></tr>
+      <tr><td><b>Видно пользователю?</b></td><td>Да — как обычное сообщение или блок, который ты копируешь</td><td>Не всегда: в Cursor IDE — сегмент «Summarized conversation» в breakdown; полный текст замены может быть не в ленте</td></tr>
+      <tr><td><b>Можно контролировать?</b></td><td>Да — шаблон, поля, «включи файлы и решения»</td><td>Частично — инструкции в AGENTS.md / CLAUDE.md; в Claude Code ещё PreCompact hook</td></tr>
+      <tr><td><b>Может потерять детали?</b></td><td>Да, если не просить явно</td><td>Да — детали теряются при замене истории на короткий summary</td></tr>
+      <tr><td><b>Для нового чата?</b></td><td>Да — вставить summary или <b>лучше checkpoint</b> в первое сообщение</td><td>Обычно для <b>продолжения текущего</b> чата; новый чат = другой способ «обнулить» историю (+ checkpoint)</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="schema-box" style="margin-top:12px"><span class="h">Как связаны (одна линия времени)</span>
+
+<span class="c">Длинный чат в одном треде</span>
+    → контекст заполнился
+    → <span class="r">COMPACT</span> (процесс)
+    → в окне остаётся <span class="v">SUMMARY</span> (артефакт) + недавние сообщения
+    → агент продолжает <span class="c">в том же чате</span>
+
+<span class="c">Ты сам до compact</span>
+    → просишь <span class="v">summary</span> или пишешь <span class="v">checkpoint</span> в файл
+    → <span class="k">New Chat</span> + @checkpoint
+    → это <span class="c">не compact</span>, а смена сессии с переносом смысла</div>
+
+  <div class="callout" style="margin-top:12px"><b>Главное отличие:</b> summary — пересказ для человека и переноса смысла; compact — инженерия context window в текущем чате. Для точного продолжения задачи summary часто слабоват — нужен <b>checkpoint</b> (next step, decisions, evidence).</div>
+
+  <h3 style="font-size:15px;margin:18px 0 10px">Сравнение: чем отличаются</h3>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Понятие</th><th>Кто создаёт</th><th>Цель</th><th>Детализация</th><th>Выживает compaction?</th></tr></thead>
+    <tbody>
+      <tr><td><b>Checkpoint</b></td><td>Агент или пользователь — явно</td><td>Продолжить работу точно отсюда</td><td>Высокая — файлы, строки, решения</td><td>✅ Да — если сохранён в файл/Memory</td></tr>
+      <tr><td><b>Summary</b></td><td>По запросу или как побочный текст внутри compact</td><td>Пересказать «что было»</td><td>Низкая — общий смысл</td><td>⚠️ В чате — часть compact; в файле — да</td></tr>
+      <tr><td><b>Compression</b></td><td>Система или команда compact</td><td>Не дать context overflow</td><td>—</td><td>— это сам процесс (≈ compact)</td></tr>
+      <tr><td><b>Memory Bank</b></td><td>Агент по протоколу</td><td>Хранить устойчивые знания между сессиями</td><td>Средняя — структурированные факты</td><td>✅ Да — файл вне context</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="nuance-card nc-blue" style="margin-top:12px">
+    <h4>Ключевое отличие Checkpoint от Summary</h4>
+    <p><b>Summary</b> говорит «что было» — он описательный. <b>Checkpoint</b> говорит «откуда продолжать» — он операционный. Summary создаётся системой автоматически и оптимизирован для сжатия. Checkpoint создаётся намеренно и оптимизирован для возобновления работы. Плохой Checkpoint: «Мы работали над auth». Хороший Checkpoint: «Next: implement refresh token в <code>api/auth/refresh.py</code>, JWT secret в env, тест в <code>tests/test_auth.py:45</code>».</p>
+  </div>
+  <div class="nuance-card nc-orange">
+    <h4>Summary vs Compact — частая путаница</h4>
+    <p>«Сделай summary» ≠ <code>/compact</code> и ≠ авто-compaction: пересказ в ленте не обязан <b>освободить</b> context window. Compact <b>выбрасывает</b> старые turns и подставляет сжатое summary — модель в следующих шагах уже не видит исходные детали. Summary удобно копировать в доку или новый чат; compact — чтобы не рвать длинный тред. Оба могут терять детали → явный checkpoint в файле.</p>
+  </div>
+</section>
+
 <!-- ── С нуля: Compaction ── -->
 <section class="section">
   <h2>С нуля: что такое Compaction / Compression — Claude Code / Cursor</h2>
-  <p class="sectionIntro">Прежде чем разбираться в Checkpoint — нужно понять зачем он нужен. А нужен он из-за <b>compaction</b>. Концепция одинакова в Claude Code и Cursor.</p>
+  <p class="sectionIntro">Checkpoint из предыдущего блока нужен в первую очередь из‑за <b>compaction</b> — ниже разберём механику сжатия. Концепция одинакова в Claude Code и Cursor.</p>
 
   <div class="nuance-card nc-blue">
     <h4>Уровень 0 — простыми словами</h4>
@@ -273,105 +373,6 @@ claude "Контекст задачи:
   </div>
 </section>
 
-<section class="section">
-  <h2>Что такое Checkpoint, Summary и Compression</h2>
-
-  <div class="grid">
-    <div class="card bg-blue">
-      <h3>Checkpoint = точка возобновления</h3>
-      <p>Структурированная запись состояния задачи в конкретный момент: что сделано, какие решения приняты, что осталось и <em>конкретно</em> следующий шаг. Создаётся намеренно — человеком или агентом.</p>
-      <ul>
-        <li><b>Отвечает на:</b> «Откуда продолжать?»</li>
-        <li><b>Содержит:</b> Goal, Done, Decisions, Next step, Evidence</li>
-        <li><b>Создаётся:</b> явно, перед паузой или compaction</li>
-        <li><b>Аналог:</b> git commit с подробным описанием</li>
-      </ul>
-    </div>
-    <div class="card bg-orange">
-      <h3>Summary = краткий пересказ</h3>
-      <p>Сжатый пересказ того что происходило. Бывает ручным (агент по запросу) и автоматическим (генерируется при compaction). Теряет детали — это его природа.</p>
-      <ul>
-        <li><b>Отвечает на:</b> «Что происходило?»</li>
-        <li><b>Содержит:</b> общий смысл, высокоуровневые выводы</li>
-        <li><b>Создаётся:</b> автоматически при compaction или по запросу</li>
-        <li><b>Аналог:</b> краткое содержание главы книги</li>
-      </ul>
-    </div>
-    <div class="card bg-purple">
-      <h3>Compression / Compaction = сжатие</h3>
-      <p>Технический процесс уменьшения объёма context window. Старая история заменяется summary. Неизбежен при длинных задачах. Checkpoint — инструмент защиты от потерь при compaction.</p>
-      <ul>
-        <li><b>Триггер:</b> context window ~80% заполнен</li>
-        <li><b>Результат:</b> старые turns → summary (~5–10k токенов)</li>
-        <li><b>Потери:</b> конкретные детали, решения, отклонённые пути</li>
-        <li><b>Аналог:</b> старые письма уничтожены, остался только пересказ</li>
-      </ul>
-    </div>
-  </div>
-
-  <h3 style="font-size:15px;margin:18px 0 10px">Summary и Compact — не одно и то же</h3>
-
-  <div class="grid two" style="margin-bottom:14px">
-    <div class="card bg-orange" style="margin:0">
-      <h4 style="margin:0 0 6px;font-size:14px">Summary = «перескажи»</h4>
-      <p style="font-size:13px;margin:0">Краткое содержание разговора или задачи — для человека, документации или переноса в новый чат.</p>
-    </div>
-    <div class="card bg-purple" style="margin:0">
-      <h4 style="margin:0 0 6px;font-size:14px">Compact = «сожми контекст, освободи место»</h4>
-      <p style="font-size:13px;margin:0">Механизм управления context window: старая часть чата заменяется сжатым summary, чтобы работа в <b>том же</b> треде могла продолжиться.</p>
-    </div>
-  </div>
-
-  <div class="callout warn" style="margin-bottom:14px"><b>При compaction</b> часть деталей может потеряться. Для важных задач делай явный <a href="#checkpoint-template">checkpoint</a> в файле или Memory Bank — не полагайся только на авто-summary после compact.</div>
-
-  <div class="tableWrap"><table>
-    <thead><tr><th>Пункт</th><th>Summary</th><th>Compact / compaction</th></tr></thead>
-    <tbody>
-      <tr><td><b>Что это?</b></td><td>Краткое содержание — абзац или структурированный текст</td><td>Сжатие <b>рабочего контекста</b> (старые turns выкидываются или заменяются)</td></tr>
-      <tr><td><b>Кто запускает?</b></td><td>Ты или агент <b>по просьбе</b>; либо модель как шаг внутри compact</td><td><b>Система</b> (авто при переполнении), <b>команда</b> (<code>/compact</code> в Claude Code, <code>/summarize</code> / <code>/compress</code> в Cursor CLI)</td></tr>
-      <tr><td><b>Цель</b></td><td>Объяснить, передать факты, зафиксировать «что было»</td><td><b>Освободить место</b> в context window, чтобы диалог мог продолжиться</td></tr>
-      <tr><td><b>Видно пользователю?</b></td><td>Да — как обычное сообщение или блок, который ты копируешь</td><td>Не всегда: в Cursor IDE — сегмент «Summarized conversation» в breakdown; полный текст замены может быть не в ленте</td></tr>
-      <tr><td><b>Можно контролировать?</b></td><td>Да — шаблон, поля, «включи файлы и решения»</td><td>Частично — инструкции в AGENTS.md / CLAUDE.md; в Claude Code ещё PreCompact hook</td></tr>
-      <tr><td><b>Может потерять детали?</b></td><td>Да, если не просить явно</td><td>Да — детали теряются при замене истории на короткий summary</td></tr>
-      <tr><td><b>Для нового чата?</b></td><td>Да — вставить summary или <b>лучше checkpoint</b> в первое сообщение</td><td>Обычно для <b>продолжения текущего</b> чата; новый чат = другой способ «обнулить» историю (+ checkpoint)</td></tr>
-    </tbody>
-  </table></div>
-
-  <div class="schema-box" style="margin-top:12px"><span class="h">Как связаны (одна линия времени)</span>
-
-<span class="c">Длинный чат в одном треде</span>
-    → контекст заполнился
-    → <span class="r">COMPACT</span> (процесс)
-    → в окне остаётся <span class="v">SUMMARY</span> (артефакт) + недавние сообщения
-    → агент продолжает <span class="c">в том же чате</span>
-
-<span class="c">Ты сам до compact</span>
-    → просишь <span class="v">summary</span> или пишешь <span class="v">checkpoint</span> в файл
-    → <span class="k">New Chat</span> + @checkpoint
-    → это <span class="c">не compact</span>, а смена сессии с переносом смысла</div>
-
-  <div class="callout" style="margin-top:12px"><b>Главное отличие:</b> summary — пересказ для человека и переноса смысла; compact — инженерия context window в текущем чате. Для точного продолжения задачи summary часто слабоват — нужен <b>checkpoint</b> (next step, decisions, evidence).</div>
-
-  <h3 style="font-size:15px;margin:18px 0 10px">Сравнение: чем отличаются</h3>
-  <div class="tableWrap"><table>
-    <thead><tr><th>Понятие</th><th>Кто создаёт</th><th>Цель</th><th>Детализация</th><th>Выживает compaction?</th></tr></thead>
-    <tbody>
-      <tr><td><b>Checkpoint</b></td><td>Агент или пользователь — явно</td><td>Продолжить работу точно отсюда</td><td>Высокая — файлы, строки, решения</td><td>✅ Да — если сохранён в файл/Memory</td></tr>
-      <tr><td><b>Summary</b></td><td>По запросу или как побочный текст внутри compact</td><td>Пересказать «что было»</td><td>Низкая — общий смысл</td><td>⚠️ В чате — часть compact; в файле — да</td></tr>
-      <tr><td><b>Compression</b></td><td>Система или команда compact</td><td>Не дать context overflow</td><td>—</td><td>— это сам процесс (≈ compact)</td></tr>
-      <tr><td><b>Memory Bank</b></td><td>Агент по протоколу</td><td>Хранить устойчивые знания между сессиями</td><td>Средняя — структурированные факты</td><td>✅ Да — файл вне context</td></tr>
-    </tbody>
-  </table></div>
-
-  <div class="nuance-card nc-blue" style="margin-top:12px">
-    <h4>Ключевое отличие Checkpoint от Summary</h4>
-    <p><b>Summary</b> говорит «что было» — он описательный. <b>Checkpoint</b> говорит «откуда продолжать» — он операционный. Summary создаётся системой автоматически и оптимизирован для сжатия. Checkpoint создаётся намеренно и оптимизирован для возобновления работы. Плохой Checkpoint: «Мы работали над auth». Хороший Checkpoint: «Next: implement refresh token в <code>api/auth/refresh.py</code>, JWT secret в env, тест в <code>tests/test_auth.py:45</code>».</p>
-  </div>
-  <div class="nuance-card nc-orange">
-    <h4>Summary vs Compact — частая путаница</h4>
-    <p>«Сделай summary» ≠ <code>/compact</code> и ≠ авто-compaction: пересказ в ленте не обязан <b>освободить</b> context window. Compact <b>выбрасывает</b> старые turns и подставляет сжатое summary — модель в следующих шагах уже не видит исходные детали. Summary удобно копировать в доку или новый чат; compact — чтобы не рвать длинный тред. Оба могут терять детали → явный checkpoint в файле.</p>
-  </div>
-</section>
 <section class="section">
   <h2>Checkpoint vs Compaction — как работают вместе</h2>
   <p class="sectionIntro">Checkpoint и compaction — не одно и то же. Compaction — это проблема (потеря деталей). Checkpoint — это решение. Вот как они взаимодействуют.</p>

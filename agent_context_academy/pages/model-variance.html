@@ -52,27 +52,6 @@
   </div>
 </section>
 
-<!-- Main factors -->
-<section class="section">
-  <h2>Все факторы вариации — полная карта</h2>
-  <div class="tableWrap"><table>
-    <thead><tr><th>Фактор</th><th>Что делает</th><th>Диапазон влияния</th><th>Пример</th></tr></thead>
-    <tbody>
-      <tr><td><b>Temperature</b></td><td>Степень случайности в выборе следующего токена</td><td>Очень высокое</td><td>T=0 → детерминированный; T=1 → творческий; T=2 → хаотичный</td></tr>
-      <tr><td><b>Top-P / Top-K sampling</b></td><td>Ограничивает выбор из топ-P% или топ-K токенов</td><td>Высокое</td><td>Top-P=0.9 → только из 90% вероятностной массы</td></tr>
-      <tr><td><b>System prompt (harness)</b></td><td>Роль, ограничения, стиль от платформы</td><td>Очень высокое</td><td>Cursor system prompt ≠ claude.ai system prompt</td></tr>
-      <tr><td><b>Rules / AGENTS.md</b></td><td>Проектные ограничения и workflow</td><td>Высокое</td><td>Rule "не меняй API" кардинально меняет ответ</td></tr>
-      <tr><td><b>Context качество</b></td><td>Какие файлы, chunks, memory попали в контекст</td><td>Очень высокое</td><td>Устаревший chunk → устаревший ответ</td></tr>
-      <tr><td><b>Context длина / compaction</b></td><td>Сжатие длинной истории теряет детали</td><td>Высокое</td><td>После compaction модель "забыла" решение из начала</td></tr>
-      <tr><td><b>Tool order</b></td><td>Порядок определения tools влияет на выбор</td><td>Среднее</td><td>Первый tool чаще выбирается при прочих равных</td></tr>
-      <tr><td><b>Permissions</b></td><td>Что разрешено: read/write/execute</td><td>Среднее</td><td>Subagent без write permission ≠ main agent</td></tr>
-      <tr><td><b>Model version</b></td><td>Claude 3.5 ≠ Claude 3 ≠ Claude 3.7</td><td>Высокое</td><td>Разные веса, разное поведение на одном промпте</td></tr>
-      <tr><td><b>RAG качество</b></td><td>Что нашёл retriever, насколько релевантно</td><td>Высокое</td><td>Плохой chunking → нерелевантные chunks → плохой ответ</td></tr>
-      <tr><td><b>Memory staleness</b></td><td>Устаревшая memory вводит в заблуждение</td><td>Среднее</td><td>Memory из 2 месяцев назад о старой архитектуре</td></tr>
-    </tbody>
-  </table></div>
-</section>
-
 <!-- Temperature deep dive -->
 <section class="section">
   <h2>Temperature — самый частый вопрос</h2>
@@ -233,7 +212,26 @@ logits / 2.0 → probability spread across many tokens</pre>
   </div>
 </section>
 
-<!-- Assessment -->
+<!-- Main factors -->
+<section class="section">
+  <h2>Все факторы вариации — полная карта</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Фактор</th><th>Что делает</th><th>Диапазон влияния</th><th>Пример</th></tr></thead>
+    <tbody>
+      <tr><td><b>Temperature</b></td><td>Степень случайности в выборе следующего токена</td><td>Очень высокое</td><td>T=0 → детерминированный; T=1 → творческий; T=2 → хаотичный</td></tr>
+      <tr><td><b>Top-P / Top-K sampling</b></td><td>Ограничивает выбор из топ-P% или топ-K токенов</td><td>Высокое</td><td>Top-P=0.9 → только из 90% вероятностной массы</td></tr>
+      <tr><td><b>System prompt (harness)</b></td><td>Роль, ограничения, стиль от платформы</td><td>Очень высокое</td><td>Cursor system prompt ≠ claude.ai system prompt</td></tr>
+      <tr><td><b>Rules / AGENTS.md</b></td><td>Проектные ограничения и workflow</td><td>Высокое</td><td>Rule "не меняй API" кардинально меняет ответ</td></tr>
+      <tr><td><b>Context качество</b></td><td>Какие файлы, chunks, memory попали в контекст</td><td>Очень высокое</td><td>Устаревший chunk → устаревший ответ</td></tr>
+      <tr><td><b>Context длина / compaction</b></td><td>Сжатие длинной истории теряет детали</td><td>Высокое</td><td>После compaction модель "забыла" решение из начала</td></tr>
+      <tr><td><b>Tool order</b></td><td>Порядок определения tools влияет на выбор</td><td>Среднее</td><td>Первый tool чаще выбирается при прочих равных</td></tr>
+      <tr><td><b>Permissions</b></td><td>Что разрешено: read/write/execute</td><td>Среднее</td><td>Subagent без write permission ≠ main agent</td></tr>
+      <tr><td><b>Model version</b></td><td>Claude 3.5 ≠ Claude 3 ≠ Claude 3.7</td><td>Высокое</td><td>Разные веса, разное поведение на одном промпте</td></tr>
+      <tr><td><b>RAG качество</b></td><td>Что нашёл retriever, насколько релевантно</td><td>Высокое</td><td>Плохой chunking → нерелевантные chunks → плохой ответ</td></tr>
+      <tr><td><b>Memory staleness</b></td><td>Устаревшая memory вводит в заблуждение</td><td>Среднее</td><td>Memory из 2 месяцев назад о старой архитектуре</td></tr>
+    </tbody>
+  </table></div>
+</section>
 
 <section class="section"><h2>Тонкости и нюансы вариативности модели</h2>
 <div class="nuance-card nc-red"><h4>Temperature=0 не гарантирует детерминизм</h4><p>При temperature=0 модель выбирает максимально вероятный токен — это близко к детерминизму, но не абсолютно. GPU параллелизм, floating-point rounding, разные batch sizes могут дать разные результаты даже при T=0. Кроме того, контекст (compaction, порядок документов) меняется — это тоже источник вариативности.</p></div>

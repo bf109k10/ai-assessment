@@ -65,6 +65,12 @@ Every topic page (context, rules, hooks, skills, mcp, rag, memory, etc.) MUST in
 7. **Cursor vs Claude Code** — сравнительная таблица (если тема platform-specific)
 8. **Каверзные вопросы** — `<details>` Q&A, минимум 3-4 вопроса включая каверзные
 
+**Порядок внутри страницы (уточнение к §1 и §8):**
+
+- **Словарь / «что такое»** — сразу после Hero, если несколько связанных терминов или риск омонимов (например Checkpoint vs UI checkpoint). Длинный блок «С нуля» — **после** словаря, не до него. Эталон: `checkpoints.html`.
+- **Сводная таблица / полная карта** — после тематических разделов (deep-dive, сценарии, примеры), **непосредственно перед** «Тонкости»; nuance-cards раскрывают строки таблицы. Не ставить ту же карту сразу после Hero. Эталон: `model-variance.html`.
+- Каркас: Hero → core (словарь) → механика / формат / примеры → сводка (если есть) → Тонкости → Best practices → platform compare → Q&A.
+
 ## 2. Тонкости (nuances) — обязательный формат
 
 ```html
@@ -233,7 +239,7 @@ Colors: `nc-blue`, `nc-red`, `nc-orange`, `nc-green`, `nc-purple`
 
 ## 8. Level-0 / Foundational секция — «С нуля»
 
-Если тема опирается на базовый концепт (agent loop, context window, RAG pipeline, MCP protocol и т.д.) — **первые две секции** страницы строятся по шаблону ниже, до погружения в детали.
+Если тема опирается на базовый концепт (agent loop, context window, RAG pipeline, MCP protocol и т.д.) — **сразу после Hero** идёт словарь понятий (секция A или multi-term grid, см. `checkpoints.html`), затем формат/архитектура и «С нуля» по шаблонам ниже, до остальных деталей.
 
 ### Когда добавлять
 
@@ -245,7 +251,9 @@ Colors: `nc-blue`, `nc-red`, `nc-orange`, `nc-green`, `nc-purple`
 
 ### Секция A — «Что такое X»
 
-Используй `div.grid` с карточками `card bg-COLOR` — по одной на каждый ключевой аспект. Паттерн взят с `rules.html` и `mcp.html`.
+Используй `div.grid` с карточками `card bg-COLOR` — по одной на каждый ключевой аспект. Паттерн взят с `rules.html`, `mcp.html` и multi-term — `checkpoints.html` («Checkpoint / Summary / Compression» + подблок Summary vs Compact + `callout warn`).
+
+**Multi-term (несколько понятий на одной странице):** одна секция сразу после Hero: grid по термину, затем короткое «не путать» (две карточки или таблица), затем при необходимости сравнительные таблицы — всё **до** «С нуля: …» и длинных platform-split.
 
 ```html
 <section class="section">
@@ -390,6 +398,7 @@ Colors: `nc-blue`, `nc-red`, `nc-orange`, `nc-green`, `nc-purple`
 - **Пример**: конкретный (файлы, команды, реальные значения), не абстрактный («Fix failing tests in auth.ts», не «выполни задачу»)
 - **Platform split**: явно писать «концепция идентична, отличается только API/синтаксис» если различий нет
 - **Ссылки**: всегда в конце — `docs.cursor.com` и `code.claude.com/docs`
+- **sectionIntro после перестановки:** если «С нуля» идёт после словаря — не пиши «сначала разберём compaction, потом checkpoint»; отсылай к блоку выше («Checkpoint из предыдущей секции нужен из‑за compaction…»)
 
 Этот порядок = шаги на home.html (1→prompting, 2→context-engineering, 3→context, 4→model-variance, 5→agents-rules-skills, 8→memory, 9→rag, 10→mcp, 11→caching, 12→checkpoints, 13→subagents, 14→conflicts, 16→tricky-questions, 17→assessment).
 

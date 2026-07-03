@@ -255,3 +255,6 @@ body.academySearchOpen{overflow:hidden}
 .academySearchSnippet{display:block;font-size:12px;color:#475569;line-height:1.4;margin-top:3px}
 .academySearchSnippet mark,.academySearchTitle mark{background:#fef08a;color:inherit;border-radius:2px;padding:0 1px}
 .academySearchFoot{padding:8px 14px 12px;border-top:1px solid #f1f5f9;font-size:11px;color:#94a3b8;font-weight:800}
+
+/* Dark code blocks on topic pages — inline <code> must stay readable */
+.schema-box code{background:rgba(253,224,71,.12);color:#fde68a;padding:1px 5px;border-radius:4px;font-size:inherit;font-weight:800}

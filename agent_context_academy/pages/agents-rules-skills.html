@@ -33,6 +33,7 @@
     .fb-skills{background:#f5f3ff;color:#6b21a8;border:1px solid #ddd6fe}
     .fb-hooks{background:#fff1f2;color:#dc2626;border:1px solid #fecaca}
     .fb-cas{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+    .fb-mem{background:#fff7ed;color:#c2410c;border:1px solid #fdba74}
     .fb-opt{background:#f8fafc;color:#64748b;border:1px solid #e2e8f0}
     .fi-section{background:#f8fafc;padding:5px 12px 5px 16px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;border-bottom:1px solid #f1f5f9}
 
@@ -128,7 +129,7 @@
     <a href="assessment.html"><span class="ico">🎯</span><span>Assessment тренажёр</span></a>
   </div>
 <div class="progressBox"><b>Прогресс обучения</b><div class="progressBar"><div class="progressFill"></div></div><div class="progressText"></div></div>
-  <div class="progressBox"><b>Приоритет</b><p class="sourceNote">Rules &gt; AGENTS.md &gt; Skills.<br>Rules нельзя обойти из чата.<br>Skills — рекомендации, не ограничения.</p></div>
+  <div class="progressBox"><b>Приоритет</b><p class="sourceNote">Hooks &gt; Rules &gt; AGENTS.md &gt; чат &gt; Skills.<br>Rules нельзя обойти из чата.<br>Memory/RAG — другой слой: <a href="tool-choice.html">матрица</a>.</p></div>
 </aside>
 
 <main class="main">
@@ -136,9 +137,10 @@
 <section class="hero">
   <div class="kicker">Agent Context Academy</div>
   <h2>AGENTS.md · Rules · Skills</h2>
-  <p>Зачем каждый артефакт существует, что в него класть, что обязательно иметь в каждом проекте, структура файлов, тонкости и ссылки на официальную документацию Cursor и Claude Code.</p>
+  <p>Обзор <b>слоя конфигурации</b> в репозитории: зачем каждый артефакт, дерево файлов, приоритеты. Шаг 7 — первая карта; после подстраниц (Rules, Hooks, Skills) можно вернуться сюда как к шпаргалке (также шаг 25 на roadmap).</p>
   <div class="heroActions">
     <a class="btn primary" href="#file-tree">Файловое дерево ↓</a>
+    <a class="btn" href="tool-choice.html">Куда класть факт →</a>
     <a class="btn" href="assessment.html">К assessment</a>
     <button class="markDone">Отметить страницу изученной</button>
   </div>
@@ -147,11 +149,16 @@
 <!-- ─────────────────── ЗАЧЕМ ─────────────────── -->
 <section class="section">
   <h2>Зачем это всё — большая картинка</h2>
-  <p class="sectionIntro">Когда вы пишете агенту задачу в чате, он уже «знает» о проекте из трёх источников. Каждый решает свою задачу — и заменить один другим нельзя без потери гарантий.</p>
+  <p class="sectionIntro">К каждому запросу платформа подмешивает <b>несколько слоёв</b> инструкций. Ниже — цепочка как на <a href="home.html#mental-model">ментальной модели</a> (слои 1–6 для этой страницы). Каждый решает свою задачу; подменить один другим — потерять гарантии или смешать policy с памятью.</p>
   <div class="diagram">
     <div class="hier-band">
       <div class="hier-row">
-        <div class="hier-box" style="background:#fff1f2;border-color:#fca5a5;color:#dc2626;border-radius:14px 14px 0 0">
+        <div class="hier-box" style="background:#450a0a;border-color:#991b1b;color:#fecaca;border-radius:14px 14px 0 0">
+          🪝 Hooks / Team Rules <small style="font-weight:700;display:block;font-size:12px">Shell до/после tool call. Жёстче Rules — нельзя «переубедить» промптом.</small>
+        </div>
+      </div>
+      <div class="hier-row">
+        <div class="hier-box" style="background:#fff1f2;border-color:#fca5a5;color:#dc2626">
           🔒 Rules <small style="font-weight:700;display:block;font-size:12px">Что НЕЛЬЗЯ / обязательно. Не переопределяется из чата.</small>
         </div>
       </div>
@@ -162,18 +169,28 @@
       </div>
       <div class="hier-row">
         <div class="hier-box" style="background:#f0fdf4;border-color:#86efac;color:#166534">
-          🧩 Current chat <small style="font-weight:700;display:block;font-size:12px">Текущая задача пользователя. Не отменяет Rules выше.</small>
+          🧩 Current chat <small style="font-weight:700;display:block;font-size:12px">Текущая задача. Не отменяет Hooks/Rules выше.</small>
         </div>
       </div>
       <div class="hier-row">
-        <div class="hier-box" style="background:#f5f3ff;border-color:#d8b4fe;color:#6b21a8;border-radius:0 0 14px 14px">
-          ⚡ Skills / Commands <small style="font-weight:700;display:block;font-size:12px">Commands как делать задачу. Рекомендации, не ограничения.</small>
+        <div class="hier-box" style="background:#f5f3ff;border-color:#d8b4fe;color:#6b21a8">
+          ⚡ Skills / Commands <small style="font-weight:700;display:block;font-size:12px">Как делать типовую задачу. Рекомендации, не ограничения.</small>
+        </div>
+      </div>
+      <div class="hier-row">
+        <div class="hier-box" style="background:#fff7ed;border-color:#fdba74;color:#c2410c;border-radius:0 0 14px 14px">
+          🧠 Memory Bank <small style="font-weight:700;display:block;font-size:12px">Что уже решили между сессиями. Не запреты (→ Rules) и не весь онбординг (→ AGENTS.md). <a href="memory.html" style="color:#9a3412;text-decoration:underline">Подробно →</a></small>
         </div>
       </div>
     </div>
   </div>
 
   <div class="grid" style="margin-top:20px">
+    <div class="card bg-orange">
+      <h3>Hooks — принуждение</h3>
+      <p><b>Назначение:</b> проверить или заблокировать действие на границе tool call (lint, секреты, запрет <code>rm -rf</code>).</p>
+      <p style="margin-top:8px"><b>Ключевое свойство:</b> выполняется платформой, не моделью. <a href="hooks.html">Hooks →</a></p>
+    </div>
     <div class="card bg-red">
       <h3>Rules — политика</h3>
       <p><b>Назначение:</b> зафиксировать что нельзя делать никогда — независимо от того, что попросил пользователь. Safety, compliance, архитектурные ограничения.</p>
@@ -189,17 +206,53 @@
       <p><b>Назначение:</b> сохранить шаги типовой задачи чтобы не объяснять каждый раз. Вызывается по имени или автоматически.</p>
       <p style="margin-top:8px"><b>Ключевое свойство:</b> рекомендует как делать, не запрещает. Skill проигрывает Rule при конфликте.</p>
     </div>
+    <div class="card" style="background:#fff7ed;border:1px solid #fdba74">
+      <h3 style="color:#c2410c">Memory Bank — между сессиями</h3>
+      <p><b>Назначение:</b> не терять решения, статус фичи и договорённости после закрытия чата.</p>
+      <p style="margin-top:8px"><b>Ключевое свойство:</b> эволюцирует и может устареть; policy остаётся в Rules. <a href="memory.html">Memory →</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────── НЕ ПУТАТЬ С MEMORY ─────────────────── -->
+<section class="section" id="not-memory">
+  <h2>Часто путают с конфигом — Memory и соседи</h2>
+  <p class="sectionIntro">AGENTS.md описывает <b>как команде работать в репозитории</b> (версионируется, ревьюится). Memory Bank хранит <b>эволюцирующий контекст сессий</b> (решения, открытые вопросы) — может устареть и требует дисциплины обновления. Запреты и MUST — всегда в Rules/Hooks, не в memory-файлах.</p>
+  <div class="grid two">
+    <div class="card bg-blue">
+      <h3>AGENTS.md / CLAUDE.md</h3>
+      <ul>
+        <li>Стабильный workflow, стек, команды сборки</li>
+        <li>Один источник правды для всей команды в git</li>
+        <li>Загружается при каждом запросе (prefix)</li>
+      </ul>
+    </div>
+    <div class="card bg-orange">
+      <h3>Memory Bank</h3>
+      <ul>
+        <li>«Что мы уже решили по фиче X», заметки между чатами</li>
+        <li>Может жить в <code>memory/</code>, user rules, CLAUDE.md memory — см. платформу</li>
+        <li>Не заменяет RAG для больших доков и не заменяет Rules для запретов</li>
+      </ul>
+      <p style="margin-top:10px;font-size:13px"><a href="memory.html">Memory Bank →</a> · <a href="memory-structure.html">структура файлов →</a></p>
+    </div>
+  </div>
+  <div class="nuance-card nc-orange" style="margin-top:14px">
+    <h4>Куда положить новый факт?</h4>
+    <p>Если сомневаетесь между AGENTS, Rules, Skills, Memory, Hooks — используйте пошаговую матрицу на странице <a href="tool-choice.html"><b>Какой инструмент когда</b></a>. Там же сравнение с RAG и типичные ошибки («весь онбординг в AGENTS.md»).</p>
   </div>
 </section>
 
 <!-- ─────────────────── FILE TREE ─────────────────── -->
 <section class="section" id="file-tree">
   <h2>Файловое дерево — где лежит каждый артефакт</h2>
-  <p class="sectionIntro">
+  <p class="sectionIntro">Набор <code>memory-bank/</code> опционален, но типичен для долгих задач. Поля файлов и минимальный набор: <a href="memory-structure.html">структура Memory →</a>.
+    <br/><br/>
     <span class="fb fb-must" style="font-size:12px;padding:4px 10px">⚠ обязательно</span>&nbsp;
     <span class="fb fb-always" style="font-size:12px;padding:4px 10px">★ always-apply</span>&nbsp;
     <span class="fb fb-globs" style="font-size:12px;padding:4px 10px">◈ globs</span>&nbsp;
     <span class="fb fb-skills" style="font-size:12px;padding:4px 10px">⚡ skill</span>&nbsp;
+    <span class="fb fb-mem" style="font-size:12px;padding:4px 10px">🧠 memory</span>&nbsp;
     <span class="fb fb-cas" style="font-size:12px;padding:4px 10px">↓ cascade</span>&nbsp;
     <span class="fb fb-opt" style="font-size:12px;padding:4px 10px">○ опционально</span>
   </p>
@@ -285,6 +338,40 @@
           <div class="fi-badges"><span class="fb fb-skills">⚡ /weekly-report</span></div>
         </div>
 
+        <div class="fi-section">memory-bank/ — Memory Bank</div>
+
+        <div class="fi">
+          <div class="fi-indent"><div class="fi-line"></div><div class="fi-blank"></div></div>
+          <div class="fi-icon">🧠</div>
+          <div class="fi-name fn-rec">memory.md</div>
+          <div class="fi-badges"><span class="fb fb-mem">🧠 сводка</span></div>
+          <div class="fi-desc">стек, команды, ADR — или один файл вместо набора</div>
+        </div>
+
+        <div class="fi">
+          <div class="fi-indent"><div class="fi-line"></div><div class="fi-blank"></div></div>
+          <div class="fi-icon">🧠</div>
+          <div class="fi-name fn-rec">projectbrief.md</div>
+          <div class="fi-badges"><span class="fb fb-mem">🧠 цели</span></div>
+          <div class="fi-desc">что строим, ограничения продукта</div>
+        </div>
+
+        <div class="fi">
+          <div class="fi-indent"><div class="fi-line"></div><div class="fi-blank"></div></div>
+          <div class="fi-icon">🧠</div>
+          <div class="fi-name fn-rec">activeContext.md</div>
+          <div class="fi-badges"><span class="fb fb-mem">🧠 сейчас</span></div>
+          <div class="fi-desc">фокус сессии, открытые нити</div>
+        </div>
+
+        <div class="fi">
+          <div class="fi-indent"><div class="fi-line"></div><div class="fi-blank"></div></div>
+          <div class="fi-icon">🧠</div>
+          <div class="fi-name fn-opt">decisions.md</div>
+          <div class="fi-badges"><span class="fb fb-opt">○ ADR</span></div>
+          <div class="fi-desc">подключать через @ в AGENTS.md</div>
+        </div>
+
         <div class="fi-section">Cascade (поддиректории)</div>
 
         <div class="fi">
@@ -343,6 +430,38 @@
             <div class="fi-icon">⚡</div>
             <div class="fi-name fn-opt">commands/weekly-report.md</div>
             <div class="fi-badges"><span class="fb fb-skills">⚡ /weekly-report</span></div>
+          </div>
+
+          <div class="fi-section">memory-bank/ — Memory Bank</div>
+
+          <div class="fi">
+            <div class="fi-indent"><div class="fi-line"></div><div class="fi-blank"></div></div>
+            <div class="fi-icon">🧠</div>
+            <div class="fi-name fn-rec">memory.md</div>
+            <div class="fi-badges"><span class="fb fb-mem">🧠 сводка</span></div>
+            <div class="fi-desc">устойчивые факты; @ в CLAUDE.md</div>
+          </div>
+
+          <div class="fi">
+            <div class="fi-indent"><div class="fi-line"></div><div class="fi-blank"></div></div>
+            <div class="fi-icon">🧠</div>
+            <div class="fi-name fn-rec">projectbrief.md</div>
+            <div class="fi-badges"><span class="fb fb-mem">🧠 цели</span></div>
+          </div>
+
+          <div class="fi">
+            <div class="fi-indent"><div class="fi-line"></div><div class="fi-blank"></div></div>
+            <div class="fi-icon">🧠</div>
+            <div class="fi-name fn-rec">activeContext.md</div>
+            <div class="fi-badges"><span class="fb fb-mem">🧠 сейчас</span></div>
+            <div class="fi-desc">+ Memory tool для user/project memory</div>
+          </div>
+
+          <div class="fi">
+            <div class="fi-indent"><div class="fi-line"></div><div class="fi-blank"></div></div>
+            <div class="fi-icon">🧠</div>
+            <div class="fi-name fn-opt">decisions.md</div>
+            <div class="fi-badges"><span class="fb fb-opt">○ ADR</span></div>
           </div>
 
           <div class="fi-section">Cascade</div>
@@ -436,6 +555,13 @@
       </div>
       <span class="pl-badge" style="background:#ede9fe;border-color:#c4b5fd;color:#5b21b6">playbook</span>
     </div>
+    <div class="pl-row" style="background:#fff7ed">
+      <div class="pl-rank" style="background:#ea580c">7</div>
+      <div class="pl-name">Memory Bank
+        <small>Контекст между сессиями. Не отменяет Rules; при конфликте с AGENTS.md — сверяйте с git и обновляйте memory.</small>
+      </div>
+      <span class="pl-badge" style="background:#ffedd5;border-color:#fdba74;color:#c2410c">память</span>
+    </div>
   </div>
 </section>
 
@@ -500,8 +626,23 @@
         <td>Markdown</td>
         <td>Когда агент работает в этой папке</td>
       </tr>
+      <tr>
+        <td><b>Session / long-term memory</b></td>
+        <td>User Rules, @-файлы, опционально <code>memory/</code> в workflow команды</td>
+        <td>Memory tool, <code>CLAUDE.md</code> cascade, project memory</td>
+        <td>Markdown / tool state</td>
+        <td>По политике команды; <b>не</b> дублировать policy из Rules</td>
+      </tr>
+      <tr>
+        <td><b>Tool permissions</b></td>
+        <td>Cursor Settings, <code>cursor.json</code> / UI modes</td>
+        <td><code>permissions</code> в settings, managed policy</td>
+        <td>JSON / UI</td>
+        <td>Каждая сессия; что можно без ask</td>
+      </tr>
     </tbody>
   </table></div>
+  <p class="sectionIntro" style="margin-top:12px">Полная матрица «ситуация → куда класть»: <a href="tool-choice.html">tool-choice.html</a>.</p>
 </section>
 
 <!-- ─────────────────── ОБЯЗАТЕЛЬНЫЙ МИНИМУМ ─────────────────── -->
@@ -523,6 +664,7 @@
       <div class="check-item"><div class="check-ico ci-skip">✗</div><span>Secrets, credentials, пароли</span></div>
       <div class="check-item"><div class="check-ico ci-skip">✗</div><span>Большие docs (→ RAG/docs)</span></div>
       <div class="check-item"><div class="check-ico ci-skip">✗</div><span>Запреты типа "не делай X" (→ Rules)</span></div>
+      <div class="check-item"><div class="check-ico ci-skip">✗</div><span>Лог сессий и «что решили вчера» (→ <a href="memory.html">Memory</a>)</span></div>
     </div>
 
     <div class="check-card mandatory">
